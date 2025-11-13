@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/auth.js";
 import API from "../api/axios.js";
@@ -8,6 +8,7 @@ export default function Header() {
   const auth = useContext(AuthContext);
   const [pendingCount, setPendingCount] = useState(0);
   const [unreadChats, setUnreadChats] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let mounted = true;
@@ -107,6 +108,13 @@ export default function Header() {
               <span className="text-sm text-gray-700 max-w-[200px] truncate" title={auth?.user?.name || auth?.user?.email}>
                 {auth?.user?.name || auth?.user?.email}
               </span>
+              <button
+                type="button"
+                onClick={() => { auth.logout(); navigate('/'); }}
+                className="ml-2 px-2 py-1 text-xs rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                Logout
+              </button>
             </div>
           )}
         </div>
