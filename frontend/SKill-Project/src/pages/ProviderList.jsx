@@ -101,6 +101,14 @@ export default function ProviderList() {
       });
       const list = Array.isArray(data?.providers) ? data.providers : [];
       setProviders(list);
+      // clear smart query after a successful search so the field resets for next use
+      if (!initialQuery) {
+        setSmartQuery("");
+        // also remove the smartQuery param from the URL to avoid refilling on refresh
+        const next = new URLSearchParams(searchParams);
+        next.delete("smartQuery");
+        setSearchParams(Object.fromEntries(next.entries()));
+      }
     } catch (error) {
       console.error("Error smart-searching providers:", error);
       notify("Failed to smart-match providers. Please try again.", { type: "error" });
@@ -333,7 +341,22 @@ export default function ProviderList() {
           </label>
           <div className="ms-auto flex flex-wrap gap-2">
             <button
-              onClick={() => handleSearch()}
+              type="button"
+              onClick={async () => {
+                await handleSearch();
+                // Clear filter inputs after search so the fields reset for the next use
+                setCategory("");
+                setProviderType("");
+                setCity("");
+                setStateRegion("");
+                setCountry("");
+                setRadiusKm("");
+                setLat("");
+                setLng("");
+                setSortDistance(false);
+                setSearchParams({});
+                try { localStorage.removeItem('provider_filters'); } catch { void 0 }
+              }}
               className="px-4 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-all w-full sm:w-auto"
             >
               Search

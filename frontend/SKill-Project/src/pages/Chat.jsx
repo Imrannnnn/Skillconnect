@@ -16,6 +16,8 @@ export default function Chat() {
   const [loading, setLoading] = useState(true);
   const [typingUser, setTypingUser] = useState(null);
   const endRef = useRef(null);
+  const messagesContainerRef = useRef(null);
+  const [autoScroll, setAutoScroll] = useState(true);
   const [chats, setChats] = useState([]);
   const [chatsLoading, setChatsLoading] = useState(true);
   const { notify } = useToast();
@@ -155,10 +157,18 @@ export default function Chat() {
     };
   }, [socket, chatId, auth?.user?._id]);
 
-  // Auto scroll to bottom
+  // Auto scroll to bottom when enabled and user is near bottom
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, typingUser]);
+    const container = messagesContainerRef.current;
+    if (!container || !autoScroll) return;
+
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    const nearBottom = distanceFromBottom < 80; // px threshold
+
+    if (nearBottom) {
+      endRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, typingUser, autoScroll]);
 
   async function deleteCurrentChat() {
     if (!chatId) return;
@@ -215,8 +225,8 @@ export default function Chat() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div className="max-w-5xl mx-auto px-4 py-6 flex justify-center">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full lg:max-w-5xl">
         {/* Left: chat list placeholder */}
         <aside className="hidden lg:block lg:col-span-1 rounded-lg border border-gray-200 bg-white p-4 h-[70vh]">
           <h3 className="font-semibold mb-3">Chats</h3>
@@ -311,7 +321,16 @@ export default function Chat() {
               </p>
             )}
           </div>
-          <div className="flex-1 overflow-y-auto p-3 bg-gray-50">
+          <div
+            ref={messagesContainerRef}
+            className="flex-1 overflow-y-auto p-3 bg-gray-50"
+            onScroll={(e) => {
+              const el = e.currentTarget;
+              const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+              const nearBottom = distanceFromBottom < 40; // tighter threshold for re-enabling
+              setAutoScroll(nearBottom);
+            }}
+          >
             {loading && (
               <div className="space-y-2">
                 {Array.from({ length: 6 }).map((_, i) => (

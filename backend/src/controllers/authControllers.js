@@ -163,3 +163,45 @@ export const verifyEmail = async (req, res) => {
     res.status(500).json({ message: "Failed to verify email", error: e });
   }
 };
+
+export const resendVerification = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "Email is required" });
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Do not reveal whether email exists
+      return res.json({ message: "If an account exists for this email, a verification link has been sent" });
+    }
+
+    if (user.verified) {
+      return res.status(400).json({ message: "Email is already verified" });
+    }
+
+    // Generate a new verification token
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    user.verificationToken = verificationToken;
+    await user.save();
+
+    try {
+      const verifyUrl = `${FRONTEND_URL}/verify-email/${verificationToken}`;
+      const html = `
+        <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; color: #111827;">
+          <h2 style="margin-bottom: 8px;">Verify your email</h2>
+          <p style="margin: 0 0 12px 0;">Here is a fresh verification link for your SkillConnect account.</p>
+          <p style="margin: 0 0 16px 0;">
+            <a href="${verifyUrl}" style="display: inline-block; padding: 10px 16px; border-radius: 999px; background: #059669; color: #fff; text-decoration: none; font-weight: 500;">Verify email</a>
+          </p>
+          <p style="margin: 0; font-size: 12px; color: #6b7280;">If you did not request this, you can ignore this email.</p>
+        </div>`;
+      await sendEmail(user.email, "Verify your SkillConnect account", html);
+    } catch {
+      // swallow email errors; client will see generic message below
+    }
+
+    res.json({ message: "If an account exists for this email, a verification link has been sent" });
+  } catch (e) {
+    res.status(500).json({ message: "Failed to resend verification", error: e });
+  }
+};

@@ -1,10 +1,12 @@
 import express from "express";
-import { getAllProviders, getProvider, updateProvider, deleteProvider, rateProvider } from "../controllers/providerController.js";
+import { getAllProviders, getProvider, getProviderByHandle, updateProvider, deleteProvider, rateProvider, visitProvider } from "../controllers/providerController.js";
 import { protect } from "../middleware/authMiddleware.js";
 const router = express.Router();
 router.get("/", getAllProviders);
 router.get("/:id", getProvider);
+router.get("/handle/:handle", getProviderByHandle);
 router.put("/:id", protect, updateProvider);
 router.delete("/:id", protect, deleteProvider);
 router.post("/:id/rate", protect, rateProvider);
+router.post("/:id/visit", visitProvider);
 export default router;

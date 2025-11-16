@@ -33,7 +33,7 @@ function App() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <OfflineBanner />
-      <main className="flex-1 p-4 bg-wave relative overflow-hidden">
+      <main className="flex-1 p-4 bg-wave relative">
         {/* Floating particles across all pages */}
         <span className="particle" style={{ top: "10%", left: "8%", animationDelay: "0s" }} />
         <span className="particle" style={{ top: "25%", left: "20%", animationDelay: "0.8s" }} />

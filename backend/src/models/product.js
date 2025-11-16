@@ -41,6 +41,10 @@ const productSchema = new mongoose.Schema({
   ratingAvg: { type: Number, default: 0 },
   ratingCount: { type: Number, default: 0 },
 
+  // Simple analytics
+  viewCount: { type: Number, default: 0 },
+  orderClickCount: { type: Number, default: 0 },
+
   // Administrative
   status: { type: String, enum: ["active", "inactive", "deleted"], default: "active" },
   visibility: { type: String, enum: ["public", "hidden", "draft"], default: "public" },

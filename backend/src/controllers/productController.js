@@ -132,3 +132,33 @@ export const deleteProduct = async (req, res) => {
     res.status(500).json({ message: "Failed to delete product", error });
   }
 };
+
+// Increment simple view counter
+export const trackProductView = async (req, res) => {
+  try {
+    const p = await Product.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { viewCount: 1 } },
+      { new: true }
+    );
+    if (!p) return res.status(404).json({ message: "Product not found" });
+    res.json({ viewCount: p.viewCount });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to track view", error });
+  }
+};
+
+// Increment simple order click counter (when client clicks "Order product")
+export const trackProductOrderClick = async (req, res) => {
+  try {
+    const p = await Product.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { orderClickCount: 1 } },
+      { new: true }
+    );
+    if (!p) return res.status(404).json({ message: "Product not found" });
+    res.json({ orderClickCount: p.orderClickCount });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to track order click", error });
+  }
+};

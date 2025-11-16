@@ -1,6 +1,8 @@
 import Booking from "../models/booking.js";
 import User from "../models/user.js";
 import Product from "../models/product.js";
+import Wallet from "../models/wallet.js";
+import Transaction from "../models/transaction.js";
 import sendEmail from "../utils/sendEmail.js";
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
@@ -209,4 +211,116 @@ export const listBookings = async (req, res) => {
     const bookings = await Booking.find(q).sort({ createdAt: -1 });
     res.json({ bookings });
   } catch (error) { res.status(500).json({ message: "Failed to fetch bookings", error }); }
+};
+
+export const updateBookingFlow = async (req, res) => {
+  try {
+    const { action } = req.body || {};
+    if (!action) return res.status(400).json({ message: "Action is required" });
+
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+
+    const current = booking.flowStatus || "requested";
+
+    const transitions = {
+      accept: {
+        from: ["requested"],
+        to: "provider_accepted",
+      },
+      on_the_way: {
+        from: ["provider_accepted"],
+        to: "on_the_way",
+      },
+      start_job: {
+        from: ["on_the_way", "provider_accepted"],
+        to: "job_started",
+      },
+      complete_job: {
+        from: ["job_started", "on_the_way", "provider_accepted"],
+        to: "job_completed",
+      },
+      release_payment: {
+        from: ["job_completed"],
+        to: "payment_released",
+      },
+      cancel: {
+        from: ["requested", "provider_accepted"],
+        to: "cancelled",
+      },
+      decline: {
+        from: ["requested"],
+        to: "declined",
+      },
+    };
+
+    const rule = transitions[action];
+    if (!rule) {
+      return res.status(400).json({ message: "Unsupported action" });
+    }
+    if (!rule.from.includes(current)) {
+      return res.status(400).json({ message: `Cannot apply action '${action}' from state '${current}'` });
+    }
+
+    // Escrow step: when provider accepts and a price is set, hold funds in escrow from client wallet
+    if (action === "accept" && typeof booking.price === "number" && booking.price > 0 && booking.clientId) {
+      const wallet = await Wallet.findOne({ user: booking.clientId });
+      const balance = wallet?.balance || 0;
+      if (balance < booking.price) {
+        return res.status(400).json({ message: "Insufficient wallet balance to accept this booking" });
+      }
+
+      wallet.balance = balance - booking.price;
+      await wallet.save();
+
+      await Transaction.create({
+        type: "escrow",
+        fromUser: booking.clientId,
+        toUser: booking.providerId,
+        bookingId: booking._id,
+        amount: booking.price,
+        status: "pending",
+      });
+    }
+
+    // Release step: move escrow to provider wallet when client approves payment release
+    if (action === "release_payment") {
+      const escrow = await Transaction.findOne({
+        type: "escrow",
+        bookingId: booking._id,
+        status: "pending",
+      });
+
+      if (!escrow) {
+        return res.status(400).json({ message: "No pending escrow found for this booking" });
+      }
+
+      const providerId = booking.providerId;
+      if (providerId) {
+        let providerWallet = await Wallet.findOne({ user: providerId });
+        if (!providerWallet) {
+          providerWallet = await Wallet.create({ user: providerId });
+        }
+        providerWallet.balance = (providerWallet.balance || 0) + (escrow.amount || 0);
+        await providerWallet.save();
+      }
+
+      escrow.status = "completed";
+      await escrow.save();
+    }
+
+    booking.flowStatus = rule.to;
+    booking.statusHistory = booking.statusHistory || [];
+    booking.statusHistory.push({
+      status: rule.to,
+      at: new Date(),
+      by: req.user?._id || undefined,
+    });
+
+    await booking.save();
+
+    res.json({ message: "Booking flow updated", booking });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update booking flow", error });
+  }
 };
