@@ -28,44 +28,76 @@ export default function ProviderCard({ provider, distanceKm }) {
     }
   }
 
+  const jobsDone =
+    typeof provider?.jobsDone === "number"
+      ? provider.jobsDone
+      : typeof provider?.completedJobs === "number"
+      ? provider.completedJobs
+      : typeof provider?.jobsCompleted === "number"
+      ? provider.jobsCompleted
+      : undefined;
+
   return (
-    <div className="h-full rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-all flex flex-col">
-      <div className="flex items-start gap-3">
-        <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-semibold">
-          {provider?.name?.[0]?.toUpperCase() || "P"}
+    <div className="relative h-full flex flex-col">
+      <div
+        className="relative w-full cursor-pointer text-slate-900
+                   flex flex-col justify-between rounded-xl bg-transparent
+                   before:content-[''] before:absolute before:inset-0
+                   before:m-auto before:w-full before:h-full before:rounded-[14px]
+                   before:bg-gradient-to-br before:from-emerald-500
+                   before:via-emerald-500 before:to-cyan-500 before:-z-10
+                   before:pointer-events-none before:transition-transform
+                   before:duration-500 before:ease-[cubic-bezier(0.175,0.885,0.32,1.275)]
+                   hover:before:scale-105"
+      >
+        <div className="relative h-full rounded-lg border border-gray-200 bg-white p-4 shadow-sm flex flex-col">
+          <div className="flex items-start gap-3">
+            <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-semibold">
+              {provider?.name?.[0]?.toUpperCase() || "P"}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-medium text-gray-800 truncate" title={provider?.name || ''}>{provider?.name}</h3>
+              <p className="text-sm text-gray-500 truncate" title={Array.isArray(provider?.categories) ? provider.categories.join(", ") : (provider?.category || '')}>
+                {Array.isArray(provider?.categories) ? provider.categories.join(", ") : provider?.category}
+              </p>
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                {typeof provider?.ratingAvg === 'number' && provider?.ratingCount > 0 && (
+                  <span className="inline-flex items-center gap-1 text-amber-600">
+                    <span>★ {provider.ratingAvg}</span>
+                    <span className="text-gray-500">({provider.ratingCount})</span>
+                  </span>
+                )}
+                {typeof jobsDone === 'number' && jobsDone > 0 && (
+                  <span className="inline-flex items-center gap-1 text-gray-600">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    <span>{jobsDone} jobs done</span>
+                  </span>
+                )}
+              </div>
+              {provider?.providerType && (
+                <p className="text-xs mt-1 text-gray-500">{provider.providerType}</p>
+              )}
+              {typeof distanceKm === 'number' && (
+                <p className="text-xs mt-1 text-gray-500">{distanceKm.toFixed(1)} km away</p>
+              )}
+            </div>
+          </div>
+          <div className="mt-4 flex gap-2 mt-auto">
+            <Link
+              to={`/providers/${provider?._id}`}
+              className="inline-flex items-center justify-center px-3 py-1.5 text-sm rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-all w-full sm:w-auto"
+            >
+              View Profile
+            </Link>
+            <button
+              onClick={startChat}
+              disabled={chatLoading}
+              className="inline-flex items-center justify-center px-3 py-1.5 text-sm rounded-md border border-emerald-600 text-emerald-700 hover:bg-emerald-50 transition-all disabled:opacity-70 w-full sm:w-auto"
+            >
+              {chatLoading ? "Starting…" : "Chat"}
+            </button>
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-gray-800 truncate" title={provider?.name || ''}>{provider?.name}</h3>
-          <p className="text-sm text-gray-500 truncate" title={Array.isArray(provider?.categories) ? provider.categories.join(", ") : (provider?.category || '')}>
-            {Array.isArray(provider?.categories) ? provider.categories.join(", ") : provider?.category}
-          </p>
-          {typeof provider?.ratingAvg === 'number' && provider?.ratingCount > 0 && (
-            <p className="text-xs mt-1 text-amber-600">
-              ★ {provider.ratingAvg} <span className="text-gray-500">({provider.ratingCount})</span>
-            </p>
-          )}
-          {provider?.providerType && (
-            <p className="text-xs mt-1 text-gray-500">{provider.providerType}</p>
-          )}
-          {typeof distanceKm === 'number' && (
-            <p className="text-xs mt-1 text-gray-500">{distanceKm.toFixed(1)} km away</p>
-          )}
-        </div>
-      </div>
-      <div className="mt-4 flex gap-2 mt-auto">
-        <Link
-          to={`/providers/${provider?._id}`}
-          className="inline-flex items-center justify-center px-3 py-1.5 text-sm rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-all w-full sm:w-auto"
-        >
-          View Profile
-        </Link>
-        <button
-          onClick={startChat}
-          disabled={chatLoading}
-          className="inline-flex items-center justify-center px-3 py-1.5 text-sm rounded-md border border-emerald-600 text-emerald-700 hover:bg-emerald-50 transition-all disabled:opacity-70 w-full sm:w-auto"
-        >
-          {chatLoading ? "Starting…" : "Chat"}
-        </button>
       </div>
     </div>
   );

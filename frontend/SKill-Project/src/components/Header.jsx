@@ -54,6 +54,16 @@ export default function Header() {
   }, []);
   return (
     <header className="bg-white border-b border-gray-100">
+      {auth?.user && auth.user.verified === false && (
+        <div className="bg-amber-50 border-b border-amber-200">
+          <div className="max-w-6xl mx-auto px-4 py-1 text-xs text-amber-800 flex items-center justify-between gap-2">
+            <span>
+              Please verify your email address. We sent a verification link to <span className="font-semibold">{auth.user.email}</span>.
+            </span>
+            <span className="hidden sm:inline">Check your inbox or spam folder.</span>
+          </div>
+        </div>
+      )}
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-4">
         <Link to="/" className="text-emerald-700 font-semibold">
           SkillConnect
@@ -108,6 +118,14 @@ export default function Header() {
               <span className="text-sm text-gray-700 max-w-[200px] truncate" title={auth?.user?.name || auth?.user?.email}>
                 {auth?.user?.name || auth?.user?.email}
               </span>
+              {auth?.user?.role === 'provider' && (
+                <Link
+                  to="/provider/dashboard"
+                  className="text-xs text-emerald-700 hover:text-emerald-800 px-2 py-1 rounded-md border border-emerald-200 hover:bg-emerald-50"
+                >
+                  My dashboard
+                </Link>
+              )}
               <button
                 type="button"
                 onClick={() => { auth.logout(); navigate('/'); }}

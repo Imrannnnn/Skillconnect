@@ -11,6 +11,7 @@ export default function ProviderBookings() {
   const [updatingId, setUpdatingId] = useState(null);
   const { notify } = useToast();
   const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
 
   useEffect(() => {
     let mounted = true;
@@ -52,19 +53,49 @@ export default function ProviderBookings() {
         </span>
       </div>
       {loading && <p className="text-sm text-gray-500 mt-2">Loading…</p>}
-      <div className="mt-3 flex items-center gap-2 text-sm">
-        <FilterButton label="All" active={statusFilter==='all'} onClick={()=>setStatusFilter('all')} />
-        <FilterButton label="Pending" active={statusFilter==='pending'} onClick={()=>setStatusFilter('pending')} />
-        <FilterButton label="Successful" active={statusFilter==='successful'} onClick={()=>setStatusFilter('successful')} />
-        <FilterButton label="Declined" active={statusFilter==='declined'} onClick={()=>setStatusFilter('declined')} />
+      <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">Status:</span>
+          <FilterButton label="All" active={statusFilter==='all'} onClick={()=>setStatusFilter('all')} />
+          <FilterButton label="Pending" active={statusFilter==='pending'} onClick={()=>setStatusFilter('pending')} />
+          <FilterButton label="Successful" active={statusFilter==='successful'} onClick={()=>setStatusFilter('successful')} />
+          <FilterButton label="Declined" active={statusFilter==='declined'} onClick={()=>setStatusFilter('declined')} />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">Type:</span>
+          <FilterButton label="All" active={typeFilter==='all'} onClick={()=>setTypeFilter('all')} />
+          <FilterButton label="Service" active={typeFilter==='service'} onClick={()=>setTypeFilter('service')} />
+          <FilterButton label="Product" active={typeFilter==='product'} onClick={()=>setTypeFilter('product')} />
+        </div>
       </div>
       {!loading && items.length === 0 && <p className="text-sm text-gray-500 mt-2">No bookings yet.</p>}
       <div className="mt-4 space-y-2">
-        {items.filter(b => statusFilter==='all' ? true : b.status===statusFilter).map((b) => (
+        {items
+          .filter((b) => statusFilter==='all' ? true : b.status===statusFilter)
+          .filter((b) => {
+            if (typeFilter === 'all') return true;
+            const t = b.bookingType || 'service';
+            return typeFilter === t;
+          })
+          .map((b) => (
           <div key={b._id} className="rounded-lg border border-gray-200 bg-white p-4 flex items-start gap-4">
             <div className="min-w-0 flex-1">
-              <div className="font-medium text-gray-800">{b.clientName} <span className="text-xs text-gray-500">({b.clientPhone})</span></div>
+              <div className="font-medium text-gray-800 flex flex-wrap items-center gap-2">
+                <span>{b.clientName}</span>
+                <span className="text-xs text-gray-500">({b.clientPhone})</span>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${b.bookingType === 'product' ? 'bg-sky-50 border-sky-200 text-sky-700' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
+                  {b.bookingType === 'product' ? 'Product' : 'Service'}
+                </span>
+              </div>
               <div className="text-sm text-gray-700 mt-1 break-words">{b.description}</div>
+              {b.productSnapshot?.name && (
+                <div className="text-xs text-gray-600 mt-1">
+                  Product: {b.productSnapshot.name}
+                  {b.productSnapshot.productCode && (
+                    <span className="ml-1 text-[10px] text-gray-500">(ID: {b.productSnapshot.productCode})</span>
+                  )}
+                </div>
+              )}
               {b.address && <div className="text-xs text-gray-500 mt-1">{b.address}</div>}
               {b.details && <div className="text-xs text-gray-500 mt-1">{b.details}</div>}
               <div className="text-xs text-gray-500 mt-1">{new Date(b.createdAt).toLocaleString()}</div>

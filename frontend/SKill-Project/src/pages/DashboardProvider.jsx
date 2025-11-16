@@ -1,4 +1,5 @@
 import { useContext, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import API from '../api/axios.js'
 import { AuthContext } from '../context/auth.js'
 
@@ -62,10 +63,21 @@ export default function DashboardProvider() {
               )}
             </div>
           </div>
-          <div className="mt-3">
-            <a href="/provider/edit-profile" className="inline-flex items-center text-sm px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50">
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link to="/provider/edit-profile" className="inline-flex items-center text-sm px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50">
               Edit profile
-            </a>
+            </Link>
+            <Link to="/provider/products" className="inline-flex items-center text-sm px-3 py-1.5 rounded-md border border-emerald-600 text-emerald-700 hover:bg-emerald-50">
+              Manage product catalog
+            </Link>
+            {auth?.user?._id && (
+              <Link
+                to={`/providers/${auth.user._id}`}
+                className="inline-flex items-center text-sm px-3 py-1.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                View my public profile
+              </Link>
+            )}
           </div>
         </section>
       )}

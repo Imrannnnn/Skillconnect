@@ -110,6 +110,7 @@ export default function Chat() {
     setUnread((prev) => {
       const next = { ...prev, [chatId]: 0 };
       localStorage.setItem("unreadCounts", JSON.stringify(next));
+      NetBus.emit({ chatsUpdated: true, at: Date.now() });
       return next;
     });
   }, [chatId]);
@@ -158,6 +159,27 @@ export default function Chat() {
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typingUser]);
+
+  async function deleteCurrentChat() {
+    if (!chatId) return;
+    const ok = window.confirm("Delete this conversation for you? This will hide the chat on your side but not for the other user.");
+    if (!ok) return;
+    try {
+      await API.delete(`/chats/${chatId}`);
+      // Clear unread count for this chat
+      setUnread((prev) => {
+        const next = { ...prev };
+        delete next[chatId];
+        localStorage.setItem("unreadCounts", JSON.stringify(next));
+        NetBus.emit({ chatsUpdated: true, at: Date.now() });
+        return next;
+      });
+      notify("Chat deleted", { type: "success" });
+      navigate("/chats");
+    } catch (e) {
+      notify(e?.response?.data?.message || "Failed to delete chat", { type: "error" });
+    }
+  }
 
   async function sendMessage() {
     const text = input.trim();
@@ -261,19 +283,32 @@ export default function Chat() {
         {/* Right: chat window */}
         <section className="lg:col-span-2 rounded-lg border border-gray-200 bg-white flex flex-col h-[70vh]">
           <div className="border-b border-gray-200 p-3">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full overflow-hidden bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-semibold">
-                {otherUser?.avatarUrl ? (
-                  <img src={otherUser.avatarUrl} alt="avatar" className="h-full w-full object-cover" />
-                ) : (
-                  (otherUser?.name?.[0] || otherUser?.email?.[0] || 'U')?.toUpperCase?.()
-                )}
+            <div className="flex items-center gap-2 justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-full overflow-hidden bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-semibold">
+                  {otherUser?.avatarUrl ? (
+                    <img src={otherUser.avatarUrl} alt="avatar" className="h-full w-full object-cover" />
+                  ) : (
+                    (otherUser?.name?.[0] || otherUser?.email?.[0] || 'U')?.toUpperCase?.()
+                  )}
+                </div>
+                <h2 className="font-semibold">{otherUser?.name || otherUser?.email || 'Chat'}</h2>
               </div>
-              <h2 className="font-semibold">{otherUser?.name || otherUser?.email || 'Chat'}</h2>
+              {chatId && (
+                <button
+                  type="button"
+                  onClick={deleteCurrentChat}
+                  className="text-xs px-2 py-1 rounded-md border border-rose-200 text-rose-600 hover:bg-rose-50"
+                >
+                  Delete chat
+                </button>
+              )}
             </div>
-            <p className="text-xs text-gray-500">Room: {chatId}</p>
             {auth?.user && (
-              <p className="text-xs text-gray-500 mt-1">You are logged in as <span className="font-medium text-gray-700">{auth.user.name || auth.user.email}</span></p>
+              <p className="mt-1 text-xs text-gray-600">
+                <span className="font-semibold text-gray-800">You are logged in as</span>{" "}
+                <span className="font-semibold text-gray-900">{auth.user.name || auth.user.email}</span>
+              </p>
             )}
           </div>
           <div className="flex-1 overflow-y-auto p-3 bg-gray-50">

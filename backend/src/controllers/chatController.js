@@ -7,7 +7,25 @@ export const listChats = async (req, res) => {
   try {
     const userId = String(req.user._id);
     const pipeline = [
-      { $match: { $or: [{ sender: new mongoose.Types.ObjectId(userId) }, { receiver: new mongoose.Types.ObjectId(userId) }] } },
+      {
+        $match: {
+          $and: [
+            {
+              $or: [
+                { sender: new mongoose.Types.ObjectId(userId) },
+                { receiver: new mongoose.Types.ObjectId(userId) },
+              ],
+            },
+            {
+              // Exclude messages soft-deleted for this user
+              $or: [
+                { deletedFor: { $exists: false } },
+                { deletedFor: { $ne: new mongoose.Types.ObjectId(userId) } },
+              ],
+            },
+          ],
+        },
+      },
       { $sort: { createdAt: -1 } },
       { $group: { _id: "$chatId", lastMessage: { $first: "$$ROOT" } } },
       { $project: { chatId: "$_id", lastMessage: 1, _id: 0 } },
@@ -28,7 +46,14 @@ export const createOrGetChat = async (req, res) => {
 
 export const getChatById = async (req, res) => {
   try {
-    const messages = await Message.find({ chatId: req.params.chatId }).sort({ createdAt: 1 });
+    const messages = await Message.find({
+      chatId: req.params.chatId,
+      // Exclude messages that have been soft-deleted for this user
+      $or: [
+        { deletedFor: { $exists: false } },
+        { deletedFor: { $ne: req.user._id } },
+      ],
+    }).sort({ createdAt: 1 });
     res.json({ messages });
   } catch (error) { res.status(500).json({ message: "Failed to fetch chat", error }); }
 };
@@ -42,4 +67,28 @@ export const sendMessageToChat = async (req, res) => {
     const msg = await Message.create({ chatId, sender, receiver, content: text });
     res.status(201).json(msg);
   } catch (error) { res.status(500).json({ message: "Failed to send message", error }); }
+};
+
+export const deleteChat = async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    if (!chatId) return res.status(400).json({ message: "chatId is required" });
+
+    // Ensure requester is part of the chat
+    const [a, b] = String(chatId).split("_");
+    const userId = String(req.user._id);
+    if (userId !== String(a) && userId !== String(b)) {
+      return res.status(403).json({ message: "Not allowed to delete this chat" });
+    }
+
+    // Soft delete: mark all messages in this chat as deleted for this user
+    await Message.updateMany(
+      { chatId },
+      { $addToSet: { deletedFor: req.user._id } },
+    );
+
+    return res.json({ message: "Chat deleted for you" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete chat", error });
+  }
 };

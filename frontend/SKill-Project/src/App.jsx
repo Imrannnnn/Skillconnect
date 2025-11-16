@@ -6,10 +6,14 @@ import OfflineBanner from './components/OfflineBanner.jsx'
 import Home from './pages/Home.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
+import ForgotPassword from './pages/ForgotPassword.jsx'
+import ResetPassword from './pages/ResetPassword.jsx'
+import VerifyEmail from './pages/VerifyEmail.jsx'
 import ProviderList from './pages/ProviderList.jsx'
 import ProviderProfile from './pages/ProviderProfile.jsx'
 import DashboardClient from './pages/DashboardClient.jsx'
 import DashboardProvider from './pages/DashboardProvider.jsx'
+import ProviderProducts from './pages/ProviderProducts.jsx'
 import Chat from './pages/Chat.jsx'
 import Payments from './pages/Payments.jsx'
 import PrivateRoute from './components/PrivateRoute.jsx'
@@ -32,10 +36,14 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/verify-email/:token" element={<VerifyEmail />} />
           <Route path="/providers" element={<ProviderList />} />
           <Route path="/providers/:id" element={<ProviderProfile />} />
           <Route path="/dashboard" element={<PrivateRoute><DashboardClient /></PrivateRoute>} />
           <Route path="/provider/dashboard" element={<PrivateRoute><DashboardProvider /></PrivateRoute>} />
+          <Route path="/provider/products" element={<PrivateRoute><ProviderProducts /></PrivateRoute>} />
           <Route path="/provider/edit-profile" element={<PrivateRoute><EditProfileProvider /></PrivateRoute>} />
           <Route path="/provider/bookings" element={<PrivateRoute><ProviderBookings /></PrivateRoute>} />
           <Route path="/bookings" element={<PrivateRoute><ClientBookings /></PrivateRoute>} />

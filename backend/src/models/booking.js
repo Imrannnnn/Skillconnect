@@ -3,11 +3,25 @@ import mongoose from "mongoose";
 const bookingSchema = new mongoose.Schema({
   providerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   clientId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  // Client contact details for ticket-style emails
   clientName: { type: String, required: true },
   clientPhone: { type: String, required: true },
+  clientEmail: String,
+  // Booking description (service description OR free-text product request)
   description: { type: String, required: true },
   address: String,
   details: String,
+  // New: classify booking
+  bookingType: { type: String, enum: ["service", "product"], default: "service" },
+  // Optional product reference when this booking is for a specific product
+  productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+  productSnapshot: {
+    productCode: String,
+    name: String,
+    description: String,
+    category: String,
+    price: Number,
+  },
   status: { type: String, enum: ["pending", "declined", "successful"], default: "pending" },
 }, { timestamps: true });
 

@@ -201,12 +201,13 @@ export default function ProviderList() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <h2 className="text-2xl font-semibold">Providers</h2>
+      <h2 className="text-2xl font-semibold">Find providers near you</h2>
+      <div className="mt-1 text-xs text-gray-500">Search by skill or service (e.g. "software engineer", "plumber") and optionally use your current location so the nearest providers show first.</div>
       <div className="mt-4 space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <input
             className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            placeholder="Category (e.g., plumber)"
+            placeholder="Skill or service (e.g., software engineer, plumber)"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             list="cat-suggest"

@@ -21,9 +21,35 @@ export const getProvider = async (req, res) => {
 
 export const updateProvider = async (req, res) => {
   try {
-    const allowed = ["bio", "categories", "providerType", "latitude", "longitude", "location", "name"];
+    const allowed = ["bio", "categories", "providerType", "providerMode", "latitude", "longitude", "location", "name", "social"];
     const update = {};
     for (const k of allowed) if (req.body[k] !== undefined) update[k] = req.body[k];
+
+    // Map flat city/state/country fields into location object when provided
+    const city = req.body.city;
+    const state = req.body.state;
+    const country = req.body.country;
+    if (city || state || country) {
+      update.location = {
+        ...(update.location || {}),
+        city,
+        state,
+        country,
+      };
+    }
+
+    // Map flat social fields into social object
+    const social = req.body.social || {};
+    const socialPayload = {
+      instagram: social.instagram ?? req.body.instagram,
+      facebook: social.facebook ?? req.body.facebook,
+      tiktok: social.tiktok ?? req.body.tiktok,
+      whatsapp: social.whatsapp ?? req.body.whatsapp,
+      website: social.website ?? req.body.website,
+    };
+    if (Object.values(socialPayload).some((v) => v)) {
+      update.social = socialPayload;
+    }
     const p = await User.findByIdAndUpdate(req.params.id, update, { new: true });
     if (!p) return res.status(404).json({ message: "Not found" });
     res.json(p);

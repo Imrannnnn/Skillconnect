@@ -19,8 +19,26 @@ router.put("/:id/avatar", protect, upload.single("avatar"), async (req, res) => 
     await image.toFile(outPath);
     const url = `/uploads/${req.params.id}/avatar.webp`;
     await User.findByIdAndUpdate(req.params.id, { avatarUrl: url });
-    res.json({ avatarUrl: url });
+    res.json({ avatarUrl: url, user: { avatarUrl: url } });
   } catch (e) { res.status(500).json({ message: "Upload failed", error: e }); }
+});
+
+// Generic product image upload for providers; returns a public URL only
+router.post("/:id/product-image", protect, upload.single("image"), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: "No file" });
+    const providerId = req.params.id;
+    const outDir = path.join(process.cwd(), "backend", "src", "uploads", "products", providerId);
+    fs.mkdirSync(outDir, { recursive: true });
+    const filename = `product-${Date.now()}.webp`;
+    const outPath = path.join(outDir, filename);
+    const image = sharp(req.file.buffer).resize(800, 800, { fit: "inside" }).webp({ quality: 82 });
+    await image.toFile(outPath);
+    const url = `/uploads/products/${providerId}/${filename}`;
+    res.json({ url });
+  } catch (e) {
+    res.status(500).json({ message: "Upload failed", error: e });
+  }
 });
 
 export default router;
