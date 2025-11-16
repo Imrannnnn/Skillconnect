@@ -1,22 +1,32 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useContext, useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import API from '../api/axios.js'
+import { AuthContext } from '../context/auth.js'
+import { useToast } from '../components/toast.js'
 
 export default function DashboardClient() {
+  const auth = useContext(AuthContext)
+  const navigate = useNavigate()
+  const { notify } = useToast()
   const [chats, setChats] = useState([])
   const [txs, setTxs] = useState([])
   const [loading, setLoading] = useState(true)
   const [wallet, setWallet] = useState(null)
+  const [deleting, setDeleting] = useState(false)
+  const [fundAmount, setFundAmount] = useState('')
+  const [funding, setFunding] = useState(false)
+  const [walletTxs, setWalletTxs] = useState([])
 
   useEffect(() => {
     let mounted = true
     async function load() {
       setLoading(true)
       try {
-        const [cRes, tRes, wRes] = await Promise.all([
+        const [cRes, tRes, wRes, walletTxRes] = await Promise.all([
           API.get('/chats'),
           API.get('/payments'),
           API.get('/wallet/me').catch(() => ({ data: null })),
+          API.get('/wallet/transactions?limit=5&page=1').catch(() => ({ data: { items: [] } })),
         ])
         const chatList = Array.isArray(cRes.data?.chats) ? cRes.data.chats : Array.isArray(cRes.data) ? cRes.data : []
         const txListRaw = Array.isArray(tRes.data?.payments) ? tRes.data.payments : Array.isArray(tRes.data) ? tRes.data : []
@@ -25,6 +35,8 @@ export default function DashboardClient() {
           setChats(chatList.slice(0, 5))
           setTxs(activeTx.slice(0, 5))
           if (wRes?.data?.wallet) setWallet(wRes.data.wallet)
+          const walletItems = Array.isArray(walletTxRes?.data?.items) ? walletTxRes.data.items : []
+          setWalletTxs(walletItems.slice(0, 5))
         }
       } finally {
         if (mounted) setLoading(false)
@@ -92,8 +104,99 @@ export default function DashboardClient() {
           <p className="mt-2 text-[11px] text-emerald-800/80">
             Add funds to your SkillConnect wallet to pay providers securely when bookings are accepted.
           </p>
+          <div className="mt-3 flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min="1"
+                step="0.01"
+                value={fundAmount}
+                onChange={(e) => setFundAmount(e.target.value)}
+                placeholder="Amount (e.g. 5000)"
+                className="flex-1 px-2 py-1.5 rounded-md border border-emerald-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              <button
+                type="button"
+                disabled={funding}
+                onClick={async () => {
+                  const amt = Number(fundAmount)
+                  if (!Number.isFinite(amt) || amt <= 0) {
+                    notify('Enter a valid amount to fund your wallet.', { type: 'info' })
+                    return
+                  }
+                  setFunding(true)
+                  try {
+                    const { data } = await API.post('/wallet/fund/initiate', { amount: amt })
+                    notify(data?.message || 'Funding initialized. Redirecting to Paystack…', { type: 'success' })
+                    if (data?.checkoutUrl) {
+                      window.location.href = data.checkoutUrl
+                    }
+                  } catch (e) {
+                    notify(e?.response?.data?.message || 'Failed to initiate wallet funding', { type: 'error' })
+                  } finally {
+                    setFunding(false)
+                  }
+                }}
+                className="px-3 py-1.5 rounded-md bg-emerald-600 text-white text-[11px] hover:bg-emerald-700 disabled:opacity-60"
+              >
+                {funding ? 'Starting…' : 'Fund wallet'}
+              </button>
+            </div>
+            <p className="text-[10px] text-emerald-800/70">
+              You will be redirected to Paystack to complete payment. Once successful, your wallet balance will update automatically.
+            </p>
+          </div>
         </section>
       </div>
+
+      <section className="mt-6 rounded-lg border border-gray-200 bg-white p-4">
+        <h3 className="font-semibold mb-2 text-sm text-gray-800">Recent wallet activity</h3>
+        {walletTxs.length === 0 && (
+          <p className="text-sm text-gray-500">No wallet transactions yet.</p>
+        )}
+        <div className="space-y-2 mt-1">
+          {walletTxs.map((t) => (
+            <div key={t._id} className="flex items-center justify-between text-xs border border-gray-100 rounded-md px-3 py-2">
+              <div className="min-w-0">
+                <div className="font-medium text-gray-800 truncate">{t.type === 'fund' ? 'Wallet funding' : (t.type || 'Transaction')}</div>
+                <div className="text-[11px] text-gray-500 truncate">{new Date(t.createdAt || Date.now()).toLocaleString()}</div>
+              </div>
+              <div className="text-right">
+                <div className="font-semibold text-gray-800">{formatAmount(t.amount, t.currency || 'ngn')}</div>
+                <div className="text-[11px] text-gray-500 capitalize">{t.status || 'pending'}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-6 rounded-lg border border-rose-200 bg-rose-50 p-4">
+        <h3 className="font-semibold mb-1 text-sm text-rose-800">Danger zone</h3>
+        <p className="text-xs text-rose-800/80 mb-3">
+          Deleting your account is permanent. This will remove your client account and you may lose access to bookings, chats, and wallet history.
+        </p>
+        <button
+          type="button"
+          disabled={deleting}
+          onClick={async () => {
+            if (!window.confirm('Are you sure you want to permanently delete your SkillConnect account? This action cannot be undone.')) return
+            setDeleting(true)
+            try {
+              await API.delete('/users/me')
+              notify('Your account has been deleted.', { type: 'success' })
+              auth?.logout?.()
+              navigate('/')
+            } catch (e) {
+              notify(e?.response?.data?.message || 'Failed to delete account', { type: 'error' })
+            } finally {
+              setDeleting(false)
+            }
+          }}
+          className="inline-flex items-center px-3 py-1.5 rounded-md border border-rose-300 bg-rose-600 text-white text-xs hover:bg-rose-700 disabled:opacity-60"
+        >
+          {deleting ? 'Deleting account…' : 'Delete my account'}
+        </button>
+      </section>
     </div>
   )
 }

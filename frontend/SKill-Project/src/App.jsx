@@ -17,6 +17,7 @@ import DashboardProvider from './pages/DashboardProvider.jsx'
 import ProviderProducts from './pages/ProviderProducts.jsx'
 import Chat from './pages/Chat.jsx'
 import Payments from './pages/Payments.jsx'
+import WalletCallback from './pages/WalletCallback.jsx'
 import PrivateRoute from './components/PrivateRoute.jsx'
 import Notifications from './pages/Notifications.jsx'
 import Chats from './pages/Chats.jsx'
@@ -75,6 +76,7 @@ function App() {
           <Route path="/chats" element={<PrivateRoute><Chats /></PrivateRoute>} />
           <Route path="/chat/:chatId" element={<PrivateRoute><Chat /></PrivateRoute>} />
           <Route path="/payments" element={<PrivateRoute><Payments /></PrivateRoute>} />
+          <Route path="/wallet/callback" element={<PrivateRoute><WalletCallback /></PrivateRoute>} />
           <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
           <Route path="/about" element={<About />} />
           <Route path="*" element={<Navigate to="/" replace />} />
