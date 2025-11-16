@@ -3,12 +3,15 @@ import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../context/auth.js";
 import API from "../api/axios.js";
 import { NetBus } from "../api/axios.js";
+import { useToast } from "./toast.js";
 
 export default function Header() {
   const auth = useContext(AuthContext);
   const [pendingCount, setPendingCount] = useState(0);
   const [unreadChats, setUnreadChats] = useState(0);
+  const [resending, setResending] = useState(false);
   const navigate = useNavigate();
+  const { notify } = useToast();
 
   useEffect(() => {
     let mounted = true;
@@ -60,7 +63,28 @@ export default function Header() {
             <span>
               Please verify your email address. We sent a verification link to <span className="font-semibold">{auth.user.email}</span>.
             </span>
-            <span className="hidden sm:inline">Check your inbox or spam folder.</span>
+            <div className="flex items-center gap-3">
+              <span className="hidden sm:inline">Check your inbox or spam folder.</span>
+              <button
+                type="button"
+                disabled={resending}
+                onClick={async () => {
+                  if (!auth?.user?.email) return;
+                  try {
+                    setResending(true);
+                    await API.post("/auth/resend-verification", { email: auth.user.email });
+                    notify("If an account exists for this email, a new verification link has been sent.", { type: 'success' });
+                  } catch (e) {
+                    notify(e?.response?.data?.message || "Failed to resend verification link", { type: 'error' });
+                  } finally {
+                    setResending(false);
+                  }
+                }}
+                className="px-2 py-1 rounded-md border border-amber-300 bg-amber-100 text-amber-800 text-[11px] hover:bg-amber-200 disabled:opacity-60"
+              >
+                {resending ? "Sending…" : "Resend link"}
+              </button>
+            </div>
           </div>
         </div>
       )}

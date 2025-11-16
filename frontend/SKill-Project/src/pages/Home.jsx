@@ -1,59 +1,152 @@
 import { Link } from "react-router-dom";
 
 export default function Home() {
-  const categories = ["Plumber", "Driver", "Cooker", "Fashion designer", "Cleaner"];
-  return (
-    <div className="max-w-6xl mx-auto px-4 py-10">
-      <div className="text-center mb-10">
-        <h1 className="text-3xl sm:text-4xl font-semibold mb-2">Find trusted service providers</h1>
-        <p className="text-gray-500">Chat, hire, and pay securely — all in one place.</p>
-        <div className="mt-6 flex justify-center">
-          <Link to="/providers" className="px-5 py-2.5 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-all">
-            Browse Providers
-          </Link>
-        </div>
-      </div>
+  const categories = ["Plumber", "Driver", "Cook", "Fashion designer", "Cleaner"];
 
-      {/* How It Works (compact) */}
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-10">
-        {[
-          { title: 'Search', desc: 'Filter by category, type, and location.' },
-          { title: 'Chat', desc: 'Discuss scope and timelines in real time.' },
-          { title: 'Hire', desc: 'Book confidently with transparent profiles.' },
-          { title: 'Pay', desc: 'Secure payments with clear milestones.' },
-        ].map((s, i) => (
-          <div key={s.title} className="rounded-lg border border-gray-200 bg-white p-4 hover:shadow-md transition">
-            <div className="h-7 w-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-semibold">{i+1}</div>
-            <h3 className="mt-2 font-semibold text-gray-900">{s.title}</h3>
-            <p className="text-sm text-gray-600">{s.desc}</p>
+  return (
+    <div className="min-h-screen bg-white">
+      {/* Hero section */}
+      <section
+          className="relative w-full h-[60vh] flex items-center justify-center text-white"
+          style={{
+            backgroundImage:
+              "url('frontend/SKill-Project/src/assets/ayaz-lalani-no-EShQ7s1A-unsplash.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          <div className="absolute inset-0 bg-emerald-900/70" />
+          <div className="relative z-10 text-center max-w-2xl px-6">
+            <h1 className="text-3xl md:text-5xl font-bold drop-shadow-lg">Need Help? Get Help!</h1>
+            <p className="text-base md:text-lg mt-3 opacity-90">
+              Find trusted service providers around you — fast, easy, and secure.
+            </p>
+            <p className="mt-1 text-sm md:text-base opacity-90">
+              Become a provider and offer your services to thousands of clients.
+            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <Link
+                to="/providers"
+                className="px-5 py-2.5 rounded-md bg-emerald-500 hover:bg-emerald-600 text-white text-sm md:text-base font-medium shadow-md"
+              >
+                Find providers
+              </Link>
+              <Link
+                to="/register"
+                className="px-5 py-2.5 rounded-md border border-emerald-200 bg-white/10 text-white text-sm md:text-base font-medium hover:bg-white/20"
+              >
+                Become a provider
+              </Link>
+            </div>
           </div>
-        ))}
+        </section>
+
+      {/* Core value cards (Find / Book / Chat) */}
+      <section className="py-12 sm:py-16 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 grid md:grid-cols-3 gap-6 md:gap-8">
+          {[ 
+            {
+              title: "Find providers",
+              desc: "Search for verified and trusted local providers easily.",
+            },
+            {
+              title: "Book the closest",
+              desc: "Use smart matching and distance filters to reach nearby talent.",
+            },
+            {
+              title: "Chat & complete",
+              desc: "Message providers directly and complete your service smoothly.",
+            },
+          ].map((card) => (
+            <div
+              key={card.title}
+              className="group relative bg-white px-6 sm:px-8 py-8 sm:py-10 rounded-xl shadow-sm border border-emerald-100 hover:border-emerald-500 transition"
+            >
+              <div className="absolute inset-0 rounded-xl border border-emerald-500 opacity-0 group-hover:opacity-100 blur-md transition" />
+              <div className="relative z-10 text-center">
+                <div className="mx-auto mb-4 h-10 w-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg font-semibold">
+                  {card.title[0]}
+                </div>
+                <h3 className="text-lg font-semibold mb-2 text-gray-900">{card.title}</h3>
+                <p className="text-sm text-gray-600">{card.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        {categories.map((c) => (
-          <Link
-            key={c}
-            to={`/providers?category=${encodeURIComponent(c)}`}
-            className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:shadow-lg transition-all text-center"
-          >
-            <span className="text-gray-800 font-medium">{c}</span>
-          </Link>
-        ))}
-      </div>
-
-      {/* Why SkillConnect (compact) */}
-      <section className="mt-12 grid gap-4 sm:grid-cols-3">
-        {[ 
-          { title: 'Trusted', desc: 'Clear profiles and reviews build confidence.' },
-          { title: 'Fast', desc: 'Match quickly and keep momentum with chat.' },
-          { title: 'Flexible', desc: 'Work locally or remotely—your choice.' },
-        ].map((v) => (
-          <div key={v.title} className="rounded-lg border border-gray-200 bg-white p-4">
-            <h3 className="font-semibold text-gray-900">{v.title}</h3>
-            <p className="text-sm text-gray-600 mt-1">{v.desc}</p>
+      {/* About / Why SkillConnect section */}
+      <section className="py-12 sm:py-16 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 grid gap-8 md:grid-cols-2 items-center">
+          <div>
+            <h2 className="text-2xl font-semibold text-gray-900">About SkillConnect</h2>
+            <p className="mt-3 text-gray-600 leading-relaxed text-sm md:text-base">
+              SkillConnect is a marketplace designed to help clients discover, evaluate, and hire trusted service
+              providers. Chat, bookings, payments, and reviews live in one place so work moves faster and feels safer.
+            </p>
+            <ul className="mt-4 space-y-2 text-gray-600 text-sm">
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-600">✓</span>
+                <span>Verified providers with transparent profiles and badges.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-600">✓</span>
+                <span>Secure wallet and escrow so payments are protected.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-emerald-600">✓</span>
+                <span>Location and smart search to match you with the right person quickly.</span>
+              </li>
+            </ul>
           </div>
-        ))}
+          <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+            <img
+              src="https://images.unsplash.com/photo-1556761175-129418cb2dfe?q=80&w=1470&auto=format&fit=crop"
+              alt="People collaborating"
+              className="w-full h-64 object-cover"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Quick categories + how it works */}
+      <section className="py-10 sm:py-12 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 grid gap-8 lg:grid-cols-3 items-start">
+          <div className="lg:col-span-2">
+            <h2 className="text-xl font-semibold text-gray-900 mb-3">Popular categories</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              {categories.map((c) => (
+                <Link
+                  key={c}
+                  to={`/providers?category=${encodeURIComponent(c)}`}
+                  className="rounded-lg border border-gray-200 bg-white px-3 py-3 text-center text-sm font-medium text-gray-800 shadow-sm hover:shadow-md hover:border-emerald-500 transition"
+                >
+                  {c}
+                </Link>
+              ))}
+            </div>
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-3">How it works</h2>
+            <div className="space-y-3 text-sm">
+              {[ 
+                { title: 'Search & match', desc: 'Use smart search and filters to find providers.' },
+                { title: 'Chat & agree', desc: 'Discuss requirements, timelines, and pricing.' },
+                { title: 'Book & track', desc: 'Send a booking, follow the job timeline, and release payment securely.' },
+              ].map((step, i) => (
+                <div key={step.title} className="flex gap-3">
+                  <div className="h-6 w-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-semibold">
+                    {i + 1}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-800">{step.title}</div>
+                    <div className="text-gray-600 text-xs mt-0.5">{step.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </section>
     </div>
   );

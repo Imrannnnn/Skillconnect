@@ -7,15 +7,23 @@ export default function DashboardProvider() {
   const auth = useContext(AuthContext)
   const [txs, setTxs] = useState([])
   const [loading, setLoading] = useState(true)
+  const [copied, setCopied] = useState(false)
+  const [userSnapshot, setUserSnapshot] = useState(auth?.user || null)
 
   useEffect(() => {
     let mounted = true
     async function load() {
       setLoading(true)
       try {
-        const { data } = await API.get('/payments')
-        const list = Array.isArray(data?.payments) ? data.payments : Array.isArray(data) ? data : []
-        if (mounted) setTxs(list)
+        const [paymentsRes, meRes] = await Promise.all([
+          API.get('/payments'),
+          auth?.user?._id ? API.get(`/users/${auth.user._id}`) : Promise.resolve({ data: auth.user })
+        ])
+        const list = Array.isArray(paymentsRes.data?.payments) ? paymentsRes.data.payments : Array.isArray(paymentsRes.data) ? paymentsRes.data : []
+        if (mounted) {
+          setTxs(list)
+          setUserSnapshot(meRes.data || auth.user)
+        }
       } finally {
         if (mounted) setLoading(false)
       }
@@ -23,6 +31,12 @@ export default function DashboardProvider() {
     load()
     return () => { mounted = false }
   }, [])
+
+  const profileUrl = userSnapshot?._id
+    ? userSnapshot.handle
+      ? `${window.location.origin}/@${userSnapshot.handle}`
+      : `${window.location.origin}/p/${userSnapshot._id}`
+    : ''
 
   const earnings = useMemo(() => {
     const eligible = txs.filter((t) => ['paid','released'].includes(t.status))
@@ -36,30 +50,34 @@ export default function DashboardProvider() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <h2 className="text-2xl font-semibold">Provider Dashboard</h2>
-      {loading && <p className="text-sm text-gray-500 mt-2">Loading…</p>}
+      {loading && (
+        <div className="mt-4 flex items-center justify-center">
+          <div className="loader" />
+        </div>
+      )}
 
-      {auth?.user && (
+      {userSnapshot && (
         <section className="mt-4 rounded-lg border border-gray-200 bg-white p-4">
           <div className="flex items-start gap-3">
             <div className="h-12 w-12 shrink-0 rounded-full overflow-hidden bg-emerald-100 flex items-center justify-center text-emerald-700 font-semibold">
-              {auth.user.avatarUrl ? (
-                <img src={auth.user.avatarUrl} alt="avatar" className="h-full w-full object-cover" />
+              {userSnapshot.avatarUrl ? (
+                <img src={userSnapshot.avatarUrl} alt="avatar" className="h-full w-full object-cover" />
               ) : (
-                (auth.user.name?.[0] || 'P').toUpperCase()
+                (userSnapshot.name?.[0] || 'P').toUpperCase()
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-lg font-semibold text-gray-800 break-words">{auth.user.name}</div>
+              <div className="text-lg font-semibold text-gray-800 break-words">{userSnapshot.name}</div>
               <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-600">
-                {auth.user.providerType && (
-                  <span className="px-2 py-0.5 rounded-md bg-gray-100 text-gray-700">{auth.user.providerType}</span>
+                {userSnapshot.providerType && (
+                  <span className="px-2 py-0.5 rounded-md bg-gray-100 text-gray-700">{userSnapshot.providerType}</span>
                 )}
-                {Array.isArray(auth.user.categories) && auth.user.categories.map((c) => (
+                {Array.isArray(userSnapshot.categories) && userSnapshot.categories.map((c) => (
                   <span key={c} className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700">{c}</span>
                 ))}
               </div>
-              {auth.user.bio && (
-                <p className="mt-2 text-sm text-gray-700 leading-relaxed break-words">{auth.user.bio}</p>
+              {userSnapshot.bio && (
+                <p className="mt-2 text-sm text-gray-700 leading-relaxed break-words">{userSnapshot.bio}</p>
               )}
             </div>
           </div>
@@ -70,15 +88,47 @@ export default function DashboardProvider() {
             <Link to="/provider/products" className="inline-flex items-center text-sm px-3 py-1.5 rounded-md border border-emerald-600 text-emerald-700 hover:bg-emerald-50">
               Manage product catalog
             </Link>
-            {auth?.user?._id && (
+            {userSnapshot?._id && (
               <Link
-                to={`/providers/${auth.user._id}`}
+                to={`/providers/${userSnapshot._id}`}
                 className="inline-flex items-center text-sm px-3 py-1.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
               >
                 View my public profile
               </Link>
             )}
           </div>
+          {auth?.user?._id && (
+            <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50/60 p-3 text-xs flex flex-col gap-2">
+              <div className="font-semibold text-emerald-800 text-sm">Share your profile</div>
+              <p className="text-[11px] text-emerald-800/80">
+                Send this link to clients as your mini website so they can view your profile, book your services, or order your products.
+              </p>
+              <div className="flex items-center gap-2">
+                <input
+                  className="flex-1 px-2 py-1.5 rounded-md border border-emerald-200 bg-white text-[11px] text-gray-800 truncate"
+                  value={profileUrl}
+                  readOnly
+                  onFocus={(e) => e.target.select()}
+                />
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!profileUrl) return
+                    try {
+                      await navigator.clipboard.writeText(profileUrl)
+                      setCopied(true)
+                      setTimeout(() => setCopied(false), 1500)
+                    } catch {
+                      // ignore clipboard errors
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-md bg-emerald-600 text-white text-[11px] hover:bg-emerald-700"
+                >
+                  {copied ? 'Copied' : 'Copy link'}
+                </button>
+              </div>
+            </div>
+          )}
         </section>
       )}
 
@@ -97,6 +147,16 @@ export default function DashboardProvider() {
           <div className="text-xl font-semibold text-gray-800 mt-1">{txs.filter(t=>t.status==='pending').length}</div>
         </div>
       </div>
+
+      {userSnapshot && typeof userSnapshot.profileViews === 'number' && (
+        <section className="mt-4 rounded-lg border border-gray-200 bg-white p-4">
+          <h3 className="font-semibold mb-1 text-sm text-gray-800">Profile analytics</h3>
+          <p className="text-xs text-gray-600 mb-2">Basic visibility into how many times clients have opened your public profile link.</p>
+          <div className="text-sm text-gray-800">
+            Profile views: <span className="font-semibold">{userSnapshot.profileViews}</span>
+          </div>
+        </section>
+      )}
 
       <section className="rounded-lg border border-gray-200 bg-white p-4 mt-6">
         <h3 className="font-semibold mb-2">Recent Transactions</h3>

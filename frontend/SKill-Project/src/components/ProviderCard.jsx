@@ -37,6 +37,13 @@ export default function ProviderCard({ provider, distanceKm }) {
       ? provider.jobsCompleted
       : undefined;
 
+  const verification = provider?.verification || {};
+  const emailVerified = !!(verification.emailVerified || provider?.verified);
+  const phoneVerified = !!verification.phoneVerified;
+  const idVerified = !!verification.idVerified;
+  const trustedProvider = !!verification.trustedProvider;
+  const topPerformer = Array.isArray(verification.topPerformerMonths) && verification.topPerformerMonths.length > 0;
+
   return (
     <div className="relative h-full flex flex-col">
       <div
@@ -71,6 +78,30 @@ export default function ProviderCard({ provider, distanceKm }) {
                   <span className="inline-flex items-center gap-1 text-gray-600">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                     <span>{jobsDone} jobs done</span>
+                  </span>
+                )}
+                {(emailVerified || phoneVerified) && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] text-emerald-700 border border-emerald-100">
+                    <span>✔</span>
+                    <span>Verified</span>
+                  </span>
+                )}
+                {idVerified && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2 py-0.5 text-[11px] text-sky-700 border border-sky-100">
+                    <span>🪪</span>
+                    <span>ID verified</span>
+                  </span>
+                )}
+                {trustedProvider && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] text-emerald-800 border border-emerald-200">
+                    <span>🛡</span>
+                    <span>Trusted</span>
+                  </span>
+                )}
+                {topPerformer && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] text-amber-800 border border-amber-200">
+                    <span>🥇</span>
+                    <span>Top performer</span>
                   </span>
                 )}
               </div>

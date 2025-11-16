@@ -453,7 +453,11 @@ export default function ProviderProducts() {
 
       <section className="mt-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-2">Your products</h3>
-        {loading && <p className="text-sm text-gray-500">Loading products…</p>}
+        {loading && (
+          <div className="py-6 flex items-center justify-center">
+            <div className="loader" />
+          </div>
+        )}
         {!loading && items.length === 0 && <p className="text-sm text-gray-500">You have not added any products yet.</p>}
         <div className="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {items
@@ -518,6 +522,11 @@ export default function ProviderProducts() {
                     <span className="flex items-center gap-1 text-[10px] text-amber-600">
                       <span className="text-[11px]">★</span>
                       <span>{p.ratingAvg.toFixed(1)} ({p.ratingCount})</span>
+                    </span>
+                  )}
+                  {typeof p.orderClickCount === "number" && (
+                    <span className="text-[10px] text-gray-500">
+                      Orders started: {p.orderClickCount}
                     </span>
                   )}
                 </div>

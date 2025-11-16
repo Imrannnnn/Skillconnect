@@ -28,7 +28,11 @@ export default function Payments() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <h2 className="text-2xl font-semibold">Payments</h2>
-      {loading && <p className="text-sm text-gray-500 mt-2">Loading…</p>}
+      {loading && (
+        <div className="mt-4 flex items-center justify-center">
+          <div className="loader" />
+        </div>
+      )}
 
       {/* Filters */}
       <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

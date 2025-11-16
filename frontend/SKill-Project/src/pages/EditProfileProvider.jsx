@@ -8,6 +8,7 @@ export default function EditProfileProvider() {
   const navigate = useNavigate();
 
   const [bio, setBio] = useState(user?.bio || "");
+  const [handle, setHandle] = useState(user?.handle || "");
   const [categories, setCategories] = useState(Array.isArray(user?.categories) ? user.categories : []);
   const [catInput, setCatInput] = useState("");
   const [city, setCity] = useState(user?.location?.city || user?.city || "");
@@ -69,6 +70,15 @@ export default function EditProfileProvider() {
       return;
     }
 
+    // Basic client-side validation for handle (if provided)
+    if (handle) {
+      const normalized = handle.trim().toLowerCase();
+      if (!/^[a-z0-9_-]{3,30}$/.test(normalized)) {
+        setError("Handle must be 3-30 characters of a-z, 0-9, '-' or '_'.");
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       // If avatar selected, upload first
@@ -86,6 +96,7 @@ export default function EditProfileProvider() {
         bio,
         categories,
         providerMode,
+        handle: handle ? handle.trim().toLowerCase() : undefined,
         city,
         state: stateRegion,
         country,
@@ -209,6 +220,21 @@ export default function EditProfileProvider() {
                 <option value="product">Product provider</option>
                 <option value="both">Both service & product</option>
               </select>
+              <div className="mt-4">
+                <h3 className="text-sm font-medium text-gray-700">Public handle / link</h3>
+                <p className="text-xs text-gray-500 mb-2">
+                  This becomes part of your public link, for example <span className="font-mono">@mybusiness</span>. Only a-z, 0-9, '-' and '_' are allowed.
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">@</span>
+                  <input
+                    className="flex-1 px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                    value={handle}
+                    onChange={(e) => setHandle(e.target.value)}
+                    placeholder="yourbusiness"
+                  />
+                </div>
+              </div>
             </div>
           </>
         )}

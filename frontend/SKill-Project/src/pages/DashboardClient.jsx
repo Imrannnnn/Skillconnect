@@ -6,15 +6,17 @@ export default function DashboardClient() {
   const [chats, setChats] = useState([])
   const [txs, setTxs] = useState([])
   const [loading, setLoading] = useState(true)
+  const [wallet, setWallet] = useState(null)
 
   useEffect(() => {
     let mounted = true
     async function load() {
       setLoading(true)
       try {
-        const [cRes, tRes] = await Promise.all([
+        const [cRes, tRes, wRes] = await Promise.all([
           API.get('/chats'),
           API.get('/payments'),
+          API.get('/wallet/me').catch(() => ({ data: null })),
         ])
         const chatList = Array.isArray(cRes.data?.chats) ? cRes.data.chats : Array.isArray(cRes.data) ? cRes.data : []
         const txListRaw = Array.isArray(tRes.data?.payments) ? tRes.data.payments : Array.isArray(tRes.data) ? tRes.data : []
@@ -22,6 +24,7 @@ export default function DashboardClient() {
         if (mounted) {
           setChats(chatList.slice(0, 5))
           setTxs(activeTx.slice(0, 5))
+          if (wRes?.data?.wallet) setWallet(wRes.data.wallet)
         }
       } finally {
         if (mounted) setLoading(false)
@@ -34,10 +37,13 @@ export default function DashboardClient() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <h2 className="text-2xl font-semibold">Client Dashboard</h2>
-      {loading && <p className="text-sm text-gray-500 mt-2">Loading…</p>}
-
-      <div className="grid gap-6 mt-4 md:grid-cols-2">
-        <section className="rounded-lg border border-gray-200 bg-white p-4">
+      {loading && (
+        <div className="mt-4 flex items-center justify-center">
+          <div className="loader" />
+        </div>
+      )}
+      <div className="grid gap-6 mt-4 md:grid-cols-3">
+        <section className="rounded-lg border border-gray-200 bg-white p-4 md:col-span-2">
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-semibold">Recent Chats</h3>
             <Link to="/chats" className="text-sm text-emerald-700 hover:text-emerald-800">View all chats</Link>
@@ -75,9 +81,33 @@ export default function DashboardClient() {
             ))}
           </div>
         </section>
+
+        <section className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 flex flex-col justify-between">
+          <div>
+            <div className="text-sm text-emerald-700">Wallet balance</div>
+            <div className="text-2xl font-semibold text-emerald-900 mt-1">
+              {formatWalletAmount(wallet)}
+            </div>
+          </div>
+          <p className="mt-2 text-[11px] text-emerald-800/80">
+            Add funds to your SkillConnect wallet to pay providers securely when bookings are accepted.
+          </p>
+        </section>
       </div>
     </div>
   )
+}
+
+function formatWalletAmount(wallet) {
+  if (!wallet) return '₦0.00'
+  const balance = typeof wallet.balance === 'number' ? wallet.balance : 0
+  const naira = balance / 100
+  const currency = (wallet.currency || 'NGN').toUpperCase()
+  try {
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(naira)
+  } catch {
+    return `₦${naira.toFixed(2)}`
+  }
 }
 
 function formatAmount(amount, currency = 'usd') {

@@ -20,6 +20,7 @@ export default function ProviderList() {
   const [lng, setLng] = useState("");
   const [sortDistance, setSortDistance] = useState(false);
   const { notify } = useToast();
+  const [smartQuery, setSmartQuery] = useState("");
 
   // Initialize from URL params or localStorage once
   useEffect(() => {
@@ -31,6 +32,7 @@ export default function ProviderList() {
     const urlRadius = searchParams.get("radiusKm") || "";
     const urlLat = searchParams.get("lat") || "";
     const urlLng = searchParams.get("lng") || "";
+    const urlSmartQuery = searchParams.get("smartQuery") || "";
     if (urlCategory) setCategory(urlCategory);
     if (urlProviderType) setProviderType(urlProviderType);
     if (urlCity) setCity(urlCity);
@@ -40,8 +42,11 @@ export default function ProviderList() {
     if (urlLat) setLat(urlLat);
     if (urlLng) setLng(urlLng);
     if (urlLat && urlLng) setSortDistance(true);
+    if (urlSmartQuery) setSmartQuery(urlSmartQuery);
     // Auto-search on first load
-    if (urlCategory || urlProviderType || urlCity || urlState || urlCountry || urlRadius || urlLat || urlLng) {
+    if (urlSmartQuery) {
+      handleSmartSearch(urlSmartQuery);
+    } else if (urlCategory || urlProviderType || urlCity || urlState || urlCountry || urlRadius || urlLat || urlLng) {
       handleSearch(urlCategory, urlProviderType, urlCity, urlState, urlCountry, urlRadius, urlLat, urlLng);
     } else {
       try {
@@ -57,7 +62,16 @@ export default function ProviderList() {
           if (saved.lng) setLng(String(saved.lng));
           if (saved.sortDistance != null) setSortDistance(Boolean(saved.sortDistance));
           if (Object.keys(saved).length) {
-            handleSearch(saved.category || "", saved.providerType || "", saved.city || "", saved.state || "", saved.country || "", saved.radiusKm || "", saved.lat || "", saved.lng || "");
+            handleSearch(
+              saved.category || "",
+              saved.providerType || "",
+              saved.city || "",
+              saved.state || "",
+              saved.country || "",
+              saved.radiusKm || "",
+              saved.lat || "",
+              saved.lng || ""
+            );
             return;
           }
         }
@@ -66,6 +80,35 @@ export default function ProviderList() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function handleSmartSearch(initialQuery) {
+    const source = initialQuery != null ? initialQuery : smartQuery;
+    const trimmed = (source || "").trim();
+    if (!trimmed) {
+      notify("Please describe what you need (e.g. 'fix leaking sink')", { type: "info" });
+      return;
+    }
+    setLoading(true);
+    try {
+      const latNum = lat ? Number(lat) : undefined;
+      const lngNum = lng ? Number(lng) : undefined;
+      const radiusNum = radiusKm ? Number(radiusKm) : undefined;
+      const { data } = await API.post("/users/smart-search", {
+        query: trimmed,
+        lat: Number.isFinite(latNum) ? latNum : undefined,
+        lng: Number.isFinite(lngNum) ? lngNum : undefined,
+        radiusKm: Number.isFinite(radiusNum) ? radiusNum : undefined,
+      });
+      const list = Array.isArray(data?.providers) ? data.providers : [];
+      setProviders(list);
+    } catch (error) {
+      console.error("Error smart-searching providers:", error);
+      notify("Failed to smart-match providers. Please try again.", { type: "error" });
+      setProviders([]);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   // Fetch category suggestions once
   useEffect(() => {
@@ -202,8 +245,29 @@ export default function ProviderList() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <h2 className="text-2xl font-semibold">Find providers near you</h2>
-      <div className="mt-1 text-xs text-gray-500">Search by skill or service (e.g. "software engineer", "plumber") and optionally use your current location so the nearest providers show first.</div>
+      <div className="mt-1 text-xs text-gray-500">Search by skill or service (e.g. "software engineer", "plumber") or describe your problem in natural language. You can also use your location so the nearest providers show first.</div>
       <div className="mt-4 space-y-3">
+        {/* Smart matching input */}
+        <div className="flex flex-col gap-2 rounded-md border border-emerald-100 bg-emerald-50/40 p-3">
+          <label className="text-xs font-medium text-emerald-900">Smart match (recommended)</label>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              className="flex-1 px-3 py-2 rounded-md border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+              placeholder="Describe what you need (e.g. I need someone to repair a leaking bathroom sink)"
+              value={smartQuery}
+              onChange={(e) => setSmartQuery(e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={handleSmartSearch}
+              className="px-4 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-all w-full sm:w-auto"
+            >
+              Smart search
+            </button>
+          </div>
+        </div>
+
+        {/* Traditional filters */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <input
             className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
@@ -290,7 +354,11 @@ export default function ProviderList() {
         </div>
       </div>
       <div className="mt-6">
-        {loading && <p className="text-sm text-gray-500">Searching providers…</p>}
+        {loading && (
+          <div className="py-6 flex items-center justify-center">
+            <div className="loader" />
+          </div>
+        )}
         {!loading && providers.length === 0 && (
           <p className="text-sm text-gray-500">
             {city || stateRegion || country || radiusKm

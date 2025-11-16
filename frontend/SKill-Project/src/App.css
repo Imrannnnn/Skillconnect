@@ -40,3 +40,93 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Global loader spinner (use with <div className="loader" />) */
+.loader {
+  width: 65px;
+  aspect-ratio: 1;
+  position: relative;
+}
+.loader:before,
+.loader:after {
+  content: "";
+  position: absolute;
+  border-radius: 50px;
+  /* emerald ring to match app brand */
+  box-shadow: 0 0 0 3px inset #059669;
+  animation: l4 2.5s infinite;
+}
+.loader:after {
+  animation-delay: -1.25s;
+}
+@keyframes l4 {
+  0% {
+    inset: 0 35px 35px 0;
+  }
+  12.5% {
+    inset: 0 35px 0 0;
+  }
+  25% {
+    inset: 35px 35px 0 0;
+  }
+  37.5% {
+    inset: 35px 0 0 0;
+  }
+  50% {
+    inset: 35px 0 0 35px;
+  }
+  62.5% {
+    inset: 0 0 0 35px;
+  }
+  75% {
+    inset: 0 0 35px 35px;
+  }
+  87.5% {
+    inset: 0 0 35px 0;
+  }
+  100% {
+    inset: 0 35px 35px 0;
+  }
+}
+
+/* --- Wavy Thin Line Background --- */
+.bg-wave {
+  position: relative;
+  overflow: hidden;
+}
+
+.bg-wave::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -25%;
+  width: 150%;
+  height: 220%;
+  border-radius: 50% / 40%;
+  background: radial-gradient(circle at 50% 50%, rgba(5, 150, 105, 0.55), transparent 60%);
+  animation: waveMove 12s infinite linear;
+  opacity: 0.25;
+}
+
+@keyframes waveMove {
+  0% { transform: translateX(-15%) translateY(4%); }
+  50% { transform: translateX(5%) translateY(-4%); }
+  100% { transform: translateX(15%) translateY(4%); }
+}
+
+/* --- Floating Particles --- */
+.particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: rgba(5, 150, 105, 0.7);
+  border-radius: 50%;
+  animation: floatUp 8s infinite ease-in-out;
+  opacity: 0.7;
+}
+
+@keyframes floatUp {
+  0% { transform: translateY(60px) scale(0.7); opacity: 0; }
+  40% { opacity: 0.8; }
+  100% { transform: translateY(-60px) scale(1.1); opacity: 0; }
+}

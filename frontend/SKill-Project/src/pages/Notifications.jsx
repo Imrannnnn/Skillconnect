@@ -38,7 +38,11 @@ export default function Notifications() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
       <h2 className="text-2xl font-semibold">Notifications</h2>
-      {loading && <p className="text-sm text-gray-500 mt-2">Loading…</p>}
+      {loading && (
+        <div className="mt-4 flex items-center justify-center">
+          <div className="loader" />
+        </div>
+      )}
       {!loading && items.length === 0 && (
         <p className="text-sm text-gray-500 mt-2">No notifications.</p>
       )}

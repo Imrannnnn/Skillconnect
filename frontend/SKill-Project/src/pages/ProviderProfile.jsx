@@ -6,7 +6,9 @@ import { AuthContext } from "../context/auth.js";
 import { useToast } from "../components/toast.js";
 
 export default function ProviderProfile() {
-  const { id } = useParams();
+  const params = useParams();
+  const idFromPath = params.id;
+  const handleFromPath = params.handle;
   const navigate = useNavigate();
   const auth = useContext(AuthContext);
   const [provider, setProvider] = useState(null);
@@ -33,8 +35,22 @@ export default function ProviderProfile() {
       setLoading(true);
       setError("");
       try {
-        const { data } = await API.get(`/users/${id}`);
+        let data;
+        if (handleFromPath) {
+          // Branded URL using handle, resolve to provider
+          const res = await API.get(`/providers/handle/${handleFromPath}`);
+          data = res.data;
+        } else if (idFromPath) {
+          const res = await API.get(`/users/${idFromPath}`);
+          data = res.data;
+        } else {
+          throw new Error("Missing provider identifier");
+        }
         setProvider(data);
+        // Fire-and-forget visit event for analytics
+        if (data?._id) {
+          API.post(`/providers/${data._id}/visit`).catch(() => {});
+        }
       } catch (e) {
         setError(e?.response?.data?.message || "Failed to load provider");
       } finally {
@@ -42,16 +58,16 @@ export default function ProviderProfile() {
       }
     }
     fetchProvider();
-  }, [id]);
+  }, [idFromPath, handleFromPath]);
 
   // Load products for this provider (for product providers)
   useEffect(() => {
     let mounted = true;
     async function loadProducts() {
-      if (!id) return;
+      if (!provider?._id) return;
       setProductsLoading(true);
       try {
-        const { data } = await API.get(`/products?providerId=${id}`);
+        const { data } = await API.get(`/products?providerId=${provider._id}`);
         const list = Array.isArray(data?.products) ? data.products : [];
         if (mounted) setProducts(list);
       } catch {
@@ -62,7 +78,7 @@ export default function ProviderProfile() {
     }
     loadProducts();
     return () => { mounted = false; };
-  }, [id]);
+  }, [provider?._id]);
 
   useEffect(() => {
     function haversineKm(lat1, lon1, lat2, lon2) {
@@ -125,7 +141,13 @@ export default function ProviderProfile() {
     }
   }
 
-  if (loading) return <div className="max-w-4xl mx-auto px-4 py-8">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-12 flex items-center justify-center">
+        <div className="loader" />
+      </div>
+    );
+  }
   if (error) return <div className="max-w-4xl mx-auto px-4 py-8 text-rose-500">{error}</div>;
   if (!provider) return null;
 
@@ -144,6 +166,13 @@ export default function ProviderProfile() {
       ? provider.jobsCompleted
       : undefined;
 
+  const verification = provider?.verification || {};
+  const emailVerified = !!(verification.emailVerified || provider?.verified);
+  const phoneVerified = !!verification.phoneVerified;
+  const idVerified = !!verification.idVerified;
+  const trustedProvider = !!verification.trustedProvider;
+  const topPerformer = Array.isArray(verification.topPerformerMonths) && verification.topPerformerMonths.length > 0;
+
   const hasService = provider.providerMode === "service" || provider.providerMode === "both" || !provider.providerMode;
   const hasProducts = provider.providerMode === "product" || provider.providerMode === "both";
 
@@ -155,7 +184,7 @@ export default function ProviderProfile() {
     }
     try {
       setChatLoading(true);
-      const { data } = await API.post("/chats", { toUserId: id });
+      const { data } = await API.post("/chats", { toUserId: provider._id });
       // Support multiple possible response shapes
       const chatIdResp = data?.chatId || data?._id || data?.chat?._id;
       if (chatIdResp) {
@@ -177,10 +206,10 @@ export default function ProviderProfile() {
     if (!r || r < 1 || r > 5) return;
     try {
       setRatingSubmitting(true);
-      await API.post(`/providers/${id}/rate`, { rating: r });
+      await API.post(`/providers/${provider._id}/rate`, { rating: r });
       notify("Thanks for your rating!", { type: "success" });
       setRatingValue(0);
-      const { data } = await API.get(`/users/${id}`);
+      const { data } = await API.get(`/users/${provider._id}`);
       setProvider(data);
     } catch (e) {
       notify(e?.response?.data?.message || "Failed to submit rating", { type: "error" });
@@ -202,7 +231,7 @@ export default function ProviderProfile() {
     try {
       setBookingSubmitting(true);
       const payload = {
-        providerId: id,
+        providerId: provider._id,
         clientId: auth?.user?._id,
         clientName,
         clientPhone,
@@ -236,6 +265,10 @@ export default function ProviderProfile() {
   }
 
   function startProductBooking(p) {
+    // Track product order click for simple analytics (fire-and-forget)
+    if (p?._id) {
+      API.post(`/products/${p._id}/order-click`).catch(() => {});
+    }
     setSelectedProduct(p);
     if (!clientName && auth?.user?.name) {
       setClientName(auth.user.name);
@@ -304,6 +337,30 @@ export default function ProviderProfile() {
                       <span className="inline-flex items-center gap-1">
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                         <span className="text-gray-600">{jobsDone} jobs done</span>
+                      </span>
+                    )}
+                    {(emailVerified || phoneVerified) && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] text-emerald-700 border border-emerald-100">
+                        <span>✔</span>
+                        <span>Verified</span>
+                      </span>
+                    )}
+                    {idVerified && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2 py-0.5 text-[11px] text-sky-700 border border-sky-100">
+                        <span>🪪</span>
+                        <span>ID verified</span>
+                      </span>
+                    )}
+                    {trustedProvider && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] text-emerald-800 border border-emerald-200">
+                        <span>🛡</span>
+                        <span>Trusted</span>
+                      </span>
+                    )}
+                    {topPerformer && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] text-amber-800 border border-amber-200">
+                        <span>🥇</span>
+                        <span>Top performer</span>
                       </span>
                     )}
                   </div>
@@ -403,7 +460,11 @@ export default function ProviderProfile() {
       {hasProducts && (
         <div className="mt-6" id="provider-products-section">
           <h2 className="text-lg font-semibold text-gray-800 mb-2">Products</h2>
-          {productsLoading && <p className="text-sm text-gray-500">Loading products…</p>}
+          {productsLoading && (
+            <div className="py-4 flex items-center justify-center">
+              <div className="loader" />
+            </div>
+          )}
           {!productsLoading && products.length === 0 && (
             <p className="text-sm text-gray-500">This provider has not added any products yet.</p>
           )}

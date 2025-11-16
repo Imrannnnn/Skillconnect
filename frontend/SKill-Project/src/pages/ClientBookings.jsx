@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import API from "../api/axios.js";
 import { AuthContext } from "../context/auth.js";
+import { useToast } from "../components/toast.js";
 
 export default function ClientBookings() {
   const { user } = useContext(AuthContext);
@@ -8,6 +9,8 @@ export default function ClientBookings() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [updatingId, setUpdatingId] = useState(null);
+  const { notify } = useToast();
 
   useEffect(() => {
     let mounted = true;
@@ -26,10 +29,29 @@ export default function ClientBookings() {
     return () => { mounted = false };
   }, [user?._id]);
 
+  async function releasePayment(id) {
+    try {
+      setUpdatingId(id);
+      const { data } = await API.put(`/bookings/${id}/timeline`, { action: "release_payment" });
+      if (data?.booking) {
+        setItems((prev) => prev.map((b) => (b._id === id ? data.booking : b)));
+      }
+      notify("Payment released to provider", { type: "success" });
+    } catch (e) {
+      notify(e?.response?.data?.message || "Failed to release payment", { type: "error" });
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <h2 className="text-2xl font-semibold">My Bookings</h2>
-      {loading && <p className="text-sm text-gray-500 mt-2">Loading…</p>}
+      {loading && (
+        <div className="mt-4 flex items-center justify-center">
+          <div className="loader" />
+        </div>
+      )}
       <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-500">Status:</span>
@@ -74,6 +96,35 @@ export default function ClientBookings() {
               {b.address && <div className="text-xs text-gray-500 mt-1">{b.address}</div>}
               {b.details && <div className="text-xs text-gray-500 mt-1">{b.details}</div>}
               <div className="text-xs text-gray-500 mt-1">{new Date(b.createdAt).toLocaleString()}</div>
+              {b.flowStatus && (
+                <div className="mt-1 text-[11px] text-gray-500">
+                  Flow: <span className="font-semibold text-gray-700">{b.flowStatus}</span>
+                </div>
+              )}
+              {Array.isArray(b.statusHistory) && b.statusHistory.length > 0 && (
+                <div className="mt-1 flex flex-col gap-0.5 text-[11px] text-gray-500">
+                  {b.statusHistory.slice(-3).map((h, idx) => (
+                    <div key={idx} className="flex items-center gap-1">
+                      <span className="h-1 w-1 rounded-full bg-gray-400" />
+                      <span className="truncate">
+                        {h.status} · {h.at ? new Date(h.at).toLocaleString() : ''}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {b.flowStatus === 'job_completed' && (
+                <div className="mt-2">
+                  <button
+                    type="button"
+                    disabled={updatingId === b._id}
+                    onClick={() => releasePayment(b._id)}
+                    className="px-3 py-1 text-xs rounded-md bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-70"
+                  >
+                    Release payment
+                  </button>
+                </div>
+              )}
             </div>
             <StatusPill status={b.status} />
           </div>
