@@ -18,6 +18,25 @@ A marketplace connecting clients with service providers.
   - Typing indicators with participant name
   - Unread badges per chat and total unread badge in the header
 - Health/news/posts/blog stubs to prevent 404s in UI
+ - Provider analytics & wallet
+   - Provider dashboard overview (earnings, paid/pending/released jobs, calendar snapshot)
+   - Basic profile analytics (profile view counts)
+ - Notifications
+   - In-app notification center for booking, chat, and system updates
+
+### Provider modes & product catalog
+
+- Users with role `provider` have a `providerMode`:
+  - `"service"` — offers only services
+  - `"product"` — offers only products
+  - `"both"` — offers both services and products
+- Dashboard (`/provider/dashboard`)
+  - "Manage product catalog" button is visible only when `providerMode` is `"product"` or `"both"`.
+  - Service‑only providers (`providerMode === "service"`) do **not** see catalog management.
+- Catalog management (`/provider/products`)
+  - Protected by `PrivateRoute` and an in‑page guard.
+  - Only providers with `providerMode === "product"` or `"both"` can access.
+  - Service‑only providers trying to access `/provider/products` are redirected back to `/provider/dashboard`.
 
 ## Project Structure
 - backend/
@@ -135,9 +154,11 @@ Socket.io events: `joinRoom`, `leaveRoom`, `message` (broadcast), `typing({chatI
 - ProviderProfile (rating + booking + chat)
 - EditProfileProvider (avatar upload, categories, bio)
 - DashboardClient / DashboardProvider
+- ProviderProducts (provider product catalog creation & management, guarded by providerMode)
 - ProviderBookings (status management, filters, toasts)
 - ClientBookings (filters)
 - Chats (chat list with unread, typing indicators, chat window)
+ - Notifications (in-app notification center for bookings, chats, and system events)
 
 ## Notes
 - If avatar upload fails, ensure `sharp` is installed and backend restarted
