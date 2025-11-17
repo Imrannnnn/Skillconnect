@@ -67,8 +67,7 @@ export default function Register() {
     auth
       .register(payload)
       .then(() => {
-        const next = role === "provider" ? "/provider/dashboard" : "/dashboard";
-        navigate(next);
+        navigate(`/login?registered=1&email=${encodeURIComponent(email)}`);
       })
       .catch((err) => setError(err?.response?.data?.message || "Registration failed"));
   }

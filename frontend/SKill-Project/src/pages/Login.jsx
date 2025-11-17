@@ -7,6 +7,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [resetNotice, setResetNotice] = useState("");
+  const [registerNotice, setRegisterNotice] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
   const auth = useContext(AuthContext);
@@ -15,6 +16,14 @@ export default function Login() {
     const params = new URLSearchParams(location.search);
     if (params.get("reset") === "1") {
       setResetNotice("Your password has been updated. Please log in with your new password.");
+    }
+    if (params.get("registered") === "1") {
+      const emailFromQuery = params.get("email");
+      setRegisterNotice(
+        emailFromQuery
+          ? `Your account has been created. We sent a verification link to ${emailFromQuery}. Please verify your email, then log in.`
+          : "Your account has been created. We sent a verification link to your email. Please verify your email, then log in."
+      );
     }
   }, [location.search]);
 
@@ -37,6 +46,11 @@ export default function Login() {
   return (
     <div className="max-w-md mx-auto mt-10 bg-white rounded-lg border border-gray-200 shadow-sm p-6">
       <h2 className="text-xl font-semibold mb-4">Login</h2>
+      {registerNotice && (
+        <p className="mb-3 text-sm rounded-md border border-emerald-200 bg-emerald-50 text-emerald-700 px-3 py-2">
+          {registerNotice}
+        </p>
+      )}
       {resetNotice && (
         <p className="mb-3 text-sm rounded-md border border-emerald-200 bg-emerald-50 text-emerald-700 px-3 py-2">
           {resetNotice}

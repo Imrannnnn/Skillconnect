@@ -36,9 +36,7 @@ export function AuthProvider({ children }) {
     setLoading(true);
     try {
       const { data } = await API.post("/auth/register", payload);
-      // Some backends return token on register, others require login. Handle both.
-      if (data?.token) setToken(data.token);
-      if (data?.user) setUser(data.user);
+      // Do not auto-login on register; user must verify email and then log in manually.
       return data;
     } finally {
       setLoading(false);

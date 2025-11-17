@@ -17,7 +17,12 @@ import productRoutes from "./src/routes/productRoutes.js";
 import walletRoutes from "./src/routes/walletRoutes.js";
 
 dotenv.config();
-connectDB();
+
+// Only connect to DB automatically when not running tests
+// Jest sets NODE_ENV='test', so we can use that to skip real connections.
+if (process.env.NODE_ENV !== 'test') {
+  connectDB();
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -80,4 +85,11 @@ app.get("/api/v1/health", (req, res) => res.json({ status: "ok" }));
 app.get("/", (req, res) => res.send("SkillConnect API"));
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+// Avoid binding to a real network port when running Jest tests to prevent
+// EADDRINUSE errors and open handles.
+if (process.env.NODE_ENV !== 'test') {
+  server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+}
+
+export { app, server };
