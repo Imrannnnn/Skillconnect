@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import heroImg from "../assets/ayaz-lalani-no-EShQ7s1A-unsplash.jpg";
 
 export default function Home() {
   const categories = ["Plumber", "Driver", "Cook", "Fashion designer", "Cleaner"];
@@ -7,14 +8,13 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       {/* Hero section */}
       <section
-          className="relative w-full h-[60vh] flex items-center justify-center text-white"
-          style={{
-            backgroundImage:
-              "url('frontend/SKill-Project/src/assets/ayaz-lalani-no-EShQ7s1A-unsplash.jpg')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        >
+        className="relative w-full h-[60vh] flex items-center justify-center text-white"
+        style={{
+          backgroundImage: `url(${heroImg})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
           <div className="absolute inset-0 bg-emerald-900/70" />
           <div className="relative z-10 text-center max-w-2xl px-6">
             <h1 className="text-3xl md:text-5xl font-bold drop-shadow-lg">Need Help? Get Help!</h1>
