@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/axios.js";
 
+//AI agent
 export default function AiAssistant() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
