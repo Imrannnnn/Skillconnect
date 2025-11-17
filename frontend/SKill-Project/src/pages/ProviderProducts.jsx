@@ -1,9 +1,11 @@
 import { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../api/axios.js";
 import { AuthContext } from "../context/auth.js";
 
 export default function ProviderProducts() {
   const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -31,6 +33,14 @@ export default function ProviderProducts() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [lastEditedId, setLastEditedId] = useState(null);
+
+  useEffect(() => {
+    if (!user) return;
+    const mode = user.providerMode;
+    if (mode && mode !== "product" && mode !== "both") {
+      navigate("/provider/dashboard", { replace: true });
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     let mounted = true;
