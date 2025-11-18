@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import API from "../api/axios.js";
+import { AuthContext } from "../context/auth.js";
 
 export default function VerifyEmail() {
   const { token } = useParams();
   const navigate = useNavigate();
   const [status, setStatus] = useState("verifying");
   const [message, setMessage] = useState("");
+  const auth = useContext(AuthContext);
 
   useEffect(() => {
     async function run() {
@@ -19,6 +21,23 @@ export default function VerifyEmail() {
         const { data } = await API.get(`/auth/verify/${token}`);
         setStatus("success");
         setMessage(data?.message || "Email verified successfully.");
+
+        // If a user is present in AuthContext, update verification flags locally
+        if (auth?.setUser) {
+          auth.setUser((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  verified: true,
+                  verification: {
+                    ...(prev.verification || {}),
+                    emailVerified: true,
+                  },
+                }
+              : prev
+          );
+        }
+
         setTimeout(() => navigate("/login"), 1500);
       } catch (err) {
         setStatus("error");
@@ -26,7 +45,7 @@ export default function VerifyEmail() {
       }
     }
     run();
-  }, [token, navigate]);
+  }, [token, navigate, auth]);
 
   return (
     <div className="max-w-md mx-auto mt-10 bg-white rounded-lg border border-gray-200 shadow-sm p-6">
