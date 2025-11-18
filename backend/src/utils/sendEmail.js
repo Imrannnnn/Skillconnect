@@ -1,18 +1,30 @@
-import nodemailer from "nodemailer";
+import sgMail from "@sendgrid/mail";
+
+// Configure SendGrid once on module load
+const apiKey = process.env.SENDGRID_API_KEY || "";
+if (!apiKey) {
+  console.warn("SENDGRID_API_KEY is not set. Emails will fail to send.");
+} else {
+  sgMail.setApiKey(apiKey);
+}
+
+const defaultFrom = process.env.EMAIL_FROM || process.env.SMTP_USER || "no-reply@example.com";
 
 export default async function sendEmail(to, subject, html) {
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT || 587),
-    // Use TLS on 465, STARTTLS on 587; rely on env to choose
-    secure: Number(process.env.SMTP_PORT || 587) === 465,
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-    // Allow self-signed certificates (fixes "self-signed certificate in certificate chain")
-    tls: { rejectUnauthorized: false },
-  });
   try {
-    await transporter.sendMail({ from: process.env.SMTP_USER, to, subject, html });
+    if (!apiKey) {
+      throw new Error("Missing SENDGRID_API_KEY env var");
+    }
+
+    const msg = {
+      to,
+      from: defaultFrom,
+      subject,
+      html,
+    };
+
+    await sgMail.send(msg);
   } catch (e) {
-    console.warn("Email send failed", e?.message);
+    console.warn("Email send failed", e?.message || e);
   }
 }
