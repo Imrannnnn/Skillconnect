@@ -4,7 +4,9 @@ import crypto from "crypto";
 import User from "../models/user.js";
 import sendEmail from "../utils/sendEmail.js";
 
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+// Normalise frontend base URL so we don't get double slashes like `//verify-email` when
+// FRONTEND_URL is configured with a trailing `/` in the environment.
+const FRONTEND_URL = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/+$/, "");
 
 export const register = async (req, res) => {
   try {
