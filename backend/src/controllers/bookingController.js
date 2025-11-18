@@ -82,7 +82,7 @@ export const createBooking = async (req, res) => {
 
     const booking = await Booking.create(bookingPayload);
 
-    // Ticket-style email to provider
+    // Ticket-style email to provider (fire-and-forget; do not block response on email)
     try {
       const dashboardUrl = `${FRONTEND_URL}/provider/bookings`;
       const createdAt = new Date(booking.createdAt).toLocaleString();
@@ -130,7 +130,9 @@ export const createBooking = async (req, res) => {
           </p>
         </div>`;
 
-      await sendEmail(provider.email, subject, html);
+      sendEmail(provider.email, subject, html).catch((e) => {
+        console.warn("Email send failed (provider notification)", e?.message);
+      });
     } catch {}
 
     res.status(201).json({ message: "Booking created", booking });
@@ -153,7 +155,7 @@ export const updateBookingStatus = async (req, res) => {
     );
     if (!booking) return res.status(404).json({ message: "Booking not found" });
 
-    // When provider accepts, notify client (ticket-style)
+    // When provider accepts, notify client (ticket-style, fire-and-forget)
     if (status === "successful" && booking.clientEmail) {
       try {
         const provider = await User.findById(booking.providerId).select("name");
@@ -164,12 +166,12 @@ export const updateBookingStatus = async (req, res) => {
         const productInfo = booking.productSnapshot;
 
         const html = `
-          <div style=\"font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; color: #111827;\">
-            <h2 style=\"margin-bottom: 8px;\">Your booking has been accepted</h2>
-            <p style=\"margin: 0 0 12px 0;\">Your booking has been accepted by <b>${providerName}</b>.</p>
-            <div style=\"border-radius: 8px; border: 1px solid #e5e7eb; padding: 12px; margin-bottom: 12px;\">
-              <h3 style=\"margin: 0 0 8px 0; font-size: 14px;\">Booking details</h3>
-              <ul style=\"margin: 0; padding-left: 18px;\">
+          <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; color: #111827;">
+            <h2 style="margin-bottom: 8px;">Your booking has been accepted</h2>
+            <p style="margin: 0 0 12px 0;">Your booking has been accepted by <b>${providerName}</b>.</p>
+            <div style="border-radius: 8px; border: 1px solid #e5e7eb; padding: 12px; margin-bottom: 12px;">
+              <h3 style="margin: 0 0 8px 0; font-size: 14px;">Booking details</h3>
+              <ul style="margin: 0; padding-left: 18px;">
                 <li><b>Type:</b> ${isProduct ? "Product" : "Service"}</li>
                 <li><b>Description:</b> ${booking.description}</li>
                 ${booking.details ? `<li><b>Extra details:</b> ${booking.details}</li>` : ""}
@@ -181,18 +183,20 @@ export const updateBookingStatus = async (req, res) => {
                 ` : ""}
               </ul>
             </div>
-            <p style=\"margin: 0 0 12px 0;\">The provider will contact you shortly using the details you provided.</p>
-            <p style=\"margin: 0 0 16px 0;\">You can view your booking status in your dashboard:</p>
-            <p style=\"margin: 0 0 24px 0;\">
-              <a href=\"${dashboardUrl}\" style=\"display: inline-block; padding: 10px 16px; border-radius: 999px; background: #059669; color: #fff; text-decoration: none; font-weight: 500;\">View booking</a>
+            <p style="margin: 0 0 12px 0;">The provider will contact you shortly using the details you provided.</p>
+            <p style="margin: 0 0 16px 0;">You can view your booking status in your dashboard:</p>
+            <p style="margin: 0 0 24px 0;">
+              <a href="${dashboardUrl}" style="display: inline-block; padding: 10px 16px; border-radius: 999px; background: #059669; color: #fff; text-decoration: none; font-weight: 500;">View booking</a>
             </p>
           </div>`;
 
-        await sendEmail(
+        sendEmail(
           booking.clientEmail,
           "Your booking has been accepted",
           html
-        );
+        ).catch((e) => {
+          console.warn("Email send failed (client notification)", e?.message);
+        });
       } catch {}
     }
 
