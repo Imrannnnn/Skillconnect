@@ -62,7 +62,9 @@ export const register = async (req, res) => {
           <p style="margin: 0 0 16px 0;">
             <a href="${verifyUrl}" style="display: inline-block; padding: 10px 16px; border-radius: 999px; background: #059669; color: #fff; text-decoration: none; font-weight: 500;">Verify email</a>
           </p>
-          <p style="margin: 0; font-size: 12px; color: #6b7280;">If you did not create this account, you can ignore this email.</p>
+          <p style="margin: 0 0 8px 0; font-size: 12px; color: #6b7280;">If the button doesn't work, copy and paste this link into your browser:</p>
+          <p style="margin: 0; font-size: 12px; color: #374151; word-break: break-all;">${verifyUrl}</p>
+          <p style="margin-top: 8px; font-size: 12px; color: #6b7280;">If you did not create this account, you can ignore this email.</p>
         </div>`;
       await sendEmail(user.email, "Verify your SkillConnect account", html);
     } catch {
@@ -155,6 +157,9 @@ export const verifyEmail = async (req, res) => {
     if (!user) return res.status(400).json({ message: "Verification link is invalid or has already been used" });
 
     user.verified = true;
+    // Also set nested verification flag for consistency with other parts of the app
+    user.verification = user.verification || {};
+    user.verification.emailVerified = true;
     user.verificationToken = undefined;
     await user.save();
 
@@ -193,7 +198,9 @@ export const resendVerification = async (req, res) => {
           <p style="margin: 0 0 16px 0;">
             <a href="${verifyUrl}" style="display: inline-block; padding: 10px 16px; border-radius: 999px; background: #059669; color: #fff; text-decoration: none; font-weight: 500;">Verify email</a>
           </p>
-          <p style="margin: 0; font-size: 12px; color: #6b7280;">If you did not request this, you can ignore this email.</p>
+          <p style="margin: 0 0 8px 0; font-size: 12px; color: #6b7280;">If the button doesn't work, copy and paste this link into your browser:</p>
+          <p style="margin: 0; font-size: 12px; color: #374151; word-break: break-all;">${verifyUrl}</p>
+          <p style="margin-top: 8px; font-size: 12px; color: #6b7280;">If you did not request this, you can ignore this email.</p>
         </div>`;
       await sendEmail(user.email, "Verify your SkillConnect account", html);
     } catch {
