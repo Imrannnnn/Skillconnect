@@ -26,8 +26,9 @@ export const register = async (req, res) => {
       website,
     } = req.body;
 
-    if (!email || !password) return res.status(400).json({ message: "email & password required" });
-    const exists = await User.findOne({ email }); if (exists) return res.status(400).json({ message: "Email in use" });
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    if (!normalizedEmail || !password) return res.status(400).json({ message: "email & password required" });
+    const exists = await User.findOne({ email: normalizedEmail }); if (exists) return res.status(400).json({ message: "Email in use" });
 
     const hash = await bcrypt.hash(password, 10);
 
@@ -42,11 +43,24 @@ export const register = async (req, res) => {
 
     const verificationToken = crypto.randomBytes(32).toString("hex");
 
+    // Derive primary role and role set for multi-role support
+    let primaryRole = role;
+    if (primaryRole !== "provider" && primaryRole !== "admin") {
+      primaryRole = "client";
+    }
+    let roles = ["client"]; // by default, every account can act as a client
+    if (primaryRole === "provider") {
+      roles = ["client", "provider"];
+    } else if (primaryRole === "admin") {
+      roles = ["admin"];
+    }
+
     const user = await User.create({
       name,
-      email,
+      email: normalizedEmail,
       password: hash,
-      role,
+      role: primaryRole,
+      roles,
       categories,
       providerType,
       providerMode,
@@ -54,7 +68,14 @@ export const register = async (req, res) => {
       verificationToken,
     });
 
-    const token = jwt.sign({ _id: user._id, role: user.role }, process.env.JWT_SECRET || "devsecret", { expiresIn: "7d" });
+    const tokenRoles = Array.isArray(user.roles) && user.roles.length
+      ? user.roles
+      : (user.role ? [user.role] : []);
+    const token = jwt.sign(
+      { _id: user._id, role: user.role, roles: tokenRoles },
+      process.env.JWT_SECRET || "devsecret",
+      { expiresIn: "7d" },
+    );
     try {
       const verifyUrl = `${FRONTEND_URL}/verify-email/${verificationToken}`;
       const html = `
@@ -80,9 +101,17 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email }); if (!user) return res.status(400).json({ message: "Invalid credentials" });
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail }); if (!user) return res.status(400).json({ message: "Invalid credentials" });
     const ok = await bcrypt.compare(password, user.password || ""); if (!ok) return res.status(400).json({ message: "Invalid credentials" });
-    const token = jwt.sign({ _id: user._id, role: user.role }, process.env.JWT_SECRET || "devsecret", { expiresIn: "7d" });
+    const tokenRoles = Array.isArray(user.roles) && user.roles.length
+      ? user.roles
+      : (user.role ? [user.role] : []);
+    const token = jwt.sign(
+      { _id: user._id, role: user.role, roles: tokenRoles },
+      process.env.JWT_SECRET || "devsecret",
+      { expiresIn: "7d" },
+    );
     res.json({ user, token });
   } catch (e) { res.status(500).json({ message: "Failed to login", error: e }); }
 };
@@ -90,9 +119,10 @@ export const login = async (req, res) => {
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    if (!email) return res.status(400).json({ message: "Email is required" });
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    if (!normalizedEmail) return res.status(400).json({ message: "Email is required" });
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       // Do not reveal whether email exists
       return res.json({ message: "If an account exists for this email, a reset link has been sent" });
@@ -174,9 +204,10 @@ export const verifyEmail = async (req, res) => {
 export const resendVerification = async (req, res) => {
   try {
     const { email } = req.body;
-    if (!email) return res.status(400).json({ message: "Email is required" });
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    if (!normalizedEmail) return res.status(400).json({ message: "Email is required" });
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       // Do not reveal whether email exists
       return res.json({ message: "If an account exists for this email, a verification link has been sent" });

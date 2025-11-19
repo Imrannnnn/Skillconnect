@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "../context/auth.js";
 import API from "../api/axios.js";
 import { NetBus } from "../api/axios.js";
@@ -7,9 +7,16 @@ import { useToast } from "./toast.js";
 
 export default function Header() {
   const auth = useContext(AuthContext);
+  const roles = useMemo(() => {
+    const user = auth?.user;
+    if (!user) return [];
+    if (Array.isArray(user.roles) && user.roles.length) return user.roles;
+    return user.role ? [user.role] : [];
+  }, [auth?.user]);
   const [pendingCount, setPendingCount] = useState(0);
   const [unreadChats, setUnreadChats] = useState(0);
   const [resending, setResending] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
   const { notify } = useToast();
 
@@ -17,7 +24,7 @@ export default function Header() {
     let mounted = true;
     async function load() {
       try {
-        if (auth?.user?.role === 'provider' && auth?.user?._id) {
+        if (roles.includes('provider') && auth?.user?._id) {
           const { data } = await API.get(`/bookings?providerId=${auth.user._id}`);
           const list = Array.isArray(data?.bookings) ? data.bookings : [];
           const count = list.filter((b) => b?.status === 'pending').length;
@@ -34,7 +41,7 @@ export default function Header() {
       if (s?.bookingsUpdated) load();
     });
     return () => { mounted = false; unsub?.(); };
-  }, [auth?.user?.role, auth?.user?._id]);
+  }, [auth?.user?._id, roles]);
 
   // Unread chats total
   useEffect(() => {
@@ -55,8 +62,9 @@ export default function Header() {
     window.addEventListener('storage', onStorage);
     return () => { unsub?.(); window.removeEventListener('storage', onStorage); };
   }, []);
+
   return (
-    <header className="bg-white border-b border-gray-100">
+    <header className="bg-white border-b border-gray-100 sticky top-0 z-30">
       {auth?.user && auth.user.verified === false && (
         <div className="bg-amber-50 border-b border-amber-200">
           <div className="max-w-6xl mx-auto px-4 py-1 text-xs text-amber-800 flex items-center justify-between gap-2">
@@ -89,10 +97,10 @@ export default function Header() {
         </div>
       )}
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-4">
-        <Link to="/" className="text-emerald-700 font-semibold">
+        <Link to="/" className="text-emerald-700 font-semibold" onClick={() => setMobileOpen(false)}>
           SkillConnect
         </Link>
-        <nav className="flex items-center gap-4 text-sm">
+        <nav className="hidden md:flex flex-wrap items-center gap-2 text-xs sm:text-sm">
           <Link to="/providers" className="text-gray-700 hover:text-emerald-700 transition-all">Providers</Link>
           <Link to="/about" className="text-gray-700 hover:text-emerald-700 transition-all">About</Link>
           <Link to="/chats" className="relative text-gray-700 hover:text-emerald-700 transition-all">
@@ -101,7 +109,7 @@ export default function Header() {
               <span className="absolute -top-2 -right-3 text-[10px] px-1.5 py-0.5 rounded-full bg-rose-600 text-white">{unreadChats}</span>
             )}
           </Link>
-          {auth?.user?.role === 'provider' && (
+          {roles.includes('provider') && (
             <Link to="/provider/bookings" className="relative text-gray-700 hover:text-emerald-700 transition-all">
               Bookings
               {pendingCount > 0 && (
@@ -109,11 +117,23 @@ export default function Header() {
               )}
             </Link>
           )}
-          {auth?.user?.role === 'client' && (
+          {roles.includes('client') && (
             <Link to="/bookings" className="text-gray-700 hover:text-emerald-700 transition-all">My bookings</Link>
           )}
         </nav>
-        <div className="ml-auto flex items-center gap-3">
+        <label className="burger ml-auto md:hidden" htmlFor="main-burger">
+          <input
+            type="checkbox"
+            id="main-burger"
+            checked={mobileOpen}
+            onChange={(e) => setMobileOpen(e.target.checked)}
+            aria-label="Toggle navigation"
+          />
+          <span />
+          <span />
+          <span />
+        </label>
+        <div className="ml-auto hidden md:flex items-center gap-3">
           {!auth?.user && (
             <>
               <Link
@@ -142,7 +162,21 @@ export default function Header() {
               <span className="text-sm text-gray-700 max-w-[200px] truncate" title={auth?.user?.name || auth?.user?.email}>
                 {auth?.user?.name || auth?.user?.email}
               </span>
-              {auth?.user?.role === 'provider' && (
+              {roles.includes('admin') && (
+                <Link
+                  to="/admin/forms"
+                  className="text-xs text-emerald-700 hover:text-emerald-800 px-2 py-1 rounded-md border border-emerald-200 hover:bg-emerald-50"
+                >
+                  Admin forms
+                </Link>
+              )}
+              <Link
+                to="/settings/account"
+                className="text-xs text-gray-600 hover:text-emerald-700 px-2 py-1 rounded-md border border-transparent hover:border-emerald-200 hover:bg-emerald-50"
+              >
+                Account settings
+              </Link>
+              {roles.includes('provider') && (
                 <Link
                   to="/provider/dashboard"
                   className="text-xs text-emerald-700 hover:text-emerald-800 px-2 py-1 rounded-md border border-emerald-200 hover:bg-emerald-50"
@@ -152,7 +186,7 @@ export default function Header() {
               )}
               <button
                 type="button"
-                onClick={() => { auth.logout(); navigate('/'); }}
+                onClick={() => { auth.logout(); navigate('/'); setMobileOpen(false); }}
                 className="ml-2 px-2 py-1 text-xs rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
               >
                 Logout
@@ -161,6 +195,79 @@ export default function Header() {
           )}
         </div>
       </div>
+      {mobileOpen && (
+        <div className="md:hidden border-t border-gray-100 bg-white">
+          <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-2 text-sm">
+            <nav className="flex flex-col gap-2">
+              <Link to="/providers" className="text-gray-700 hover:text-emerald-700" onClick={() => setMobileOpen(false)}>Providers</Link>
+              <Link to="/about" className="text-gray-700 hover:text-emerald-700" onClick={() => setMobileOpen(false)}>About</Link>
+              <Link to="/chats" className="text-gray-700 hover:text-emerald-700" onClick={() => setMobileOpen(false)}>Chats</Link>
+              {roles.includes('provider') && (
+                <Link to="/provider/bookings" className="text-gray-700 hover:text-emerald-700" onClick={() => setMobileOpen(false)}>Bookings</Link>
+              )}
+              {roles.includes('client') && (
+                <Link to="/bookings" className="text-gray-700 hover:text-emerald-700" onClick={() => setMobileOpen(false)}>My bookings</Link>
+              )}
+            </nav>
+            <div className="mt-2 flex flex-col gap-2">
+              {!auth?.user && (
+                <>
+                  <Link
+                    to="/login"
+                    className="px-3 py-1.5 text-sm text-emerald-700 hover:text-emerald-800"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="px-3 py-1.5 text-sm rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-all"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Get Started
+                  </Link>
+                </>
+              )}
+              {auth?.user && (
+                <>
+                  {roles.includes('admin') && (
+                    <Link
+                      to="/admin/forms"
+                      className="text-xs text-emerald-700 hover:text-emerald-800 px-2 py-1 rounded-md border border-emerald-200 hover:bg-emerald-50"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      Admin forms
+                    </Link>
+                  )}
+                  {roles.includes('provider') && (
+                    <Link
+                      to="/provider/dashboard"
+                      className="text-xs text-emerald-700 hover:text-emerald-800 px-2 py-1 rounded-md border border-emerald-200 hover:bg-emerald-50"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      My dashboard
+                    </Link>
+                  )}
+                  <Link
+                    to="/settings/account"
+                    className="text-xs text-gray-700 hover:text-emerald-700 px-2 py-1 rounded-md border border-gray-200 hover:bg-emerald-50"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    Account settings
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => { auth.logout(); navigate('/'); setMobileOpen(false); }}
+                    className="px-3 py-1.5 text-xs rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 text-left"
+                  >
+                    Logout
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

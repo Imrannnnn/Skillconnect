@@ -335,10 +335,26 @@ export default function ProviderList() {
           >
             Use my location
           </button>
-          <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-            <input type="checkbox" className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" checked={sortDistance} onChange={(e) => setSortDistance(e.target.checked)} />
-            Sort by distance
-          </label>
+          <div className="inline-flex items-center gap-2 text-sm text-gray-700">
+            <span>Sort by distance</span>
+            <div className="toggle-wrapper">
+              <input
+                type="checkbox"
+                className="toggle-checkbox"
+                checked={sortDistance}
+                onChange={(e) => setSortDistance(e.target.checked)}
+              />
+              <div className="toggle-container">
+                <div className="toggle-button">
+                  <div className="toggle-button-circles-container">
+                    <span className="toggle-button-circle" />
+                    <span className="toggle-button-circle" />
+                    <span className="toggle-button-circle" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
           <div className="ms-auto flex flex-wrap gap-2">
             <button
               type="button"

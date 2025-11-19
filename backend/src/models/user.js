@@ -4,7 +4,14 @@ const userSchema = new mongoose.Schema({
   name: String,
   email: { type: String, unique: true, sparse: true },
   password: String,
+  // Primary role kept for backwards compatibility with existing code
   role: { type: String, enum: ["client", "provider", "admin"], default: "client" },
+  // Multi-role support so a single account can act as client, provider, and/or admin
+  roles: {
+    type: [String],
+    enum: ["client", "provider", "admin"],
+    default: ["client"],
+  },
   // Public handle for providers (used in branded URLs like /@handle)
   handle: { type: String, unique: true, sparse: true },
   categories: [String],
@@ -46,5 +53,13 @@ const userSchema = new mongoose.Schema({
     topPerformerMonths: [String], // e.g. ["2025-11"]
   },
 }, { timestamps: true });
+
+// Ensure we always store emails in lowercase for case-insensitive login and uniqueness
+userSchema.pre("save", function normalizeEmail(next) {
+  if (this.email && typeof this.email === "string") {
+    this.email = this.email.trim().toLowerCase();
+  }
+  next();
+});
 
 export default mongoose.model("User", userSchema);

@@ -20,3 +20,21 @@ export function protect(req, res, next) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 }
+
+export function maybeAuth(req, res, next) {
+  try {
+    const header = req.headers.authorization || "";
+    const token = header.startsWith("Bearer ") ? header.substring(7) : null;
+    if (token) {
+      try {
+        const user = jwt.verify(token, process.env.JWT_SECRET || "devsecret");
+        if (user?._id) req.user = user;
+      } catch {
+        // ignore invalid token, treat as anonymous
+      }
+    }
+    next();
+  } catch {
+    next();
+  }
+}

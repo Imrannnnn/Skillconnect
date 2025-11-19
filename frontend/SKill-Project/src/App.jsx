@@ -25,15 +25,18 @@ import About from './pages/About.jsx'
 import EditProfileProvider from './pages/EditProfileProvider.jsx'
 import ProviderBookings from './pages/ProviderBookings.jsx'
 import ClientBookings from './pages/ClientBookings.jsx'
+import AccountSettings from './pages/AccountSettings.jsx'
+import AdminForms from './pages/AdminForms.jsx'
+import PublicForm from './pages/PublicForm.jsx'
 
 function App() {
   const [_, __] = useState(null)
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col overflow-x-hidden">
       <Header />
       <OfflineBanner />
-      <main className="flex-1 p-4 bg-wave relative">
+      <main className="flex-1 p-4 relative overflow-x-hidden">
         {/* Floating particles across all pages */}
         <span className="particle" style={{ top: "10%", left: "8%", animationDelay: "0s" }} />
         <span className="particle" style={{ top: "25%", left: "20%", animationDelay: "0.8s" }} />
@@ -73,6 +76,9 @@ function App() {
           <Route path="/provider/edit-profile" element={<PrivateRoute><EditProfileProvider /></PrivateRoute>} />
           <Route path="/provider/bookings" element={<PrivateRoute><ProviderBookings /></PrivateRoute>} />
           <Route path="/bookings" element={<PrivateRoute><ClientBookings /></PrivateRoute>} />
+          <Route path="/settings/account" element={<PrivateRoute><AccountSettings /></PrivateRoute>} />
+          <Route path="/admin/forms" element={<PrivateRoute><AdminForms /></PrivateRoute>} />
+          <Route path="/forms/:id" element={<PublicForm />} />
           <Route path="/chats" element={<PrivateRoute><Chats /></PrivateRoute>} />
           <Route path="/chat/:chatId" element={<PrivateRoute><Chat /></PrivateRoute>} />
           <Route path="/payments" element={<PrivateRoute><Payments /></PrivateRoute>} />

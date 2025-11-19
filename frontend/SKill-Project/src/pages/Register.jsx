@@ -47,7 +47,7 @@ export default function Register() {
       setStep((s) => Math.min(maxStep, s + 1));
       return;
     }
-    const payload = { name, email, password, role };
+    const payload = { name, email: email.trim().toLowerCase(), password, role };
     if (role === "provider") {
       payload.providerType = providerType;
       payload.providerMode = providerMode;

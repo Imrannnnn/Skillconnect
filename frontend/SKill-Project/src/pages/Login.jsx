@@ -31,11 +31,14 @@ export default function Login() {
     e.preventDefault();
     setError("");
     auth
-      .login({ email, password })
-      .then(() => {
-        // Navigate based on role if available
-        const role = auth.user?.role;
-        if (role === "provider") navigate("/provider/dashboard");
+      .login({ email: email.trim().toLowerCase(), password })
+      .then((data) => {
+        // Navigate based on roles if available (supports multi-role accounts)
+        const u = data?.user || auth.user;
+        const roles = Array.isArray(u?.roles) && u.roles.length
+          ? u.roles
+          : (u?.role ? [u.role] : []);
+        if (roles.includes("provider")) navigate("/provider/dashboard");
         else navigate("/dashboard");
       })
       .catch((err) => {

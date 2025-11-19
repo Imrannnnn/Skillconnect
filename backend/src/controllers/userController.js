@@ -186,11 +186,22 @@ export const aiChatAssistant = async (req, res) => {
     const lower = text.toLowerCase();
     const keywords = extractKeywords(text);
 
-    // Basic intent classification
+    // Short messages like just "hi" or "hello"
+    const isGreetingOnly = /^(hi|hello|hey|good (morning|afternoon|evening))\b/.test(lower) && keywords.length === 0;
+
+    // Basic intent classification (order matters: more specific first)
     let intent = "general";
-    if (/(wallet|balance|fund|withdraw|paystack|money)/i.test(lower)) intent = "wallet";
-    else if (/(book|booking|job|request|timeline|status)/i.test(lower)) intent = "booking";
-    else if (/(provider|worker|artisan|plumber|driver|cleaner|hire|service)/i.test(lower)) intent = "providers";
+    if (isGreetingOnly) {
+      intent = "greeting";
+    } else if (/(wallet|balance|fund|withdraw|paystack|money|payment)/i.test(lower)) {
+      intent = "wallet";
+    } else if (/(book|booking|job|request|timeline|status)/i.test(lower)) {
+      intent = "booking";
+    } else if (/(provider|worker|artisan|plumber|driver|cleaner|hire|service)/i.test(lower)) {
+      intent = "providers";
+    } else if (/(account|login|register|sign ?up|verify|verification|email code|spam)/i.test(lower)) {
+      intent = "account";
+    }
 
     const suggestions = [];
 
@@ -234,6 +245,18 @@ export const aiChatAssistant = async (req, res) => {
         label: "View my bookings",
         description: "Open your bookings page to see current jobs.",
       });
+    } else if (intent === "account") {
+      suggestions.push({
+        type: "info",
+        label: "Account & email",
+        description: "You can register, login, and verify your email from the main site. If emails land in spam, mark them as 'Not spam' and add the sender to contacts.",
+      });
+    } else if (intent === "greeting") {
+      suggestions.push({
+        type: "info",
+        label: "Tip",
+        description: "Tell me what you want to do, for example: 'find a cleaner near me' or 'check my wallet balance'.",
+      });
     } else {
       suggestions.push({
         type: "info",
@@ -243,16 +266,29 @@ export const aiChatAssistant = async (req, res) => {
     }
 
     const replyParts = [];
-    if (intent === "providers") {
+
+    // Very short queries with no clear intent – ask for clarification
+    if (!isGreetingOnly && text.length < 5 && intent === "general") {
+      replyParts.push("Can you share a bit more detail about what you need? For example: 'find a plumber in Ikeja' or 'check my wallet balance'.");
+    } else if (intent === "greeting") {
+      replyParts.push("Hi! I'm the SkillConnect assistant.");
+      replyParts.push("I can help you find providers, manage bookings, or answer basic wallet and account questions.");
+      replyParts.push("Tell me what you want to do, for example: 'find a driver in Abuja' or 'view my bookings'.");
+    } else if (intent === "providers") {
       replyParts.push("I can help you find suitable providers.");
       if (keywords.length) replyParts.push(`I picked up these keywords: ${keywords.join(", ")}.`);
-      replyParts.push("Use the button below to run a smart search, then refine by category and location.");
+      replyParts.push("I'll run a smart search when you tap the suggestion, and you can refine by category and location.");
     } else if (intent === "wallet") {
       replyParts.push("It sounds like you have a wallet or payment question.");
       replyParts.push("Open your wallet from the dashboard to check balance, recent transactions, and funding options.");
+      replyParts.push("If a payment looks stuck, give it a few minutes and refresh the payments or wallet page.");
     } else if (intent === "booking") {
       replyParts.push("You seem to be asking about bookings or job status.");
-      replyParts.push("Use the bookings page to see your job timeline and, when available, release payments.");
+      replyParts.push("Use the bookings page to see your job timeline and, when available, confirm work or release payments.");
+    } else if (intent === "account") {
+      replyParts.push("You seem to be asking about your account or email.");
+      replyParts.push("You can register or log in from the main site, then verify your email from the link we send.");
+      replyParts.push("If you don't see the email, check your spam folder and mark it as 'Not spam' so future messages arrive in your inbox.");
     } else {
       replyParts.push("I can assist with finding providers, bookings, chat, and wallet questions.");
       replyParts.push("Tell me what you want to do, for example: 'find a cleaner in Lekki tomorrow'.");
@@ -304,5 +340,83 @@ export const deleteMe = async (req, res) => {
     res.json({ message: "Account deleted" });
   } catch (e) {
     res.status(500).json({ message: "Failed to delete account", error: e?.message || e });
+  }
+};
+
+export const becomeProvider = async (req, res) => {
+  try {
+    const userId = req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Ensure multi-role array exists
+    let roles = Array.isArray(user.roles) && user.roles.length ? user.roles : [];
+    if (!roles.length && user.role) roles = [user.role];
+
+    if (roles.includes("provider")) {
+      return res.status(400).json({ message: "Your account is already a provider" });
+    }
+
+    // By design, a provider can always act as a client
+    if (!roles.includes("client")) roles.push("client");
+    roles.push("provider");
+    user.roles = Array.from(new Set(roles));
+    user.role = "provider";
+
+    const {
+      providerType,
+      providerMode,
+      categories,
+      bio,
+      city,
+      state,
+      country,
+      social,
+      instagram,
+      facebook,
+      tiktok,
+      whatsapp,
+      website,
+    } = req.body || {};
+
+    if (providerType) user.providerType = providerType;
+    if (providerMode) user.providerMode = providerMode;
+    if (Array.isArray(categories) && categories.length) user.categories = categories;
+    if (bio) user.bio = bio;
+
+    if (city || state || country) {
+      user.location = {
+        ...(user.location || {}),
+        city,
+        state,
+        country,
+      };
+    }
+
+    const socialPayload = {
+      instagram: social?.instagram ?? instagram,
+      facebook: social?.facebook ?? facebook,
+      tiktok: social?.tiktok ?? tiktok,
+      whatsapp: social?.whatsapp ?? whatsapp,
+      website: social?.website ?? website,
+    };
+    if (Object.values(socialPayload).some((v) => v)) {
+      user.social = socialPayload;
+    }
+
+    await user.save();
+
+    res.json({
+      message: "Account upgraded to provider",
+      user,
+    });
+  } catch (e) {
+    res.status(500).json({ message: "Failed to enable provider role", error: e?.message || e });
   }
 };

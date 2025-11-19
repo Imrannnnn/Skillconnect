@@ -15,6 +15,8 @@ import categoriesRoutes from "./src/routes/categoriesRoutes.js";
 import uploadRoutes from "./src/routes/uploadRoutes.js";
 import productRoutes from "./src/routes/productRoutes.js";
 import walletRoutes from "./src/routes/walletRoutes.js";
+import organizationRoutes from "./src/routes/organizationRoutes.js";
+import formRoutes from "./src/routes/formRoutes.js";
 
 dotenv.config();
 
@@ -61,6 +63,8 @@ app.use("/api/users", uploadRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/chats", chatRoutes);
 app.use("/api/wallet", walletRoutes);
+app.use("/api/organizations", organizationRoutes);
+app.use("/api/forms", formRoutes);
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/providers", providerRoutes);
@@ -75,6 +79,8 @@ app.use("/api/v1/users", uploadRoutes);
 app.use("/api/v1/chat", chatRoutes);
 app.use("/api/v1/chats", chatRoutes);
 app.use("/api/v1/wallet", walletRoutes);
+app.use("/api/v1/organizations", organizationRoutes);
+app.use("/api/v1/forms", formRoutes);
 
 app.get("/api/v1/news", (req, res) => res.json({ items: [] }));
 app.get(["/api/v1/posts", "/api/v1/blog"], (req, res) => res.json({ items: [] }));

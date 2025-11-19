@@ -1,18 +1,14 @@
-import { useContext, useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import API from '../api/axios.js'
-import { AuthContext } from '../context/auth.js'
 import { useToast } from '../components/toast.js'
 
 export default function DashboardClient() {
-  const auth = useContext(AuthContext)
-  const navigate = useNavigate()
   const { notify } = useToast()
   const [chats, setChats] = useState([])
   const [txs, setTxs] = useState([])
   const [loading, setLoading] = useState(true)
   const [wallet, setWallet] = useState(null)
-  const [deleting, setDeleting] = useState(false)
   const [fundAmount, setFundAmount] = useState('')
   const [funding, setFunding] = useState(false)
   const [walletTxs, setWalletTxs] = useState([])
@@ -170,33 +166,7 @@ export default function DashboardClient() {
         </div>
       </section>
 
-      <section className="mt-6 rounded-lg border border-rose-200 bg-rose-50 p-4">
-        <h3 className="font-semibold mb-1 text-sm text-rose-800">Danger zone</h3>
-        <p className="text-xs text-rose-800/80 mb-3">
-          Deleting your account is permanent. This will remove your client account and you may lose access to bookings, chats, and wallet history.
-        </p>
-        <button
-          type="button"
-          disabled={deleting}
-          onClick={async () => {
-            if (!window.confirm('Are you sure you want to permanently delete your SkillConnect account? This action cannot be undone.')) return
-            setDeleting(true)
-            try {
-              await API.delete('/users/me')
-              notify('Your account has been deleted.', { type: 'success' })
-              auth?.logout?.()
-              navigate('/')
-            } catch (e) {
-              notify(e?.response?.data?.message || 'Failed to delete account', { type: 'error' })
-            } finally {
-              setDeleting(false)
-            }
-          }}
-          className="inline-flex items-center px-3 py-1.5 rounded-md border border-rose-300 bg-rose-600 text-white text-xs hover:bg-rose-700 disabled:opacity-60"
-        >
-          {deleting ? 'Deleting account…' : 'Delete my account'}
-        </button>
-      </section>
+      
     </div>
   )
 }
