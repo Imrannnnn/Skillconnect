@@ -6,9 +6,12 @@ export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [accountType, setAccountType] = useState("individual"); // 'individual' | 'organization'
   const [role, setRole] = useState("client");
   const [providerType, setProviderType] = useState("individual");
   const [providerMode, setProviderMode] = useState("service");
+  const [orgSector, setOrgSector] = useState("");
+  const [orgPhone, setOrgPhone] = useState("");
   const [categories, setCategories] = useState([]);
   const [catInput, setCatInput] = useState("");
   const [bio, setBio] = useState("");
@@ -25,45 +28,61 @@ export default function Register() {
   const navigate = useNavigate();
   const auth = useContext(AuthContext);
 
-  const isProvider = role === "provider";
-  const maxStep = isProvider ? 2 : 1;
+  const isOrg = accountType === "organization";
+  const isProvider = !isOrg && role === "provider";
+  const maxStep = isOrg ? 0 : (isProvider ? 2 : 1);
 
   function handleSubmit(e) {
     e.preventDefault();
     setError("");
 
-    // Multi-step: advance until final step, then submit
-    if (step < maxStep) {
-      if (step === 0) {
-        if (!name || !email || !password) {
-          setError("Name, email and password are required.");
-          return;
-        }
-        if (password.length < 6) {
-          setError("Password should be at least 6 characters.");
-          return;
-        }
+    // Basic validation for the main account step
+    if (step === 0) {
+      if (!name || !email || !password) {
+        setError("Name, email and password are required.");
+        return;
       }
+      if (password.length < 6) {
+        setError("Password should be at least 6 characters.");
+        return;
+      }
+    }
+
+    // Multi-step: advance until final step for individual accounts
+    if (!isOrg && step < maxStep) {
       setStep((s) => Math.min(maxStep, s + 1));
       return;
     }
-    const payload = { name, email: email.trim().toLowerCase(), password, role };
-    if (role === "provider") {
-      payload.providerType = providerType;
-      payload.providerMode = providerMode;
-      if (categories.length) payload.categories = categories;
-      if (bio) payload.bio = bio;
-      payload.social = {
-        instagram: instagram || undefined,
-        facebook: facebook || undefined,
-        tiktok: tiktok || undefined,
-        whatsapp: whatsapp || undefined,
-        website: website || undefined,
+
+    let payload;
+    if (isOrg) {
+      payload = {
+        name,
+        email: email.trim().toLowerCase(),
+        password,
+        accountType: "organization",
+        sector: orgSector || undefined,
+        phone: orgPhone || undefined,
       };
+    } else {
+      payload = { name, email: email.trim().toLowerCase(), password, role, accountType: "individual" };
+      if (role === "provider") {
+        payload.providerType = providerType;
+        payload.providerMode = providerMode;
+        if (categories.length) payload.categories = categories;
+        if (bio) payload.bio = bio;
+        payload.social = {
+          instagram: instagram || undefined,
+          facebook: facebook || undefined,
+          tiktok: tiktok || undefined,
+          whatsapp: whatsapp || undefined,
+          website: website || undefined,
+        };
+      }
+      if (city) payload.city = city;
+      if (stateRegion) payload.state = stateRegion;
+      if (country) payload.country = country;
     }
-    if (city) payload.city = city;
-    if (stateRegion) payload.state = stateRegion;
-    if (country) payload.country = country;
     auth
       .register(payload)
       .then(() => {
@@ -87,6 +106,32 @@ export default function Register() {
       <form onSubmit={handleSubmit} className="grid gap-3">
         {step === 0 && (
           <>
+            <div className="grid sm:grid-cols-2 gap-3 mb-1">
+              <label className="grid gap-1 text-sm">
+                <span className="text-gray-700">Account type</span>
+                <select
+                  className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  value={accountType}
+                  onChange={(e) => { setAccountType(e.target.value); setStep(0); }}
+                >
+                  <option value="individual">Individual (client or provider)</option>
+                  <option value="organization">Organization</option>
+                </select>
+              </label>
+              {!isOrg && (
+                <label className="grid gap-1 text-sm">
+                  <span className="text-gray-700">Role</span>
+                  <select
+                    className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    value={role}
+                    onChange={(e) => { setRole(e.target.value); setStep(0); }}
+                  >
+                    <option value="client">Client</option>
+                    <option value="provider">Provider</option>
+                  </select>
+                </label>
+              )}
+            </div>
             <label className="grid gap-1 text-sm">
               <span className="text-gray-700">Name</span>
               <input
@@ -119,19 +164,8 @@ export default function Register() {
                 required
               />
             </label>
-            <div className="grid sm:grid-cols-2 gap-3">
-              <label className="grid gap-1 text-sm">
-                <span className="text-gray-700">Role</span>
-                <select
-                  className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  value={role}
-                  onChange={(e) => { setRole(e.target.value); setStep(0); }}
-                >
-                  <option value="client">Client</option>
-                  <option value="provider">Provider</option>
-                </select>
-              </label>
-              {isProvider && (
+            {isProvider && !isOrg && (
+              <div className="grid sm:grid-cols-2 gap-3">
                 <label className="grid gap-1 text-sm">
                   <span className="text-gray-700">Provider Type</span>
                   <select
@@ -144,10 +178,6 @@ export default function Register() {
                   </select>
                   <span className="text-xs text-gray-500">Choose whether you are an individual freelancer or a registered company.</span>
                 </label>
-              )}
-            </div>
-            {isProvider && (
-              <div className="grid sm:grid-cols-2 gap-3">
                 <label className="grid gap-1 text-sm">
                   <span className="text-gray-700">Provider Mode</span>
                   <select
@@ -162,10 +192,32 @@ export default function Register() {
                 </label>
               </div>
             )}
+            {isOrg && (
+              <div className="grid sm:grid-cols-2 gap-3 mt-2">
+                <label className="grid gap-1 text-sm">
+                  <span className="text-gray-700">Sector</span>
+                  <input
+                    className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    placeholder="e.g. Hospital, School, Airline, NGO"
+                    value={orgSector}
+                    onChange={(e) => setOrgSector(e.target.value)}
+                  />
+                </label>
+                <label className="grid gap-1 text-sm">
+                  <span className="text-gray-700">Organization phone (optional)</span>
+                  <input
+                    className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    placeholder="Contact phone number"
+                    value={orgPhone}
+                    onChange={(e) => setOrgPhone(e.target.value)}
+                  />
+                </label>
+              </div>
+            )}
           </>
         )}
 
-        {step === 1 && isProvider && (
+        {step === 1 && isProvider && !isOrg && (
           <>
             <div className="grid gap-3">
               <div>

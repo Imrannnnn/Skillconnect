@@ -13,6 +13,7 @@ export default function Header() {
     if (Array.isArray(user.roles) && user.roles.length) return user.roles;
     return user.role ? [user.role] : [];
   }, [auth?.user]);
+  const accountType = auth?.user?.accountType || "individual";
   const [pendingCount, setPendingCount] = useState(0);
   const [unreadChats, setUnreadChats] = useState(0);
   const [resending, setResending] = useState(false);
@@ -176,6 +177,14 @@ export default function Header() {
               >
                 Account settings
               </Link>
+              {accountType === 'organization' && (
+                <Link
+                  to="/org/dashboard"
+                  className="text-xs text-emerald-700 hover:text-emerald-800 px-2 py-1 rounded-md border border-emerald-200 hover:bg-emerald-50"
+                >
+                  Org dashboard
+                </Link>
+              )}
               {roles.includes('provider') && (
                 <Link
                   to="/provider/dashboard"
@@ -237,6 +246,15 @@ export default function Header() {
                       onClick={() => setMobileOpen(false)}
                     >
                       Admin forms
+                    </Link>
+                  )}
+                  {accountType === 'organization' && (
+                    <Link
+                      to="/org/dashboard"
+                      className="text-xs text-emerald-700 hover:text-emerald-800 px-2 py-1 rounded-md border border-emerald-200 hover:bg-emerald-50"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      Org dashboard
                     </Link>
                   )}
                   {roles.includes('provider') && (

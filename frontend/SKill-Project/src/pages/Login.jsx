@@ -33,8 +33,13 @@ export default function Login() {
     auth
       .login({ email: email.trim().toLowerCase(), password })
       .then((data) => {
-        // Navigate based on roles if available (supports multi-role accounts)
         const u = data?.user || auth.user;
+        const accountType = u?.accountType || "individual";
+        if (accountType === "organization") {
+          navigate("/org/dashboard");
+          return;
+        }
+        // Navigate based on roles if available (supports multi-role accounts)
         const roles = Array.isArray(u?.roles) && u.roles.length
           ? u.roles
           : (u?.role ? [u.role] : []);

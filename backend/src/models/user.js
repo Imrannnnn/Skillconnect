@@ -12,6 +12,14 @@ const userSchema = new mongoose.Schema({
     enum: ["client", "provider", "admin"],
     default: ["client"],
   },
+  // Account type distinguishes individual users from organization accounts
+  accountType: {
+    type: String,
+    enum: ["individual", "organization"],
+    default: "individual",
+  },
+  // When this is an organization account, link it to the Organization document
+  organizationId: { type: mongoose.Schema.Types.ObjectId, ref: "Organization" },
   // Public handle for providers (used in branded URLs like /@handle)
   handle: { type: String, unique: true, sparse: true },
   categories: [String],

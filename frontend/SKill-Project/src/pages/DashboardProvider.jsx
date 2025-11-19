@@ -209,7 +209,7 @@ export default function DashboardProvider() {
         </section>
       )}
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        <section className="lg:col-span-2 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <section className="w-full lg:col-span-2 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-2.5">
             <div>
               <h3 className="text-sm font-semibold text-gray-900">Top selling services</h3>
@@ -228,16 +228,16 @@ export default function DashboardProvider() {
               </select>
             </div>
           </div>
-          <div className="mt-3 overflow-x-auto">
-            <table className="min-w-full text-left text-xs">
+          <div className="mt-3">
+            <table className="w-full text-left text-xs table-fixed">
               <thead>
                 <tr className="border-b border-gray-100 text-[11px] uppercase tracking-wide text-gray-500">
-                  <th className="py-2.5 pr-3 font-medium align-middle"></th>
-                  <th className="py-2.5 pr-3 font-medium align-middle min-w-[150px]">Service</th>
+                  <th className="py-2.5 pr-3 font-medium align-middle w-8"></th>
+                  <th className="py-2.5 pr-3 font-medium align-middle">Service</th>
                   <th className="py-2.5 pr-3 font-medium align-middle">Client</th>
-                  <th className="py-2.5 pr-3 font-medium align-middle min-w-[80px] whitespace-nowrap">Price</th>
-                  <th className="py-2.5 pr-3 font-medium align-middle min-w-[80px] whitespace-nowrap">Status</th>
-                  <th className="py-2.5 pr-3 font-medium align-middle min-w-[80px] text-right whitespace-nowrap">Date</th>
+                  <th className="py-2.5 pr-3 font-medium align-middle whitespace-nowrap">Price</th>
+                  <th className="py-2.5 pr-3 font-medium align-middle whitespace-nowrap">Status</th>
+                  <th className="py-2.5 pr-3 font-medium align-middle text-right whitespace-nowrap">Date</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -260,7 +260,7 @@ export default function DashboardProvider() {
                         />
                       </td>
                       <td className="py-2.5 pr-3 align-middle">
-                        <div className="flex items-center min-w-[150px]">
+                        <div className="flex items-center">
                           <div className="flex h-12 w-12 max-w-[50px] items-center justify-center rounded-md bg-emerald-50 text-[10px] font-semibold text-emerald-700 mr-3 overflow-hidden">
                             {t?.serviceName?.[0]?.toUpperCase?.() || t?.clientName?.[0]?.toUpperCase?.() || 'S'}
                           </div>
@@ -296,7 +296,7 @@ export default function DashboardProvider() {
             </table>
           </div>
         </section>
-        <section className="rounded-xl bg-slate-900 text-white p-4 shadow-sm flex flex-col justify-between">
+        <section className="w-full rounded-xl bg-slate-900 text-white p-4 shadow-sm flex flex-col justify-between">
           <div className="flex items-start justify-between gap-2">
             <div>
               <h3 className="text-sm font-semibold">Today at a glance</h3>

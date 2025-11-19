@@ -28,6 +28,7 @@ import ClientBookings from './pages/ClientBookings.jsx'
 import AccountSettings from './pages/AccountSettings.jsx'
 import AdminForms from './pages/AdminForms.jsx'
 import PublicForm from './pages/PublicForm.jsx'
+import OrgDashboard from './pages/OrgDashboard.jsx'
 
 function App() {
   const [_, __] = useState(null)
@@ -72,6 +73,7 @@ function App() {
           <Route path="/@:handle" element={<ProviderProfile />} />
           <Route path="/dashboard" element={<PrivateRoute><DashboardClient /></PrivateRoute>} />
           <Route path="/provider/dashboard" element={<PrivateRoute><DashboardProvider /></PrivateRoute>} />
+          <Route path="/org/dashboard" element={<PrivateRoute><OrgDashboard /></PrivateRoute>} />
           <Route path="/provider/products" element={<PrivateRoute><ProviderProducts /></PrivateRoute>} />
           <Route path="/provider/edit-profile" element={<PrivateRoute><EditProfileProvider /></PrivateRoute>} />
           <Route path="/provider/bookings" element={<PrivateRoute><ProviderBookings /></PrivateRoute>} />

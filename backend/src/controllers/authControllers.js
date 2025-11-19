@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import User from "../models/user.js";
+import Organization from "../models/organization.js";
 import sendEmail from "../utils/sendEmail.js";
 
 // Normalise frontend base URL so we don't get double slashes like `//verify-email` when
@@ -15,6 +16,9 @@ export const register = async (req, res) => {
       email,
       password,
       role,
+      accountType,
+      sector,
+      phone,
       categories,
       providerType,
       providerMode,
@@ -43,7 +47,71 @@ export const register = async (req, res) => {
 
     const verificationToken = crypto.randomBytes(32).toString("hex");
 
-    // Derive primary role and role set for multi-role support
+    const acctType = accountType === "organization" ? "organization" : "individual";
+
+    // Handle organization account registration separately
+    if (acctType === "organization") {
+      const orgName = name && String(name).trim();
+      if (!orgName) {
+        return res.status(400).json({ message: "Organization name is required" });
+      }
+
+      const org = await Organization.create({
+        name: orgName,
+        email: normalizedEmail,
+        sector,
+        description: undefined,
+        accountType: "organization",
+        phone,
+      });
+
+      const user = await User.create({
+        name: orgName,
+        email: normalizedEmail,
+        password: hash,
+        role: "client", // keep enum valid; org accounts are not public providers
+        roles: ["client"],
+        social: socialPayload,
+        verificationToken,
+        accountType: "organization",
+        organizationId: org._id,
+      });
+
+      org.ownerUser = user._id;
+      org.admins = [user._id];
+      await org.save();
+
+      const tokenRoles = Array.isArray(user.roles) && user.roles.length
+        ? user.roles
+        : (user.role ? [user.role] : []);
+      const token = jwt.sign(
+        { _id: user._id, role: user.role, roles: tokenRoles, accountType: user.accountType || "organization", organizationId: user.organizationId || null },
+        process.env.JWT_SECRET || "devsecret",
+        { expiresIn: "7d" },
+      );
+
+      try {
+        const verifyUrl = `${FRONTEND_URL}/verify-email/${verificationToken}`;
+        const html = `
+        <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; color: #111827;">
+          <h2 style="margin-bottom: 8px;">Welcome to SkillConnect</h2>
+          <p style="margin: 0 0 12px 0;">Thanks for creating an organization account. Please verify your email address so we can keep your account secure.</p>
+          <p style="margin: 0 0 16px 0;">
+            <a href="${verifyUrl}" style="display: inline-block; padding: 10px 16px; border-radius: 999px; background: #059669; color: #fff; text-decoration: none; font-weight: 500;">Verify email</a>
+          </p>
+          <p style="margin: 0 0 8px 0; font-size: 12px; color: #6b7280;">If the button doesn't work, copy and paste this link into your browser:</p>
+          <p style="margin: 0; font-size: 12px; color: #374151; word-break: break-all;">${verifyUrl}</p>
+          <p style="margin-top: 8px; font-size: 12px; color: #6b7280;">If you did not create this account, you can ignore this email.</p>
+        </div>`;
+        await sendEmail(user.email, "Verify your SkillConnect organization account", html);
+      } catch {
+        // Ignore email errors during registration; user can request verification later if needed
+      }
+
+      return res.status(201).json({ user, token });
+    }
+
+    // Derive primary role and role set for multi-role support (individual accounts)
     let primaryRole = role;
     if (primaryRole !== "provider" && primaryRole !== "admin") {
       primaryRole = "client";
@@ -66,13 +134,14 @@ export const register = async (req, res) => {
       providerMode,
       social: socialPayload,
       verificationToken,
+      accountType: "individual",
     });
 
     const tokenRoles = Array.isArray(user.roles) && user.roles.length
       ? user.roles
       : (user.role ? [user.role] : []);
     const token = jwt.sign(
-      { _id: user._id, role: user.role, roles: tokenRoles },
+      { _id: user._id, role: user.role, roles: tokenRoles, accountType: user.accountType || "individual", organizationId: user.organizationId || null },
       process.env.JWT_SECRET || "devsecret",
       { expiresIn: "7d" },
     );
@@ -108,7 +177,7 @@ export const login = async (req, res) => {
       ? user.roles
       : (user.role ? [user.role] : []);
     const token = jwt.sign(
-      { _id: user._id, role: user.role, roles: tokenRoles },
+      { _id: user._id, role: user.role, roles: tokenRoles, accountType: user.accountType || "individual", organizationId: user.organizationId || null },
       process.env.JWT_SECRET || "devsecret",
       { expiresIn: "7d" },
     );
