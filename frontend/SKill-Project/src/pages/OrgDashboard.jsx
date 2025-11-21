@@ -117,6 +117,12 @@ export default function OrgDashboard() {
     [forms, activeFormId],
   )
 
+  const publicOrgUrl = useMemo(() => {
+    if (!org || !org.slug) return ''
+    const origin = typeof window !== 'undefined' && window.location ? window.location.origin : ''
+    return origin ? `${origin}/org/${org.slug}` : `/org/${org.slug}`
+  }, [org])
+
   useEffect(() => {
     if (!user || !user.organizationId) {
       setLoadingOrg(false)
@@ -221,6 +227,20 @@ export default function OrgDashboard() {
         </p>
       </div>
     )
+  }
+
+  const handleCopyOrgLink = async () => {
+    if (!publicOrgUrl) return
+    try {
+      if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(publicOrgUrl)
+        notify('Organization link copied to clipboard', { type: 'success' })
+      } else {
+        notify(publicOrgUrl, { type: 'info' })
+      }
+    } catch {
+      notify('Could not copy organization link. Please copy it manually from the address bar.', { type: 'error' })
+    }
   }
 
   const handleCreateForm = async () => {
@@ -586,6 +606,30 @@ export default function OrgDashboard() {
         <p className="mt-1 text-sm text-gray-600">
           {org.name}{org.sector ? ` • ${org.sector}` : ''}{org.email ? ` • ${org.email}` : ''}
         </p>
+      )}
+      {org?.slug && publicOrgUrl && (
+        <div className="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-gray-700">
+          <div className="break-all">
+            Public profile:{' '}
+            <a
+              href={publicOrgUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-emerald-700 hover:text-emerald-800 underline"
+            >
+              {publicOrgUrl}
+            </a>
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleCopyOrgLink}
+              className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-white px-3 py-1.5 text-[11px] text-gray-700 hover:bg-gray-50"
+            >
+              Copy organization link
+            </button>
+          </div>
+        </div>
       )}
 
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -9,6 +9,14 @@ import sendEmail from "../utils/sendEmail.js";
 // FRONTEND_URL is configured with a trailing `/` in the environment.
 const FRONTEND_URL = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/+$/, "");
 
+function slugifyName(name) {
+  return String(name || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
+}
+
 export const register = async (req, res) => {
   try {
     const {
@@ -55,9 +63,24 @@ export const register = async (req, res) => {
       if (!orgName) {
         return res.status(400).json({ message: "Organization name is required" });
       }
+      let slug = slugifyName(orgName);
+      if (slug) {
+        let candidate = slug;
+        for (let i = 0; i < 10; i += 1) {
+          const existing = await Organization.findOne({ slug: candidate });
+          if (!existing) {
+            slug = candidate;
+            break;
+          }
+          candidate = `${slug}-${i + 1}`;
+        }
+      } else {
+        slug = undefined;
+      }
 
       const org = await Organization.create({
         name: orgName,
+        slug,
         email: normalizedEmail,
         sector,
         description: undefined,

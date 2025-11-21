@@ -29,6 +29,7 @@ import AccountSettings from './pages/AccountSettings.jsx'
 import AdminForms from './pages/AdminForms.jsx'
 import PublicForm from './pages/PublicForm.jsx'
 import OrgDashboard from './pages/OrgDashboard.jsx'
+import OrgPublic from './pages/OrgPublic.jsx'
 
 function App() {
   const [_, __] = useState(null)
@@ -71,6 +72,7 @@ function App() {
           <Route path="/providers/:id" element={<ProviderProfile />} />
           <Route path="/p/:id" element={<ProviderProfile />} />
           <Route path="/@:handle" element={<ProviderProfile />} />
+          <Route path="/org/:slug" element={<OrgPublic />} />
           <Route path="/dashboard" element={<PrivateRoute><DashboardClient /></PrivateRoute>} />
           <Route path="/provider/dashboard" element={<PrivateRoute><DashboardProvider /></PrivateRoute>} />
           <Route path="/org/dashboard" element={<PrivateRoute><OrgDashboard /></PrivateRoute>} />

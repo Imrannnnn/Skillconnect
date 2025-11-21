@@ -1,8 +1,38 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import heroImg from "../assets/ayaz-lalani-no-EShQ7s1A-unsplash.jpg";
+import API from "../api/axios.js";
 
 export default function Home() {
   const categories = ["Plumber", "Driver", "Cook", "Fashion designer", "Cleaner"];
+  const [organizations, setOrganizations] = useState([]);
+  const [loadingOrganizations, setLoadingOrganizations] = useState(false);
+  const [organizationsError, setOrganizationsError] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function load() {
+      setLoadingOrganizations(true);
+      setOrganizationsError("");
+      try {
+        const { data } = await API.get("/organizations/public");
+        if (!mounted) return;
+        const list = Array.isArray(data?.organizations) ? data.organizations : [];
+        setOrganizations(list);
+      } catch {
+        if (!mounted) return;
+        setOrganizationsError("Failed to load organizations.");
+      } finally {
+        if (mounted) setLoadingOrganizations(false);
+      }
+    }
+
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-white">
@@ -72,6 +102,70 @@ export default function Home() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="py-12 sm:py-16 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">
+            <div>
+              <h2 className="text-2xl font-semibold text-gray-900">Find organizations</h2>
+              <p className="mt-1 text-sm text-gray-600">Find organization to what you need.</p>
+            </div>
+            <Link
+              to="/register"
+              className="inline-flex items-center justify-center rounded-md border border-emerald-200 bg-white px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50"
+            >
+              Create organization account
+            </Link>
+          </div>
+
+          {loadingOrganizations && (
+            <p className="text-sm text-gray-500">Loading organizations...</p>
+          )}
+
+          {!loadingOrganizations && organizationsError && (
+            <p className="text-sm text-rose-600">{organizationsError}</p>
+          )}
+
+          {!loadingOrganizations && !organizationsError && (
+            <>
+              {organizations.length === 0 ? (
+                <p className="text-sm text-gray-600">
+                  No organizations are visible yet. Organizations that sign up will appear here.
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {organizations.slice(0, 6).map((org) => (
+                    <Link
+                      key={org._id}
+                      to={org.slug ? `/org/${org.slug}` : "#"}
+                      className="group flex flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:border-emerald-500 hover:shadow-md transition"
+                    >
+                      <h3 className="text-base font-semibold text-gray-900 group-hover:text-emerald-700">
+                        {org.name}
+                      </h3>
+                      {org.sector && (
+                        <p className="mt-1 text-xs uppercase tracking-wide text-emerald-700">
+                          {org.sector}
+                        </p>
+                      )}
+                      {org.description && (
+                        <p className="mt-2 text-sm text-gray-600">
+                          {org.description}
+                        </p>
+                      )}
+                      {org.slug && (
+                        <span className="mt-3 text-xs font-medium text-emerald-700">
+                          View organization
+                        </span>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
         </div>
       </section>
 
