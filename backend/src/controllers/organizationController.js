@@ -108,11 +108,78 @@ export const updateOrganizationMembers = async (req, res) => {
   }
 };
 
+export const updateOrganizationProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!req.user?._id) return res.status(401).json({ message: "Unauthorized" });
+
+    const org = await Organization.findById(id);
+    if (!org) return res.status(404).json({ message: "Organization not found" });
+
+    const roles = Array.isArray(req.user?.roles) && req.user.roles.length
+      ? req.user.roles
+      : (req.user?.role ? [req.user.role] : []);
+    const isGlobalAdmin = roles.includes("admin");
+    const isOrgAdmin = org.admins.some((uid) => String(uid) === String(req.user._id));
+
+    if (!isGlobalAdmin && !isOrgAdmin) {
+      return res.status(403).json({ message: "Only organization admins can update this organization" });
+    }
+
+    const {
+      name,
+      sector,
+      description,
+      phone,
+      website,
+      logo,
+      address,
+      tagline,
+      services,
+      teamMembers,
+      achievements,
+      projects,
+      ratingScore,
+      ratingCount,
+      reviews,
+      partners,
+      media,
+      certificates,
+      updates,
+    } = req.body || {};
+
+    if (typeof name === "string" && name.trim()) org.name = name.trim();
+    if (sector !== undefined) org.sector = sector || undefined;
+    if (description !== undefined) org.description = description || undefined;
+    if (phone !== undefined) org.phone = phone || undefined;
+    if (website !== undefined) org.website = website || undefined;
+    if (logo !== undefined) org.logo = logo || undefined;
+    if (address !== undefined) org.address = address || undefined;
+    if (tagline !== undefined) org.tagline = tagline || undefined;
+    if (Array.isArray(services)) org.services = services;
+    if (Array.isArray(teamMembers)) org.teamMembers = teamMembers;
+    if (Array.isArray(achievements)) org.achievements = achievements;
+    if (Array.isArray(projects)) org.projects = projects;
+    if (ratingScore !== undefined) org.ratingScore = ratingScore;
+    if (ratingCount !== undefined) org.ratingCount = ratingCount;
+    if (Array.isArray(reviews)) org.reviews = reviews;
+    if (Array.isArray(partners)) org.partners = partners;
+    if (Array.isArray(media)) org.media = media;
+    if (Array.isArray(certificates)) org.certificates = certificates;
+    if (Array.isArray(updates)) org.updates = updates;
+
+    await org.save();
+    res.json(org);
+  } catch (e) {
+    res.status(500).json({ message: "Failed to update organization", error: e?.message || e });
+  }
+};
+
 export const listPublicOrganizations = async (req, res) => {
   try {
     const orgs = await Organization.find(
       { accountType: "organization" },
-      "name slug sector description createdAt",
+      "name slug tagline sector description logo createdAt",
     ).sort({ createdAt: -1 }).limit(20);
     res.json({ organizations: orgs });
   } catch (e) {
@@ -126,8 +193,8 @@ export const getOrganizationBySlugPublic = async (req, res) => {
     if (!slug) return res.status(400).json({ message: "slug is required" });
 
     const org = await Organization.findOne(
-      { slug },
-      "name slug sector description email phone createdAt",
+      { $or: [{ slug }, { _id: slug }] },
+      "name slug tagline sector description email phone website logo address services teamMembers achievements projects ratingScore ratingCount reviews partners media certificates updates createdAt",
     );
     if (!org) return res.status(404).json({ message: "Organization not found" });
 

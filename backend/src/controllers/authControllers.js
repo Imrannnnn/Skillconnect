@@ -36,6 +36,9 @@ export const register = async (req, res) => {
       tiktok,
       whatsapp,
       website,
+      address,
+      logo,
+      tagline,
     } = req.body;
 
     const normalizedEmail = String(email || "").trim().toLowerCase();
@@ -86,6 +89,10 @@ export const register = async (req, res) => {
         description: undefined,
         accountType: "organization",
         phone,
+        website: socialPayload.website,
+        address,
+        logo,
+        tagline,
       });
 
       const user = await User.create({

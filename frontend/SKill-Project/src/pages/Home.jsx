@@ -139,19 +139,32 @@ export default function Home() {
                   {organizations.slice(0, 6).map((org) => (
                     <Link
                       key={org._id}
-                      to={org.slug ? `/org/${org.slug}` : "#"}
+                      to={`/org/${org.slug || org._id}`}
                       className="group flex flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:border-emerald-500 hover:shadow-md transition"
                     >
-                      <h3 className="text-base font-semibold text-gray-900 group-hover:text-emerald-700">
-                        {org.name}
-                      </h3>
-                      {org.sector && (
-                        <p className="mt-1 text-xs uppercase tracking-wide text-emerald-700">
-                          {org.sector}
-                        </p>
-                      )}
+                      <div className="flex items-start gap-3 mb-2">
+                        {org.logo && (
+                          <div className="h-10 w-10 flex-shrink-0 rounded-md border border-gray-200 bg-white overflow-hidden">
+                            <img
+                              src={org.logo}
+                              alt={`${org.name} logo`}
+                              className="h-full w-full object-contain"
+                            />
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <h3 className="text-base font-semibold text-gray-900 group-hover:text-emerald-700 truncate">
+                            {org.name}
+                          </h3>
+                          {org.sector && (
+                            <p className="mt-0.5 text-xs uppercase tracking-wide text-emerald-700 truncate">
+                              {org.sector}
+                            </p>
+                          )}
+                        </div>
+                      </div>
                       {org.description && (
-                        <p className="mt-2 text-sm text-gray-600">
+                        <p className="mt-1 text-sm text-gray-600 line-clamp-3">
                           {org.description}
                         </p>
                       )}

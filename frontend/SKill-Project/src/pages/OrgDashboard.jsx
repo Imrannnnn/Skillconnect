@@ -111,6 +111,9 @@ export default function OrgDashboard() {
   const [loadingResponses, setLoadingResponses] = useState(false)
   const [deletingResponseId, setDeletingResponseId] = useState(null)
   const [templateKey, setTemplateKey] = useState('')
+  const [orgDraft, setOrgDraft] = useState(null)
+  const [savingOrgProfile, setSavingOrgProfile] = useState(false)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
 
   const activeForm = useMemo(
     () => forms.find((f) => f._id === activeFormId) || null,
@@ -121,6 +124,108 @@ export default function OrgDashboard() {
     if (!org || !org.slug) return ''
     const origin = typeof window !== 'undefined' && window.location ? window.location.origin : ''
     return origin ? `${origin}/org/${org.slug}` : `/org/${org.slug}`
+  }, [org])
+
+  const handleOrgDraftChange = (field, value) => {
+    setOrgDraft((prev) => (prev ? { ...prev, [field]: value } : prev))
+  }
+
+  const handleLogoUpload = async (file) => {
+    if (!org?._id || !file) return
+
+    const maxSize = 5 * 1024 * 1024
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp']
+
+    if (!allowedTypes.includes(file.type)) {
+      notify('Unsupported file type. Please use PNG, JPG, or WEBP.', { type: 'error' })
+      return
+    }
+
+    if (file.size > maxSize) {
+      notify('File is too large. Maximum size is 5MB.', { type: 'error' })
+      return
+    }
+
+    setUploadingLogo(true)
+    try {
+      const fd = new FormData()
+      fd.append('logo', file)
+      const { data } = await API.post(`/organizations/${org._id}/logo`, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      if (data?.url) {
+        setOrgDraft((prev) => (prev ? { ...prev, logo: data.url } : prev))
+        notify('Logo uploaded', { type: 'success' })
+      }
+    } catch (e) {
+      notify(e?.response?.data?.message || 'Failed to upload logo', { type: 'error' })
+    } finally {
+      setUploadingLogo(false)
+    }
+  }
+
+  const handleSaveOrgProfile = async () => {
+    if (!org?._id || !orgDraft) return
+    setSavingOrgProfile(true)
+    try {
+      const payload = {
+        name: orgDraft.name,
+        sector: orgDraft.sector,
+        tagline: orgDraft.tagline,
+        phone: orgDraft.phone,
+        website: orgDraft.website,
+        logo: orgDraft.logo,
+        address: orgDraft.address,
+        description: orgDraft.description,
+        services: Array.isArray(orgDraft.services) ? orgDraft.services : [],
+        teamMembers: Array.isArray(orgDraft.teamMembers) ? orgDraft.teamMembers : [],
+        achievements: Array.isArray(orgDraft.achievements) ? orgDraft.achievements : [],
+        projects: Array.isArray(orgDraft.projects) ? orgDraft.projects : [],
+        ratingScore: orgDraft.ratingScore,
+        ratingCount: orgDraft.ratingCount,
+        reviews: Array.isArray(orgDraft.reviews) ? orgDraft.reviews : [],
+        partners: Array.isArray(orgDraft.partners) ? orgDraft.partners : [],
+        media: Array.isArray(orgDraft.media) ? orgDraft.media : [],
+        certificates: Array.isArray(orgDraft.certificates) ? orgDraft.certificates : [],
+        updates: Array.isArray(orgDraft.updates) ? orgDraft.updates : [],
+      }
+      await API.put(`/organizations/${org._id}/profile`, payload)
+      const { data } = await API.get(`/organizations/${user.organizationId}`)
+      setOrg(data)
+      notify('Organization profile updated', { type: 'success' })
+    } catch (e) {
+      notify(e?.response?.data?.message || 'Failed to update organization profile', { type: 'error' })
+    } finally {
+      setSavingOrgProfile(false)
+    }
+  }
+
+  useEffect(() => {
+    if (org) {
+      setOrgDraft({
+        name: org.name || '',
+        sector: org.sector || '',
+        tagline: org.tagline || '',
+        phone: org.phone || '',
+        website: org.website || '',
+        logo: org.logo || '',
+        address: org.address || '',
+        description: org.description || '',
+        services: Array.isArray(org.services) ? org.services : [],
+        teamMembers: Array.isArray(org.teamMembers) ? org.teamMembers : [],
+        achievements: Array.isArray(org.achievements) ? org.achievements : [],
+        projects: Array.isArray(org.projects) ? org.projects : [],
+        ratingScore: typeof org.ratingScore === 'number' ? org.ratingScore : '',
+        ratingCount: typeof org.ratingCount === 'number' ? org.ratingCount : '',
+        reviews: Array.isArray(org.reviews) ? org.reviews : [],
+        partners: Array.isArray(org.partners) ? org.partners : [],
+        media: Array.isArray(org.media) ? org.media : [],
+        certificates: Array.isArray(org.certificates) ? org.certificates : [],
+        updates: Array.isArray(org.updates) ? org.updates : [],
+      })
+    } else {
+      setOrgDraft(null)
+    }
   }, [org])
 
   useEffect(() => {
@@ -627,6 +732,947 @@ export default function OrgDashboard() {
               className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-white px-3 py-1.5 text-[11px] text-gray-700 hover:bg-gray-50"
             >
               Copy organization link
+            </button>
+          </div>
+        </div>
+      )}
+
+      {orgDraft && (
+        <div className="mt-6 rounded-lg border border-gray-200 bg-white p-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-semibold text-gray-900">Organization profile</h3>
+            {savingOrgProfile && (
+              <span className="text-[11px] text-gray-500">Saving…</span>
+            )}
+          </div>
+          <p className="text-xs text-gray-500 mb-3">
+            Update how your organization appears publicly, including logo, address, and website.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="grid gap-1 text-xs sm:text-sm">
+              <span className="text-gray-700">Organization name</span>
+              <input
+                type="text"
+                value={orgDraft.name}
+                onChange={(e) => handleOrgDraftChange('name', e.target.value)}
+                className="rounded-md border border-gray-300 px-2 py-1.5 text-xs sm:text-sm"
+              />
+            </label>
+            <label className="grid gap-1 text-xs sm:text-sm sm:col-span-2">
+              <span className="text-gray-700">Tagline (short one-liner)</span>
+              <input
+                type="text"
+                value={orgDraft.tagline}
+                onChange={(e) => handleOrgDraftChange('tagline', e.target.value)}
+                placeholder="e.g. Connecting patients to the right care"
+                className="rounded-md border border-gray-300 px-2 py-1.5 text-xs sm:text-sm"
+              />
+            </label>
+            <label className="grid gap-1 text-xs sm:text-sm">
+              <span className="text-gray-700">Sector</span>
+              <input
+                type="text"
+                value={orgDraft.sector}
+                onChange={(e) => handleOrgDraftChange('sector', e.target.value)}
+                className="rounded-md border border-gray-300 px-2 py-1.5 text-xs sm:text-sm"
+              />
+            </label>
+            <label className="grid gap-1 text-xs sm:text-sm">
+              <span className="text-gray-700">Phone</span>
+              <input
+                type="text"
+                value={orgDraft.phone}
+                onChange={(e) => handleOrgDraftChange('phone', e.target.value)}
+                className="rounded-md border border-gray-300 px-2 py-1.5 text-xs sm:text-sm"
+              />
+            </label>
+            <label className="grid gap-1 text-xs sm:text-sm">
+              <span className="text-gray-700">Website</span>
+              <input
+                type="text"
+                value={orgDraft.website}
+                onChange={(e) => handleOrgDraftChange('website', e.target.value)}
+                placeholder="https://..."
+                className="rounded-md border border-gray-300 px-2 py-1.5 text-xs sm:text-sm"
+              />
+            </label>
+            <label className="grid gap-1 text-xs sm:text-sm">
+              <span className="text-gray-700">Logo</span>
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center text-gray-500 text-xs">
+                  {orgDraft.logo ? (
+                    <img src={orgDraft.logo} alt="Logo" className="h-full w-full object-contain" />
+                  ) : (
+                    (orgDraft.name?.[0] || 'O').toUpperCase()
+                  )}
+                </div>
+                <div className="flex flex-col gap-1 items-start">
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('org-logo-input')?.click()}
+                    disabled={uploadingLogo}
+                    className="inline-flex items-center px-3 py-1.5 text-[11px] rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                  >
+                    {uploadingLogo ? 'Uploading…' : (orgDraft.logo ? 'Change logo' : 'Upload logo')}
+                  </button>
+                  <p className="text-[11px] text-gray-500">PNG/JPG/WEBP up to 5MB.</p>
+                  {orgDraft.logo && (
+                    <button
+                      type="button"
+                      onClick={() => handleOrgDraftChange('logo', '')}
+                      className="text-[11px] text-rose-600 hover:text-rose-700"
+                    >
+                      Remove logo
+                    </button>
+                  )}
+                </div>
+              </div>
+              <input
+                id="org-logo-input"
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0]
+                  if (f) handleLogoUpload(f)
+                }}
+              />
+              <input
+                type="text"
+                value={orgDraft.logo}
+                onChange={(e) => handleOrgDraftChange('logo', e.target.value)}
+                placeholder="Or paste a logo URL"
+                className="mt-1 rounded-md border border-gray-300 px-2 py-1.5 text-xs sm:text-sm"
+              />
+            </label>
+          </div>
+          <div className="mt-3 grid gap-3">
+            <label className="grid gap-1 text-xs sm:text-sm">
+              <span className="text-gray-700">Address</span>
+              <textarea
+                value={orgDraft.address}
+                onChange={(e) => handleOrgDraftChange('address', e.target.value)}
+                placeholder="Street, city, state, country"
+                rows={2}
+                className="rounded-md border border-gray-300 px-2 py-1.5 text-xs sm:text-sm"
+              />
+            </label>
+            <label className="grid gap-1 text-xs sm:text-sm">
+              <span className="text-gray-700">Description</span>
+              <textarea
+                value={orgDraft.description}
+                onChange={(e) => handleOrgDraftChange('description', e.target.value)}
+                placeholder="Short description shown on your public organization page"
+                rows={3}
+                className="rounded-md border border-gray-300 px-2 py-1.5 text-xs sm:text-sm"
+              />
+            </label>
+          </div>
+          <div className="mt-4 grid gap-4">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-wide">Services offered</h4>
+                <button
+                  type="button"
+                  onClick={() => setOrgDraft((prev) => {
+                    if (!prev) return prev
+                    const current = Array.isArray(prev.services) ? prev.services : []
+                    return { ...prev, services: [...current, { title: '', description: '' }] }
+                  })}
+                  className="px-2 py-1 rounded-md border border-gray-200 text-[11px] text-gray-700 hover:bg-gray-50"
+                >
+                  Add service
+                </button>
+              </div>
+              {Array.isArray(orgDraft.services) && orgDraft.services.length > 0 ? (
+                <div className="mt-1 grid gap-2">
+                  {orgDraft.services.map((svc, index) => (
+                    <div key={index} className="flex flex-col gap-1 rounded-md border border-gray-200 bg-white p-2">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={svc.title || ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            setOrgDraft((prev) => {
+                              if (!prev) return prev
+                              const next = Array.isArray(prev.services) ? [...prev.services] : []
+                              next[index] = { ...(next[index] || {}), title: value }
+                              return { ...prev, services: next }
+                            })
+                          }}
+                          placeholder="Service title"
+                          className="flex-1 rounded-md border border-gray-300 px-2 py-1 text-xs"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setOrgDraft((prev) => {
+                            if (!prev) return prev
+                            const current = Array.isArray(prev.services) ? prev.services : []
+                            const next = current.filter((_, i) => i !== index)
+                            return { ...prev, services: next }
+                          })}
+                          className="px-2 py-1 rounded-md border border-rose-200 text-[11px] text-rose-700 hover:bg-rose-50"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                      <textarea
+                        value={svc.description || ''}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          setOrgDraft((prev) => {
+                            if (!prev) return prev
+                            const next = Array.isArray(prev.services) ? [...prev.services] : []
+                            next[index] = { ...(next[index] || {}), description: value }
+                            return { ...prev, services: next }
+                          })
+                        }}
+                        placeholder="Short description"
+                        rows={2}
+                        className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1 text-[11px] text-gray-500">No services added yet.</p>
+              )}
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-wide">Team members</h4>
+                <button
+                  type="button"
+                  onClick={() => setOrgDraft((prev) => {
+                    if (!prev) return prev
+                    const current = Array.isArray(prev.teamMembers) ? prev.teamMembers : []
+                    return { ...prev, teamMembers: [...current, { name: '', role: '', photoUrl: '', bio: '' }] }
+                  })}
+                  className="px-2 py-1 rounded-md border border-gray-200 text-[11px] text-gray-700 hover:bg-gray-50"
+                >
+                  Add member
+                </button>
+              </div>
+              {Array.isArray(orgDraft.teamMembers) && orgDraft.teamMembers.length > 0 ? (
+                <div className="mt-1 grid gap-2">
+                  {orgDraft.teamMembers.map((m, index) => (
+                    <div key={index} className="flex flex-col gap-1 rounded-md border border-gray-200 bg-white p-2">
+                      <div className="grid sm:grid-cols-3 gap-2">
+                        <input
+                          type="text"
+                          value={m.name || ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            setOrgDraft((prev) => {
+                              if (!prev) return prev
+                              const next = Array.isArray(prev.teamMembers) ? [...prev.teamMembers] : []
+                              next[index] = { ...(next[index] || {}), name: value }
+                              return { ...prev, teamMembers: next }
+                            })
+                          }}
+                          placeholder="Name"
+                          className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                        />
+                        <input
+                          type="text"
+                          value={m.role || ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            setOrgDraft((prev) => {
+                              if (!prev) return prev
+                              const next = Array.isArray(prev.teamMembers) ? [...prev.teamMembers] : []
+                              next[index] = { ...(next[index] || {}), role: value }
+                              return { ...prev, teamMembers: next }
+                            })
+                          }}
+                          placeholder="Role"
+                          className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                        />
+                        <input
+                          type="text"
+                          value={m.photoUrl || ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            setOrgDraft((prev) => {
+                              if (!prev) return prev
+                              const next = Array.isArray(prev.teamMembers) ? [...prev.teamMembers] : []
+                              next[index] = { ...(next[index] || {}), photoUrl: value }
+                              return { ...prev, teamMembers: next }
+                            })
+                          }}
+                          placeholder="Photo URL (optional)"
+                          className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                        />
+                      </div>
+                      <textarea
+                        value={m.bio || ''}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          setOrgDraft((prev) => {
+                            if (!prev) return prev
+                            const next = Array.isArray(prev.teamMembers) ? [...prev.teamMembers] : []
+                            next[index] = { ...(next[index] || {}), bio: value }
+                            return { ...prev, teamMembers: next }
+                          })
+                        }}
+                        placeholder="Short bio"
+                        rows={2}
+                        className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                      />
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => setOrgDraft((prev) => {
+                            if (!prev) return prev
+                            const current = Array.isArray(prev.teamMembers) ? prev.teamMembers : []
+                            const next = current.filter((_, i) => i !== index)
+                            return { ...prev, teamMembers: next }
+                          })}
+                          className="px-2 py-1 rounded-md border border-rose-200 text-[11px] text-rose-700 hover:bg-rose-50"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1 text-[11px] text-gray-500">No team members added yet.</p>
+              )}
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-wide">Achievements</h4>
+                <button
+                  type="button"
+                  onClick={() => setOrgDraft((prev) => {
+                    if (!prev) return prev
+                    const current = Array.isArray(prev.achievements) ? prev.achievements : []
+                    return { ...prev, achievements: [...current, ''] }
+                  })}
+                  className="px-2 py-1 rounded-md border border-gray-200 text-[11px] text-gray-700 hover:bg-gray-50"
+                >
+                  Add achievement
+                </button>
+              </div>
+              {Array.isArray(orgDraft.achievements) && orgDraft.achievements.length > 0 ? (
+                <div className="mt-1 grid gap-1">
+                  {orgDraft.achievements.map((text, index) => (
+                    <div key={index} className="flex gap-2">
+                      <input
+                        type="text"
+                        value={text || ''}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          setOrgDraft((prev) => {
+                            if (!prev) return prev
+                            const next = Array.isArray(prev.achievements) ? [...prev.achievements] : []
+                            next[index] = value
+                            return { ...prev, achievements: next }
+                          })
+                        }}
+                        placeholder="e.g. Reached 10,000 users in 2025"
+                        className="flex-1 rounded-md border border-gray-300 px-2 py-1 text-xs"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setOrgDraft((prev) => {
+                          if (!prev) return prev
+                          const current = Array.isArray(prev.achievements) ? prev.achievements : []
+                          const next = current.filter((_, i) => i !== index)
+                          return { ...prev, achievements: next }
+                        })}
+                        className="px-2 py-1 rounded-md border border-rose-200 text-[11px] text-rose-700 hover:bg-rose-50"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1 text-[11px] text-gray-500">No achievements added yet.</p>
+              )}
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-wide">Projects / portfolio</h4>
+                <button
+                  type="button"
+                  onClick={() => setOrgDraft((prev) => {
+                    if (!prev) return prev
+                    const current = Array.isArray(prev.projects) ? prev.projects : []
+                    return { ...prev, projects: [...current, ''] }
+                  })}
+                  className="px-2 py-1 rounded-md border border-gray-200 text-[11px] text-gray-700 hover:bg-gray-50"
+                >
+                  Add project
+                </button>
+              </div>
+              {Array.isArray(orgDraft.projects) && orgDraft.projects.length > 0 ? (
+                <div className="mt-1 grid gap-1">
+                  {orgDraft.projects.map((text, index) => (
+                    <div key={index} className="flex gap-2">
+                      <input
+                        type="text"
+                        value={text || ''}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          setOrgDraft((prev) => {
+                            if (!prev) return prev
+                            const next = Array.isArray(prev.projects) ? [...prev.projects] : []
+                            next[index] = value
+                            return { ...prev, projects: next }
+                          })
+                        }}
+                        placeholder="e.g. Community health outreach 2025"
+                        className="flex-1 rounded-md border border-gray-300 px-2 py-1 text-xs"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setOrgDraft((prev) => {
+                          if (!prev) return prev
+                          const current = Array.isArray(prev.projects) ? prev.projects : []
+                          const next = current.filter((_, i) => i !== index)
+                          return { ...prev, projects: next }
+                        })}
+                        className="px-2 py-1 rounded-md border border-rose-200 text-[11px] text-rose-700 hover:bg-rose-50"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1 text-[11px] text-gray-500">No projects added yet.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-4">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-wide">Ratings & testimonials</h4>
+                <button
+                  type="button"
+                  onClick={() => setOrgDraft((prev) => {
+                    if (!prev) return prev
+                    const current = Array.isArray(prev.reviews) ? prev.reviews : []
+                    return {
+                      ...prev,
+                      reviews: [...current, { author: '', roleOrOrg: '', rating: 5, comment: '' }],
+                    }
+                  })}
+                  className="px-2 py-1 rounded-md border border-gray-200 text-[11px] text-gray-700 hover:bg-gray-50"
+                >
+                  Add testimonial
+                </button>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2 mb-2">
+                <label className="grid gap-1 text-[11px] text-gray-700">
+                  <span>Overall rating (1–5)</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="5"
+                    step="0.1"
+                    value={orgDraft.ratingScore === '' || orgDraft.ratingScore == null ? '' : orgDraft.ratingScore}
+                    onChange={(e) => {
+                      const raw = e.target.value
+                      const value = raw === '' ? '' : Number(raw)
+                      setOrgDraft((prev) => (prev ? { ...prev, ratingScore: Number.isNaN(value) ? '' : value } : prev))
+                    }}
+                    className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                  />
+                </label>
+                <label className="grid gap-1 text-[11px] text-gray-700">
+                  <span>Number of reviews</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={orgDraft.ratingCount === '' || orgDraft.ratingCount == null ? '' : orgDraft.ratingCount}
+                    onChange={(e) => {
+                      const raw = e.target.value
+                      const value = raw === '' ? '' : Number.parseInt(raw, 10)
+                      setOrgDraft((prev) => (prev ? { ...prev, ratingCount: Number.isNaN(value) ? '' : value } : prev))
+                    }}
+                    className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                  />
+                </label>
+              </div>
+              {Array.isArray(orgDraft.reviews) && orgDraft.reviews.length > 0 ? (
+                <div className="mt-1 grid gap-2">
+                  {orgDraft.reviews.map((review, index) => (
+                    <div key={index} className="flex flex-col gap-1 rounded-md border border-gray-200 bg-white p-2">
+                      <div className="grid sm:grid-cols-3 gap-2">
+                        <input
+                          type="text"
+                          value={review.author || ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            setOrgDraft((prev) => {
+                              if (!prev) return prev
+                              const next = Array.isArray(prev.reviews) ? [...prev.reviews] : []
+                              next[index] = { ...(next[index] || {}), author: value }
+                              return { ...prev, reviews: next }
+                            })
+                          }}
+                          placeholder="Author / organization"
+                          className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                        />
+                        <input
+                          type="text"
+                          value={review.roleOrOrg || ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            setOrgDraft((prev) => {
+                              if (!prev) return prev
+                              const next = Array.isArray(prev.reviews) ? [...prev.reviews] : []
+                              next[index] = { ...(next[index] || {}), roleOrOrg: value }
+                              return { ...prev, reviews: next }
+                            })
+                          }}
+                          placeholder="Role (e.g. Client, Partner)"
+                          className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                        />
+                        <input
+                          type="number"
+                          min="1"
+                          max="5"
+                          step="1"
+                          value={review.rating == null ? '' : review.rating}
+                          onChange={(e) => {
+                            const raw = e.target.value
+                            const value = raw === '' ? '' : Number.parseInt(raw, 10)
+                            setOrgDraft((prev) => {
+                              if (!prev) return prev
+                              const next = Array.isArray(prev.reviews) ? [...prev.reviews] : []
+                              next[index] = { ...(next[index] || {}), rating: Number.isNaN(value) ? '' : value }
+                              return { ...prev, reviews: next }
+                            })
+                          }}
+                          placeholder="Rating"
+                          className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                        />
+                      </div>
+                      <textarea
+                        value={review.comment || ''}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          setOrgDraft((prev) => {
+                            if (!prev) return prev
+                            const next = Array.isArray(prev.reviews) ? [...prev.reviews] : []
+                            next[index] = { ...(next[index] || {}), comment: value }
+                            return { ...prev, reviews: next }
+                          })
+                        }}
+                        placeholder="Short testimonial"
+                        rows={2}
+                        className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                      />
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => setOrgDraft((prev) => {
+                            if (!prev) return prev
+                            const current = Array.isArray(prev.reviews) ? prev.reviews : []
+                            const next = current.filter((_, i) => i !== index)
+                            return { ...prev, reviews: next }
+                          })}
+                          className="px-2 py-1 rounded-md border border-rose-200 text-[11px] text-rose-700 hover:bg-rose-50"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1 text-[11px] text-gray-500">No testimonials added yet.</p>
+              )}
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-wide">Partners & collaborators</h4>
+                <button
+                  type="button"
+                  onClick={() => setOrgDraft((prev) => {
+                    if (!prev) return prev
+                    const current = Array.isArray(prev.partners) ? prev.partners : []
+                    return { ...prev, partners: [...current, { name: '', logo: '', website: '' }] }
+                  })}
+                  className="px-2 py-1 rounded-md border border-gray-200 text-[11px] text-gray-700 hover:bg-gray-50"
+                >
+                  Add partner
+                </button>
+              </div>
+              {Array.isArray(orgDraft.partners) && orgDraft.partners.length > 0 ? (
+                <div className="mt-1 grid gap-2">
+                  {orgDraft.partners.map((partner, index) => (
+                    <div key={index} className="flex flex-col gap-1 rounded-md border border-gray-200 bg-white p-2">
+                      <div className="grid sm:grid-cols-3 gap-2">
+                        <input
+                          type="text"
+                          value={partner.name || ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            setOrgDraft((prev) => {
+                              if (!prev) return prev
+                              const next = Array.isArray(prev.partners) ? [...prev.partners] : []
+                              next[index] = { ...(next[index] || {}), name: value }
+                              return { ...prev, partners: next }
+                            })
+                          }}
+                          placeholder="Partner name"
+                          className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                        />
+                        <input
+                          type="text"
+                          value={partner.website || ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            setOrgDraft((prev) => {
+                              if (!prev) return prev
+                              const next = Array.isArray(prev.partners) ? [...prev.partners] : []
+                              next[index] = { ...(next[index] || {}), website: value }
+                              return { ...prev, partners: next }
+                            })
+                          }}
+                          placeholder="Website (optional)"
+                          className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                        />
+                        <input
+                          type="text"
+                          value={partner.logo || ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            setOrgDraft((prev) => {
+                              if (!prev) return prev
+                              const next = Array.isArray(prev.partners) ? [...prev.partners] : []
+                              next[index] = { ...(next[index] || {}), logo: value }
+                              return { ...prev, partners: next }
+                            })
+                          }}
+                          placeholder="Logo URL (optional)"
+                          className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                        />
+                      </div>
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => setOrgDraft((prev) => {
+                            if (!prev) return prev
+                            const current = Array.isArray(prev.partners) ? prev.partners : []
+                            const next = current.filter((_, i) => i !== index)
+                            return { ...prev, partners: next }
+                          })}
+                          className="px-2 py-1 rounded-md border border-rose-200 text-[11px] text-rose-700 hover:bg-rose-50"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1 text-[11px] text-gray-500">No partners added yet.</p>
+              )}
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-wide">Media gallery</h4>
+                <button
+                  type="button"
+                  onClick={() => setOrgDraft((prev) => {
+                    if (!prev) return prev
+                    const current = Array.isArray(prev.media) ? prev.media : []
+                    return { ...prev, media: [...current, { type: 'image', url: '', title: '' }] }
+                  })}
+                  className="px-2 py-1 rounded-md border border-gray-200 text-[11px] text-gray-700 hover:bg-gray-50"
+                >
+                  Add media item
+                </button>
+              </div>
+              {Array.isArray(orgDraft.media) && orgDraft.media.length > 0 ? (
+                <div className="mt-1 grid gap-2">
+                  {orgDraft.media.map((item, index) => (
+                    <div key={index} className="flex flex-col gap-1 rounded-md border border-gray-200 bg-white p-2">
+                      <div className="grid sm:grid-cols-3 gap-2">
+                        <select
+                          value={item.type || 'image'}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            setOrgDraft((prev) => {
+                              if (!prev) return prev
+                              const next = Array.isArray(prev.media) ? [...prev.media] : []
+                              next[index] = { ...(next[index] || {}), type: value }
+                              return { ...prev, media: next }
+                            })
+                          }}
+                          className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                        >
+                          <option value="image">Image</option>
+                          <option value="video">Video</option>
+                        </select>
+                        <input
+                          type="text"
+                          value={item.url || ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            setOrgDraft((prev) => {
+                              if (!prev) return prev
+                              const next = Array.isArray(prev.media) ? [...prev.media] : []
+                              next[index] = { ...(next[index] || {}), url: value }
+                              return { ...prev, media: next }
+                            })
+                          }}
+                          placeholder="Image or video URL"
+                          className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                        />
+                        <input
+                          type="text"
+                          value={item.title || ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            setOrgDraft((prev) => {
+                              if (!prev) return prev
+                              const next = Array.isArray(prev.media) ? [...prev.media] : []
+                              next[index] = { ...(next[index] || {}), title: value }
+                              return { ...prev, media: next }
+                            })
+                          }}
+                          placeholder="Caption (optional)"
+                          className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                        />
+                      </div>
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => setOrgDraft((prev) => {
+                            if (!prev) return prev
+                            const current = Array.isArray(prev.media) ? prev.media : []
+                            const next = current.filter((_, i) => i !== index)
+                            return { ...prev, media: next }
+                          })}
+                          className="px-2 py-1 rounded-md border border-rose-200 text-[11px] text-rose-700 hover:bg-rose-50"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1 text-[11px] text-gray-500">No media items added yet.</p>
+              )}
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-wide">Certificates / accreditations</h4>
+                <button
+                  type="button"
+                  onClick={() => setOrgDraft((prev) => {
+                    if (!prev) return prev
+                    const current = Array.isArray(prev.certificates) ? prev.certificates : []
+                    return { ...prev, certificates: [...current, { name: '', issuer: '', year: '', link: '' }] }
+                  })}
+                  className="px-2 py-1 rounded-md border border-gray-200 text-[11px] text-gray-700 hover:bg-gray-50"
+                >
+                  Add certificate
+                </button>
+              </div>
+              {Array.isArray(orgDraft.certificates) && orgDraft.certificates.length > 0 ? (
+                <div className="mt-1 grid gap-2">
+                  {orgDraft.certificates.map((cert, index) => (
+                    <div key={index} className="flex flex-col gap-1 rounded-md border border-gray-200 bg-white p-2">
+                      <div className="grid sm:grid-cols-4 gap-2">
+                        <input
+                          type="text"
+                          value={cert.name || ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            setOrgDraft((prev) => {
+                              if (!prev) return prev
+                              const next = Array.isArray(prev.certificates) ? [...prev.certificates] : []
+                              next[index] = { ...(next[index] || {}), name: value }
+                              return { ...prev, certificates: next }
+                            })
+                          }}
+                          placeholder="Certificate name"
+                          className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                        />
+                        <input
+                          type="text"
+                          value={cert.issuer || ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            setOrgDraft((prev) => {
+                              if (!prev) return prev
+                              const next = Array.isArray(prev.certificates) ? [...prev.certificates] : []
+                              next[index] = { ...(next[index] || {}), issuer: value }
+                              return { ...prev, certificates: next }
+                            })
+                          }}
+                          placeholder="Issuer"
+                          className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                        />
+                        <input
+                          type="text"
+                          value={cert.year || ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            setOrgDraft((prev) => {
+                              if (!prev) return prev
+                              const next = Array.isArray(prev.certificates) ? [...prev.certificates] : []
+                              next[index] = { ...(next[index] || {}), year: value }
+                              return { ...prev, certificates: next }
+                            })
+                          }}
+                          placeholder="Year"
+                          className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                        />
+                        <input
+                          type="text"
+                          value={cert.link || ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            setOrgDraft((prev) => {
+                              if (!prev) return prev
+                              const next = Array.isArray(prev.certificates) ? [...prev.certificates] : []
+                              next[index] = { ...(next[index] || {}), link: value }
+                              return { ...prev, certificates: next }
+                            })
+                          }}
+                          placeholder="Link (optional)"
+                          className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                        />
+                      </div>
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => setOrgDraft((prev) => {
+                            if (!prev) return prev
+                            const current = Array.isArray(prev.certificates) ? prev.certificates : []
+                            const next = current.filter((_, i) => i !== index)
+                            return { ...prev, certificates: next }
+                          })}
+                          className="px-2 py-1 rounded-md border border-rose-200 text-[11px] text-rose-700 hover:bg-rose-50"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1 text-[11px] text-gray-500">No certificates added yet.</p>
+              )}
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-wide">Updates / news</h4>
+                <button
+                  type="button"
+                  onClick={() => setOrgDraft((prev) => {
+                    if (!prev) return prev
+                    const current = Array.isArray(prev.updates) ? prev.updates : []
+                    return { ...prev, updates: [...current, { title: '', content: '', date: '' }] }
+                  })}
+                  className="px-2 py-1 rounded-md border border-gray-200 text-[11px] text-gray-700 hover:bg-gray-50"
+                >
+                  Add update
+                </button>
+              </div>
+              {Array.isArray(orgDraft.updates) && orgDraft.updates.length > 0 ? (
+                <div className="mt-1 grid gap-2">
+                  {orgDraft.updates.map((item, index) => (
+                    <div key={index} className="flex flex-col gap-1 rounded-md border border-gray-200 bg-white p-2">
+                      <div className="grid sm:grid-cols-3 gap-2">
+                        <input
+                          type="text"
+                          value={item.title || ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            setOrgDraft((prev) => {
+                              if (!prev) return prev
+                              const next = Array.isArray(prev.updates) ? [...prev.updates] : []
+                              next[index] = { ...(next[index] || {}), title: value }
+                              return { ...prev, updates: next }
+                            })
+                          }}
+                          placeholder="Update title"
+                          className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                        />
+                        <input
+                          type="text"
+                          value={item.date || ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            setOrgDraft((prev) => {
+                              if (!prev) return prev
+                              const next = Array.isArray(prev.updates) ? [...prev.updates] : []
+                              next[index] = { ...(next[index] || {}), date: value }
+                              return { ...prev, updates: next }
+                            })
+                          }}
+                          placeholder="Date (e.g. 2025-01-01)"
+                          className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                        />
+                        <textarea
+                          value={item.content || ''}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            setOrgDraft((prev) => {
+                              if (!prev) return prev
+                              const next = Array.isArray(prev.updates) ? [...prev.updates] : []
+                              next[index] = { ...(next[index] || {}), content: value }
+                              return { ...prev, updates: next }
+                            })
+                          }}
+                          placeholder="Short update content"
+                          rows={2}
+                          className="rounded-md border border-gray-300 px-2 py-1 text-xs sm:col-span-1"
+                        />
+                      </div>
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => setOrgDraft((prev) => {
+                            if (!prev) return prev
+                            const current = Array.isArray(prev.updates) ? prev.updates : []
+                            const next = current.filter((_, i) => i !== index)
+                            return { ...prev, updates: next }
+                          })}
+                          className="px-2 py-1 rounded-md border border-rose-200 text-[11px] text-rose-700 hover:bg-rose-50"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-1 text-[11px] text-gray-500">No updates added yet.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-3 flex justify-end">
+            <button
+              type="button"
+              onClick={handleSaveOrgProfile}
+              disabled={savingOrgProfile}
+              className="inline-flex items-center justify-center rounded-md bg-emerald-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
+            >
+              {savingOrgProfile ? 'Saving…' : 'Save profile'}
             </button>
           </div>
         </div>

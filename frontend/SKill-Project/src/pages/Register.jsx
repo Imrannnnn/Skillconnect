@@ -12,6 +12,9 @@ export default function Register() {
   const [providerMode, setProviderMode] = useState("service");
   const [orgSector, setOrgSector] = useState("");
   const [orgPhone, setOrgPhone] = useState("");
+  const [orgAddress, setOrgAddress] = useState("");
+  const [orgLogo, setOrgLogo] = useState("");
+  const [orgWebsite, setOrgWebsite] = useState("");
   const [categories, setCategories] = useState([]);
   const [catInput, setCatInput] = useState("");
   const [bio, setBio] = useState("");
@@ -63,6 +66,9 @@ export default function Register() {
         accountType: "organization",
         sector: orgSector || undefined,
         phone: orgPhone || undefined,
+        address: orgAddress || undefined,
+        logo: orgLogo || undefined,
+        website: orgWebsite || undefined,
       };
     } else {
       payload = { name, email: email.trim().toLowerCase(), password, role, accountType: "individual" };
@@ -193,25 +199,56 @@ export default function Register() {
               </div>
             )}
             {isOrg && (
-              <div className="grid sm:grid-cols-2 gap-3 mt-2">
+              <div className="grid gap-3 mt-2">
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <label className="grid gap-1 text-sm">
+                    <span className="text-gray-700">Sector</span>
+                    <input
+                      className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      placeholder="e.g. Hospital, School, Airline, NGO"
+                      value={orgSector}
+                      onChange={(e) => setOrgSector(e.target.value)}
+                    />
+                  </label>
+                  <label className="grid gap-1 text-sm">
+                    <span className="text-gray-700">Organization phone (optional)</span>
+                    <input
+                      className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      placeholder="Contact phone number"
+                      value={orgPhone}
+                      onChange={(e) => setOrgPhone(e.target.value)}
+                    />
+                  </label>
+                </div>
                 <label className="grid gap-1 text-sm">
-                  <span className="text-gray-700">Sector</span>
-                  <input
-                    className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    placeholder="e.g. Hospital, School, Airline, NGO"
-                    value={orgSector}
-                    onChange={(e) => setOrgSector(e.target.value)}
+                  <span className="text-gray-700">Organization address (optional)</span>
+                  <textarea
+                    className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[70px]"
+                    placeholder="Street, city, state, country"
+                    value={orgAddress}
+                    onChange={(e) => setOrgAddress(e.target.value)}
                   />
                 </label>
-                <label className="grid gap-1 text-sm">
-                  <span className="text-gray-700">Organization phone (optional)</span>
-                  <input
-                    className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    placeholder="Contact phone number"
-                    value={orgPhone}
-                    onChange={(e) => setOrgPhone(e.target.value)}
-                  />
-                </label>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <label className="grid gap-1 text-sm">
+                    <span className="text-gray-700">Logo URL (optional)</span>
+                    <input
+                      className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      placeholder="https://..."
+                      value={orgLogo}
+                      onChange={(e) => setOrgLogo(e.target.value)}
+                    />
+                  </label>
+                  <label className="grid gap-1 text-sm">
+                    <span className="text-gray-700">Website URL (optional)</span>
+                    <input
+                      className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      placeholder="https://..."
+                      value={orgWebsite}
+                      onChange={(e) => setOrgWebsite(e.target.value)}
+                    />
+                  </label>
+                </div>
               </div>
             )}
           </>
