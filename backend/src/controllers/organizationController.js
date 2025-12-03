@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Organization from "../models/organization.js";
 import User from "../models/user.js";
 
@@ -192,8 +193,13 @@ export const getOrganizationBySlugPublic = async (req, res) => {
     const { slug } = req.params;
     if (!slug) return res.status(400).json({ message: "slug is required" });
 
+    const orConditions = [{ slug }];
+    if (mongoose.Types.ObjectId.isValid(slug)) {
+      orConditions.push({ _id: slug });
+    }
+
     const org = await Organization.findOne(
-      { $or: [{ slug }, { _id: slug }] },
+      { $or: orConditions },
       "name slug tagline sector description email phone website logo address services teamMembers achievements projects ratingScore ratingCount reviews partners media certificates updates createdAt",
     );
     if (!org) return res.status(404).json({ message: "Organization not found" });
