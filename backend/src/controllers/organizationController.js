@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Organization from "../models/organization.js";
 import User from "../models/user.js";
+import FormDefinition from "../models/formDefinition.js";
 
 function slugifyName(name) {
   return String(name || "")
@@ -200,11 +201,16 @@ export const getOrganizationBySlugPublic = async (req, res) => {
 
     const org = await Organization.findOne(
       { $or: orConditions },
-      "name slug tagline sector description email phone website logo address services teamMembers achievements projects ratingScore ratingCount reviews partners media certificates updates createdAt",
-    );
+      "_id name slug tagline sector description email phone website logo address services teamMembers achievements projects ratingScore ratingCount reviews partners media certificates updates createdAt",
+    ).lean();
     if (!org) return res.status(404).json({ message: "Organization not found" });
 
-    res.json({ organization: org });
+    const bookingForms = await FormDefinition.find(
+      { organization: org._id, status: "active" },
+      "name description allowAnonymous",
+    ).sort({ createdAt: -1 }).lean();
+
+    res.json({ organization: { ...org, bookingForms } });
   } catch (e) {
     res.status(500).json({ message: "Failed to get organization", error: e?.message || e });
   }

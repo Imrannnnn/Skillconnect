@@ -1,4 +1,12 @@
 import User from "../models/user.js";
+import Booking from "../models/booking.js";
+import Message from "../models/message.js";
+import Transaction from "../models/transaction.js";
+import Wallet from "../models/wallet.js";
+import Product from "../models/product.js";
+import FormDefinition from "../models/formDefinition.js";
+import FormResponse from "../models/formResponse.js";
+import Organization from "../models/organization.js";
 import sendEmail from "../utils/sendEmail.js";
 export const getUser = async (req, res) => {
   try {
@@ -318,6 +326,34 @@ export const deleteMe = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    // If this user owns an organization account, remove the organization and its dependent data.
+    const organizationId = user.organizationId;
+    if (organizationId) {
+      await Promise.all([
+        FormResponse.deleteMany({ organization: organizationId }),
+        FormDefinition.deleteMany({ organization: organizationId }),
+      ]);
+      await Organization.deleteOne({ _id: organizationId });
+    }
+
+    // Remove references to this user from any remaining organizations.
+    await Promise.all([
+      Organization.updateMany({ admins: userId }, { $pull: { admins: userId } }),
+      Organization.updateMany({ staff: userId }, { $pull: { staff: userId } }),
+      Organization.updateMany({ ownerUser: userId }, { $unset: { ownerUser: "" } }),
+    ]);
+
+    // Cascade delete user-related entities across the system.
+    await Promise.all([
+      Booking.deleteMany({ $or: [{ providerId: userId }, { clientId: userId }] }),
+      Message.deleteMany({ $or: [{ sender: userId }, { receiver: userId }] }),
+      Transaction.deleteMany({ $or: [{ fromUser: userId }, { toUser: userId }] }),
+      Wallet.deleteOne({ user: userId }),
+      Product.deleteMany({ providerId: userId }),
+      FormResponse.deleteMany({ submittedBy: userId }),
+      FormDefinition.updateMany({ createdBy: userId }, { $unset: { createdBy: "" } }),
+    ]);
 
     await User.deleteOne({ _id: userId });
 

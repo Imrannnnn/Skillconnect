@@ -1,14 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import API from "../api/axios.js";
 import { AuthContext } from "./auth.js";
 
 export function AuthProvider({ children }) {
+  const INACTIVITY_LIMIT_MS = 30 * 60 * 1000; // 30 minutes
   const [token, setToken] = useState(() => localStorage.getItem("token"));
   const [user, setUser] = useState(() => {
     const raw = localStorage.getItem("user");
     return raw ? JSON.parse(raw) : null;
   });
   const [loading, setLoading] = useState(false);
+  const [lastActiveAt, setLastActiveAt] = useState(() => {
+    const stored = localStorage.getItem("lastActiveAt");
+    return stored ? Number(stored) : 0;
+  });
 
   useEffect(() => {
     if (token) localStorage.setItem("token", token);
@@ -20,19 +25,35 @@ export function AuthProvider({ children }) {
     else localStorage.removeItem("user");
   }, [user]);
 
-  async function login(credentials) {
+  useEffect(() => {
+    if (lastActiveAt) localStorage.setItem("lastActiveAt", String(lastActiveAt));
+    else localStorage.removeItem("lastActiveAt");
+  }, [lastActiveAt]);
+
+  const clearSession = useCallback(() => {
+    setToken(null);
+    setUser(null);
+    setLastActiveAt(0);
+  }, []);
+
+  const logout = useCallback(() => {
+    clearSession();
+  }, [clearSession]);
+
+  const login = useCallback(async (credentials) => {
     setLoading(true);
     try {
       const { data } = await API.post("/auth/login", credentials);
       setToken(data?.token);
       setUser(data?.user || null);
+      setLastActiveAt(Date.now());
       return data;
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  async function register(payload) {
+  const register = useCallback(async (payload) => {
     setLoading(true);
     try {
       const { data } = await API.post("/auth/register", payload);
@@ -41,16 +62,63 @@ export function AuthProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  function logout() {
-    setToken(null);
-    setUser(null);
-  }
+  useEffect(() => {
+    if (!token) return undefined;
+
+    const handleActivity = () => {
+      setLastActiveAt(Date.now());
+    };
+
+    const activityEvents = [
+      "mousemove",
+      "mousedown",
+      "keydown",
+      "scroll",
+      "touchstart",
+      "focus",
+    ];
+
+    activityEvents.forEach((event) => window.addEventListener(event, handleActivity, { passive: true }));
+    const handleVisibility = () => {
+      if (!document.hidden) {
+        handleActivity();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      activityEvents.forEach((event) => window.removeEventListener(event, handleActivity));
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return undefined;
+
+    if (!lastActiveAt) {
+      setLastActiveAt(Date.now());
+      return undefined;
+    }
+
+    const now = Date.now();
+    const elapsed = now - lastActiveAt;
+    if (elapsed >= INACTIVITY_LIMIT_MS) {
+      clearSession();
+      return undefined;
+    }
+
+    const timeout = setTimeout(() => {
+      clearSession();
+    }, INACTIVITY_LIMIT_MS - elapsed);
+
+    return () => clearTimeout(timeout);
+  }, [token, lastActiveAt, clearSession, INACTIVITY_LIMIT_MS]);
 
   const value = useMemo(
     () => ({ token, user, loading, login, register, logout, setUser }),
-    [token, user, loading]
+    [token, user, loading, login, register, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

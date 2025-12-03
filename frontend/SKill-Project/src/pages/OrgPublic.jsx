@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import API from "../api/axios.js";
 
@@ -8,6 +8,10 @@ export default function OrgPublic() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reviewPage, setReviewPage] = useState(0);
+
+  const bookingForms = useMemo(() => {
+    return Array.isArray(organization?.bookingForms) ? organization.bookingForms : [];
+  }, [organization?.bookingForms]);
 
   useEffect(() => {
     let mounted = true;
@@ -101,6 +105,38 @@ export default function OrgPublic() {
           On SkillConnect since {new Date(organization.createdAt).toLocaleDateString()}
         </p>
       )}
+      {bookingForms.length > 0 && (
+        <section className="mt-6">
+          <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-900">
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-50 text-[11px] font-bold text-emerald-600 border border-emerald-100">
+              🗓
+            </span>
+            <span>Book with {organization.name}</span>
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {bookingForms.map((form) => (
+              <div key={form._id} className="rounded-lg border border-emerald-200 bg-white p-4 flex flex-col justify-between gap-3 text-sm text-gray-700">
+                <div className="min-h-[60px]">
+                  <div className="text-base font-semibold text-gray-900">{form.name}</div>
+                  {form.description && (
+                    <p className="mt-1 text-xs text-gray-500 line-clamp-3">{form.description}</p>
+                  )}
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-gray-500">
+                  <span>{form.allowAnonymous ? "No login required" : "Login required"}</span>
+                  <Link
+                    to={`/forms/${form._id}`}
+                    className="inline-flex items-center rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700"
+                  >
+                    Book now
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {organization.description && (
         <p className="mt-4 text-sm text-gray-700 whitespace-pre-line">
           {organization.description}
