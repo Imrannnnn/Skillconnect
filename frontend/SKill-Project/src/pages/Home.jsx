@@ -4,10 +4,24 @@ import heroImg from "../assets/ayaz-lalani-no-EShQ7s1A-unsplash.jpg";
 import API from "../api/axios.js";
 
 export default function Home() {
-  const categories = ["Plumber", "Driver", "Cook", "Fashion designer", "Cleaner"];
+  const categories = ["Plumber", "Driver", "NGO", "Fashion designer", "Cleaner"];
   const [organizations, setOrganizations] = useState([]);
   const [loadingOrganizations, setLoadingOrganizations] = useState(false);
   const [organizationsError, setOrganizationsError] = useState("");
+  const [communityItems, setCommunityItems] = useState([]);
+  const [loadingCommunity, setLoadingCommunity] = useState(false);
+  const [communityError, setCommunityError] = useState("");
+
+  function formatShortDate(value) {
+    if (!value) return "";
+    try {
+      return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(
+        new Date(value),
+      );
+    } catch {
+      return "";
+    }
+  }
 
   useEffect(() => {
     let mounted = true;
@@ -29,6 +43,31 @@ export default function Home() {
     }
 
     load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadCommunity() {
+      setLoadingCommunity(true);
+      setCommunityError("");
+      try {
+        const { data } = await API.get("/content?limit=3");
+        if (!mounted) return;
+        const list = Array.isArray(data?.contents) ? data.contents : [];
+        setCommunityItems(list);
+      } catch {
+        if (!mounted) return;
+        setCommunityError("Failed to load community content.");
+      } finally {
+        if (mounted) setLoadingCommunity(false);
+      }
+    }
+
+    loadCommunity();
     return () => {
       mounted = false;
     };
@@ -173,6 +212,70 @@ export default function Home() {
                           View organization
                         </span>
                       )}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </section>
+
+      <section className="py-12 sm:py-16 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">
+            <div>
+              <h2 className="text-2xl font-semibold text-gray-900">From the community</h2>
+              <p className="mt-1 text-sm text-gray-600">
+                Recent updates, posts, and stories from the SkillConnect community.
+              </p>
+            </div>
+            <Link
+              to="/feed"
+              className="inline-flex items-center justify-center rounded-md border border-emerald-200 bg-white px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50"
+            >
+              View all
+            </Link>
+          </div>
+
+          {loadingCommunity && (
+            <p className="text-sm text-gray-500">Loading community updates...</p>
+          )}
+
+          {!loadingCommunity && communityError && (
+            <p className="text-sm text-rose-600">{communityError}</p>
+          )}
+
+          {!loadingCommunity && !communityError && (
+            <>
+              {communityItems.length === 0 ? (
+                <p className="text-sm text-gray-600">
+                  No community posts yet. Be the first to share an update from your dashboard.
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {communityItems.map((item) => (
+                    <Link
+                      key={item._id}
+                      to={`/feed/${item._id}`}
+                      className="group flex flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:border-emerald-500 hover:shadow-md transition"
+                    >
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 uppercase">
+                          {String(item.contentType || "status")}
+                        </span>
+                        <span className="text-[11px] text-gray-500">
+                          {formatShortDate(item.createdAt)}
+                        </span>
+                      </div>
+                      {item.title && (
+                        <h3 className="text-sm font-semibold text-gray-900 mb-1 line-clamp-1">
+                          {item.title}
+                        </h3>
+                      )}
+                      <p className="text-sm text-gray-600 line-clamp-3">
+                        {String(item.body || "")}
+                      </p>
                     </Link>
                   ))}
                 </div>

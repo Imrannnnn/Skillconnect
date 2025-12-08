@@ -123,6 +123,13 @@ export default function DashboardProvider() {
               </svg>
               <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-emerald-500" />
             </button>
+            <button
+              type="button"
+              onClick={() => navigate('/my-content')}
+              className="hidden sm:inline-flex items-center gap-1 rounded-full border border-emerald-600 bg-emerald-50 px-3 py-1.5 text-[11px] font-medium text-emerald-700 hover:bg-emerald-100"
+            >
+              <span>My content</span>
+            </button>
           </div>
         </div>
       </div>
@@ -180,7 +187,7 @@ export default function DashboardProvider() {
               <p className="text-[11px] text-emerald-800/80">
                 Send this link to clients as your mini website so they can view your profile, book your services, or order your products.
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-4">
                 <input
                   className="flex-1 px-2 py-1.5 rounded-md border border-emerald-200 bg-white text-[11px] text-gray-800 truncate"
                   value={profileUrl}

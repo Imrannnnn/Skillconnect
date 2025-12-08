@@ -1,4 +1,5 @@
-import { useContext, useEffect, useMemo, useState } from 'react'
+import { useContext, useEffect, useMemo, useState, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import API from '../api/axios.js'
 import { AuthContext } from '../context/auth.js'
 import { useToast } from '../components/toast.js'
@@ -181,6 +182,13 @@ export default function OrgDashboard() {
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [showProfileEditor, setShowProfileEditor] = useState(false)
   const [openProfileSections, setOpenProfileSections] = useState({ ...DEFAULT_PROFILE_SECTION_STATE })
+
+  // Collaborators state
+  const [collaborators, setCollaborators] = useState({ owner: null, admins: [], staff: [] })
+  const [loadingCollaborators, setLoadingCollaborators] = useState(false)
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteRole, setInviteRole] = useState('staff')
+  const [inviting, setInviting] = useState(false)
 
   useEffect(() => {
     if (showProfileEditor) {
@@ -452,6 +460,25 @@ export default function OrgDashboard() {
     return () => { mounted = false }
   }, [user, notify])
 
+  // Collaborators API helpers
+  const loadCollaborators = useCallback(async () => {
+    if (!org?._id) return
+    setLoadingCollaborators(true)
+    try {
+      const { data } = await API.get(`/organizations/${org._id}/collaborators`)
+      setCollaborators(data.collaborators || { owner: null, admins: [], staff: [] })
+    } catch (e) {
+      notify(e?.response?.data?.message || 'Failed to load collaborators', { type: 'error' })
+    } finally {
+      setLoadingCollaborators(false)
+    }
+  }, [org?._id, notify])
+
+  useEffect(() => {
+    if (!org?._id) return
+    loadCollaborators()
+  }, [org, loadCollaborators])
+
   useEffect(() => {
     if (!org?._id) return
     let mounted = true
@@ -701,6 +728,38 @@ export default function OrgDashboard() {
       window.URL.revokeObjectURL(url)
     } catch (e) {
       notify(e?.response?.data?.message || 'Failed to export responses', { type: 'error' })
+    }
+  }
+
+  const handleInvite = async (e) => {
+    e.preventDefault()
+    if (!inviteEmail.trim()) {
+      notify('Enter an email address', { type: 'info' })
+      return
+    }
+    setInviting(true)
+    try {
+      await API.post(`/organizations/${org._id}/invite`, { email: inviteEmail.trim(), role: inviteRole })
+      notify('Invitation sent', { type: 'success' })
+      setInviteEmail('')
+      setInviteRole('staff')
+      // Optionally refresh list after a short delay
+      setTimeout(loadCollaborators, 500)
+    } catch (e) {
+      notify(e?.response?.data?.message || 'Failed to send invitation', { type: 'error' })
+    } finally {
+      setInviting(false)
+    }
+  }
+
+  const handleRemoveCollaborator = async (userId) => {
+    if (!confirm('Remove this collaborator?')) return
+    try {
+      await API.delete(`/organizations/${org._id}/collaborators/${userId}`)
+      notify('Collaborator removed', { type: 'success' })
+      loadCollaborators()
+    } catch (e) {
+      notify(e?.response?.data?.message || 'Failed to remove collaborator', { type: 'error' })
     }
   }
 
@@ -1406,8 +1465,116 @@ export default function OrgDashboard() {
               >
                 Update profile
               </button>
+              <Link
+                to="/my-content"
+                className="inline-flex items-center rounded-full border border-emerald-600 bg-emerald-50 px-3 py-1 text-[11px] font-medium text-emerald-700 hover:bg-emerald-100"
+              >
+                My content
+              </Link>
             </div>
           </div>
+        </section>
+
+        {/* Collaborators Section */}
+        <section className="mt-8 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Collaborators</h2>
+          {loadingCollaborators ? (
+            <p className="text-sm text-gray-500">Loading collaborators…</p>
+          ) : (
+            <div className="space-y-4">
+              {/* Invite Form */}
+              <form onSubmit={handleInvite} className="flex flex-wrap gap-2 items-end">
+                <input
+                  type="email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  placeholder="Email address"
+                  className="flex-1 min-w-[200px] rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  required
+                />
+                <select
+                  value={inviteRole}
+                  onChange={(e) => setInviteRole(e.target.value)}
+                  className="rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value="staff">Staff</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <button
+                  type="submit"
+                  disabled={inviting}
+                  className="inline-flex items-center justify-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
+                >
+                  {inviting ? 'Sending…' : 'Invite'}
+                </button>
+              </form>
+
+              {/* Owner */}
+              {collaborators.owner && (
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Owner</h3>
+                  <div className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                    <div className="text-sm">
+                      <p className="font-medium text-gray-900">{collaborators.owner.name || '—'}</p>
+                      <p className="text-xs text-gray-500">{collaborators.owner.email}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Admins */}
+              {collaborators.admins.length > 0 && (
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Admins</h3>
+                  <div className="space-y-2">
+                    {collaborators.admins.map((u) => (
+                      <div key={u._id} className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2">
+                        <div className="text-sm">
+                          <p className="font-medium text-gray-900">{u.name || '—'}</p>
+                          <p className="text-xs text-gray-500">{u.email}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveCollaborator(u._id)}
+                          className="text-xs text-rose-600 hover:text-rose-700"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Staff */}
+              {collaborators.staff.length > 0 && (
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Staff</h3>
+                  <div className="space-y-2">
+                    {collaborators.staff.map((u) => (
+                      <div key={u._id} className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2">
+                        <div className="text-sm">
+                          <p className="font-medium text-gray-900">{u.name || '—'}</p>
+                          <p className="text-xs text-gray-500">{u.email}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveCollaborator(u._id)}
+                          className="text-xs text-rose-600 hover:text-rose-700"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {collaborators.admins.length === 0 && collaborators.staff.length === 0 && (
+                <p className="text-sm text-gray-500">No other collaborators yet.</p>
+              )}
+            </div>
+          )}
         </section>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[2fr,1fr]">

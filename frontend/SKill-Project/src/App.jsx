@@ -30,6 +30,10 @@ import AdminForms from './pages/AdminForms.jsx'
 import PublicForm from './pages/PublicForm.jsx'
 import OrgDashboard from './pages/OrgDashboard.jsx'
 import OrgPublic from './pages/OrgPublic.jsx'
+import CommunityFeed from './pages/CommunityFeed.jsx'
+import ContentDetail from './pages/ContentDetail.jsx'
+import MyContent from './pages/MyContent.jsx'
+import AcceptInvitation from './pages/AcceptInvitation.jsx'
 
 function App() {
   const [_, __] = useState(null)
@@ -63,6 +67,8 @@ function App() {
         <div className="relative z-10">
           <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/feed" element={<CommunityFeed />} />
+          <Route path="/feed/:id" element={<ContentDetail />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -76,6 +82,7 @@ function App() {
           <Route path="/dashboard" element={<PrivateRoute><DashboardClient /></PrivateRoute>} />
           <Route path="/provider/dashboard" element={<PrivateRoute><DashboardProvider /></PrivateRoute>} />
           <Route path="/org/dashboard" element={<PrivateRoute><OrgDashboard /></PrivateRoute>} />
+          <Route path="/my-content" element={<PrivateRoute><MyContent /></PrivateRoute>} />
           <Route path="/provider/products" element={<PrivateRoute><ProviderProducts /></PrivateRoute>} />
           <Route path="/provider/edit-profile" element={<PrivateRoute><EditProfileProvider /></PrivateRoute>} />
           <Route path="/provider/bookings" element={<PrivateRoute><ProviderBookings /></PrivateRoute>} />
@@ -89,6 +96,7 @@ function App() {
           <Route path="/wallet/callback" element={<PrivateRoute><WalletCallback /></PrivateRoute>} />
           <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
           <Route path="/about" element={<About />} />
+          <Route path="/accept-invitation/:token" element={<AcceptInvitation />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <AiAssistant />
