@@ -10,7 +10,7 @@ export const getImageUrl = (path) => {
         try {
             const url = new URL(import.meta.env.VITE_API_BASE);
             baseUrl = url.origin;
-        } catch (e) {
+        } catch {
             // ignore invalid url
         }
     }
