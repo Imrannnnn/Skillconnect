@@ -33,6 +33,9 @@ const userSchema = new mongoose.Schema({
   location: {
     latitude: Number,
     longitude: Number,
+    city: String,
+    state: String,
+    country: String,
   },
   // Public profile / trust signals
   social: {

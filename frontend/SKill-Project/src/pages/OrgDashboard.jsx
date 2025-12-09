@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import API from '../api/axios.js'
 import { AuthContext } from '../context/auth.js'
 import { useToast } from '../components/toast.js'
+import { getImageUrl } from '../utils/image.js'
 
 const FIELD_TYPES = [
   'text',
@@ -625,9 +626,9 @@ export default function OrgDashboard() {
     try {
       const fields = Array.isArray(editableForm.fields)
         ? editableForm.fields.map((f, index) => ({
-            ...f,
-            order: index,
-          }))
+          ...f,
+          order: index,
+        }))
         : []
 
       const payload = {
@@ -1072,7 +1073,7 @@ export default function OrgDashboard() {
             <div className="flex flex-wrap items-center gap-4">
               <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-sm font-semibold text-gray-500">
                 {orgDraft.logo ? (
-                  <img src={orgDraft.logo} alt="Logo" className="h-full w-full rounded-xl object-contain" />
+                  <img src={getImageUrl(orgDraft.logo)} alt="Logo" className="h-full w-full rounded-xl object-contain" />
                 ) : (
                   orgInitial
                 )}
@@ -1383,7 +1384,7 @@ export default function OrgDashboard() {
             <div className="flex flex-1 items-start gap-4">
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-600 text-xl font-semibold text-white">
                 {orgDraft?.logo ? (
-                  <img src={orgDraft.logo} alt="Organization logo" className="h-full w-full rounded-2xl object-cover" />
+                  <img src={getImageUrl(orgDraft.logo)} alt="Organization logo" className="h-full w-full rounded-2xl object-cover" />
                 ) : (
                   orgInitial
                 )}
@@ -1708,11 +1709,10 @@ export default function OrgDashboard() {
                           key={form._id}
                           type="button"
                           onClick={() => setActiveFormId(form._id)}
-                          className={`flex w-full flex-col items-start rounded-xl border px-3 py-2 text-left text-xs transition ${
-                            activeFormId === form._id
+                          className={`flex w-full flex-col items-start rounded-xl border px-3 py-2 text-left text-xs transition ${activeFormId === form._id
                               ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
                               : 'border-gray-200 bg-white text-gray-700 hover:border-emerald-200 hover:text-emerald-700'
-                          }`}
+                            }`}
                         >
                           <span className="font-medium">{form.name}</span>
                           <span className="mt-0.5 text-[11px] text-gray-500">{form.status || 'draft'}</span>
@@ -1804,22 +1804,20 @@ export default function OrgDashboard() {
                         <button
                           type="button"
                           onClick={() => setViewMode('builder')}
-                          className={`rounded-full px-3 py-1 text-xs font-medium ${
-                            viewMode === 'builder'
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${viewMode === 'builder'
                               ? 'bg-emerald-100 text-emerald-700'
                               : 'bg-white text-gray-600 hover:bg-gray-50'
-                          }`}
+                            }`}
                         >
                           Builder
                         </button>
                         <button
                           type="button"
                           onClick={() => setViewMode('submissions')}
-                          className={`rounded-full px-3 py-1 text-xs font-medium ${
-                            viewMode === 'submissions'
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${viewMode === 'submissions'
                               ? 'bg-emerald-100 text-emerald-700'
                               : 'bg-white text-gray-600 hover:bg-gray-50'
-                          }`}
+                            }`}
                         >
                           Submissions
                         </button>

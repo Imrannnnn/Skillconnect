@@ -32,10 +32,10 @@ export default function ProviderCard({ provider, distanceKm }) {
     typeof provider?.jobsDone === "number"
       ? provider.jobsDone
       : typeof provider?.completedJobs === "number"
-      ? provider.completedJobs
-      : typeof provider?.jobsCompleted === "number"
-      ? provider.jobsCompleted
-      : undefined;
+        ? provider.completedJobs
+        : typeof provider?.jobsCompleted === "number"
+          ? provider.jobsCompleted
+          : undefined;
 
   const verification = provider?.verification || {};
   const emailVerified = !!(verification.emailVerified || provider?.verified);
@@ -107,6 +107,11 @@ export default function ProviderCard({ provider, distanceKm }) {
               </div>
               {provider?.providerType && (
                 <p className="text-xs mt-1 text-gray-500">{provider.providerType}</p>
+              )}
+              {(provider?.location?.city || provider?.location?.state || provider?.location?.country) && (
+                <p className="text-xs mt-0.5 text-gray-500">
+                  {[provider.location.city, provider.location.state, provider.location.country].filter(Boolean).join(", ")}
+                </p>
               )}
               {typeof distanceKm === 'number' && (
                 <p className="text-xs mt-1 text-gray-500">{distanceKm.toFixed(1)} km away</p>

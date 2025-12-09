@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import API from "../api/axios.js";
+import { getImageUrl } from "../utils/image.js";
 
 export default function OrgPublic() {
   const { slug } = useParams();
@@ -135,7 +136,7 @@ export default function OrgPublic() {
             {organization.logo ? (
               <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl border border-white/20 bg-white/10 p-3 shadow-lg shadow-emerald-900/30 backdrop-blur">
                 <img
-                  src={organization.logo}
+                  src={getImageUrl(organization.logo)}
                   alt={`${organization.name} logo`}
                   className="h-full w-full rounded-2xl object-contain"
                 />
@@ -434,7 +435,7 @@ export default function OrgPublic() {
                         >
                           {partner.logo && (
                             <img
-                              src={partner.logo}
+                              src={getImageUrl(partner.logo)}
                               alt={partner.name || "Partner"}
                               className="h-16 w-16 flex-shrink-0 rounded-xl object-contain border border-gray-100"
                             />
@@ -475,7 +476,7 @@ export default function OrgPublic() {
                         >
                           {item.type === "image" && item.url && (
                             <img
-                              src={item.url}
+                              src={getImageUrl(item.url)}
                               alt={item.title || "Media"}
                               className="h-48 w-full object-cover"
                             />
@@ -585,7 +586,7 @@ export default function OrgPublic() {
                         >
                           {member.photoUrl && (
                             <img
-                              src={member.photoUrl}
+                              src={getImageUrl(member.photoUrl)}
                               alt={member.name || "Team member"}
                               className="h-16 w-16 flex-shrink-0 rounded-full object-cover"
                             />

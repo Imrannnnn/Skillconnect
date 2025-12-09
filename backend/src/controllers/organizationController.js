@@ -25,8 +25,9 @@ function ensureAdminRole(req, res) {
 export const createOrganization = async (req, res) => {
   try {
     if (!ensureAdminRole(req, res)) return;
-    const { name, slug: providedSlug, sector, description, adminUserIds } = req.body || {};
+    const { name, slug: providedSlug, sector, description, adminUserIds, address } = req.body || {};
     if (!name) return res.status(400).json({ message: "name is required" });
+    if (!address) return res.status(400).json({ message: "address is required" });
 
     const admins = Array.isArray(adminUserIds) && adminUserIds.length
       ? adminUserIds
@@ -66,10 +67,12 @@ export const listMyOrganizations = async (req, res) => {
   try {
     if (!req.user?._id) return res.status(401).json({ message: "Unauthorized" });
     const userId = req.user._id;
-    const orgs = await Organization.find({ $or: [
-      { admins: userId },
-      { staff: userId },
-    ] }).sort({ createdAt: -1 });
+    const orgs = await Organization.find({
+      $or: [
+        { admins: userId },
+        { staff: userId },
+      ]
+    }).sort({ createdAt: -1 });
     res.json({ organizations: orgs });
   } catch (e) {
     res.status(500).json({ message: "Failed to list organizations", error: e?.message || e });

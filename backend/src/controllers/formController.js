@@ -281,7 +281,7 @@ export const submitFormResponse = async (req, res) => {
       filesPayload.push({
         fieldId: field.id,
         originalName: f.originalname,
-        storedPath: f.path.replace(path.join(process.cwd(), "backend"), ""),
+        storedPath: f.path.replace(process.cwd(), ""),
         mimeType: f.mimetype,
         size: f.size,
       });
@@ -427,7 +427,7 @@ export const deleteFormResponse = async (req, res) => {
     if (Array.isArray(resp.files)) {
       for (const f of resp.files) {
         if (!f.storedPath) continue;
-        const full = path.join(process.cwd(), "backend", f.storedPath.replace(/^\\+|\/+/, ""));
+        const full = path.join(process.cwd(), f.storedPath.replace(/^\\+|\/+/, ""));
         try {
           if (fs.existsSync(full)) fs.unlinkSync(full);
         } catch {

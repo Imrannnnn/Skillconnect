@@ -4,6 +4,7 @@ import { AuthContext } from "../context/auth.js";
 import API from "../api/axios.js";
 import { NetBus } from "../api/axios.js";
 import { useToast } from "./toast.js";
+import { getImageUrl } from "../utils/image.js";
 
 export default function Header() {
   const auth = useContext(AuthContext);
@@ -155,7 +156,7 @@ export default function Header() {
             <div className="flex items-center gap-2">
               <div className="h-7 w-7 rounded-full overflow-hidden bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-semibold">
                 {auth?.user?.avatarUrl ? (
-                  <img src={auth.user.avatarUrl} alt="avatar" className="h-full w-full object-cover" />
+                  <img src={getImageUrl(auth.user.avatarUrl)} alt="avatar" className="h-full w-full object-cover" />
                 ) : (
                   (auth?.user?.name?.[0] || auth?.user?.email?.[0] || 'U').toUpperCase()
                 )}

@@ -39,10 +39,10 @@ function App() {
   const [_, __] = useState(null)
 
   return (
-    <div className="min-h-screen flex flex-col overflow-x-hidden">
+    <div className="min-h-screen flex flex-col">
       <Header />
       <OfflineBanner />
-      <main className="flex-1 p-4 relative overflow-x-hidden">
+      <main className="flex-1 p-4 relative">
         {/* Floating particles across all pages */}
         <span className="particle" style={{ top: "10%", left: "8%", animationDelay: "0s" }} />
         <span className="particle" style={{ top: "25%", left: "20%", animationDelay: "0.8s" }} />
@@ -66,40 +66,40 @@ function App() {
 
         <div className="relative z-10">
           <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/feed" element={<CommunityFeed />} />
-          <Route path="/feed/:id" element={<ContentDetail />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
-          <Route path="/verify-email/:token" element={<VerifyEmail />} />
-          <Route path="/providers" element={<ProviderList />} />
-          <Route path="/providers/:id" element={<ProviderProfile />} />
-          <Route path="/p/:id" element={<ProviderProfile />} />
-          <Route path="/@:handle" element={<ProviderProfile />} />
-          <Route path="/org/:slug" element={<OrgPublic />} />
-          <Route path="/dashboard" element={<PrivateRoute><DashboardClient /></PrivateRoute>} />
-          <Route path="/provider/dashboard" element={<PrivateRoute><DashboardProvider /></PrivateRoute>} />
-          <Route path="/org/dashboard" element={<PrivateRoute><OrgDashboard /></PrivateRoute>} />
-          <Route path="/my-content" element={<PrivateRoute><MyContent /></PrivateRoute>} />
-          <Route path="/provider/products" element={<PrivateRoute><ProviderProducts /></PrivateRoute>} />
-          <Route path="/provider/edit-profile" element={<PrivateRoute><EditProfileProvider /></PrivateRoute>} />
-          <Route path="/provider/bookings" element={<PrivateRoute><ProviderBookings /></PrivateRoute>} />
-          <Route path="/bookings" element={<PrivateRoute><ClientBookings /></PrivateRoute>} />
-          <Route path="/settings/account" element={<PrivateRoute><AccountSettings /></PrivateRoute>} />
-          <Route path="/admin/forms" element={<PrivateRoute><AdminForms /></PrivateRoute>} />
-          <Route path="/forms/:id" element={<PublicForm />} />
-          <Route path="/chats" element={<PrivateRoute><Chats /></PrivateRoute>} />
-          <Route path="/chat/:chatId" element={<PrivateRoute><Chat /></PrivateRoute>} />
-          <Route path="/payments" element={<PrivateRoute><Payments /></PrivateRoute>} />
-          <Route path="/wallet/callback" element={<PrivateRoute><WalletCallback /></PrivateRoute>} />
-          <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
-          <Route path="/about" element={<About />} />
-          <Route path="/accept-invitation/:token" element={<AcceptInvitation />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-        <AiAssistant />
+            <Route path="/" element={<Home />} />
+            <Route path="/feed" element={<CommunityFeed />} />
+            <Route path="/feed/:id" element={<ContentDetail />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="/verify-email/:token" element={<VerifyEmail />} />
+            <Route path="/providers" element={<ProviderList />} />
+            <Route path="/providers/:id" element={<ProviderProfile />} />
+            <Route path="/p/:id" element={<ProviderProfile />} />
+            <Route path="/@:handle" element={<ProviderProfile />} />
+            <Route path="/org/:slug" element={<OrgPublic />} />
+            <Route path="/dashboard" element={<PrivateRoute><DashboardClient /></PrivateRoute>} />
+            <Route path="/provider/dashboard" element={<PrivateRoute><DashboardProvider /></PrivateRoute>} />
+            <Route path="/org/dashboard" element={<PrivateRoute><OrgDashboard /></PrivateRoute>} />
+            <Route path="/my-content" element={<PrivateRoute><MyContent /></PrivateRoute>} />
+            <Route path="/provider/products" element={<PrivateRoute><ProviderProducts /></PrivateRoute>} />
+            <Route path="/provider/edit-profile" element={<PrivateRoute><EditProfileProvider /></PrivateRoute>} />
+            <Route path="/provider/bookings" element={<PrivateRoute><ProviderBookings /></PrivateRoute>} />
+            <Route path="/bookings" element={<PrivateRoute><ClientBookings /></PrivateRoute>} />
+            <Route path="/settings/account" element={<PrivateRoute><AccountSettings /></PrivateRoute>} />
+            <Route path="/admin/forms" element={<PrivateRoute><AdminForms /></PrivateRoute>} />
+            <Route path="/forms/:id" element={<PublicForm />} />
+            <Route path="/chats" element={<PrivateRoute><Chats /></PrivateRoute>} />
+            <Route path="/chat/:chatId" element={<PrivateRoute><Chat /></PrivateRoute>} />
+            <Route path="/payments" element={<PrivateRoute><Payments /></PrivateRoute>} />
+            <Route path="/wallet/callback" element={<PrivateRoute><WalletCallback /></PrivateRoute>} />
+            <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
+            <Route path="/about" element={<About />} />
+            <Route path="/accept-invitation/:token" element={<AcceptInvitation />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+          <AiAssistant />
         </div>
       </main>
     </div>

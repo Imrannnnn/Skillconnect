@@ -20,7 +20,7 @@ const router = express.Router();
 const storage = multer.diskStorage({
   destination(req, file, cb) {
     const formId = req.params.id || "general";
-    const dest = path.join(process.cwd(), "backend", "src", "uploads", "forms", formId);
+    const dest = path.join(process.cwd(), "src", "uploads", "forms", formId);
     cb(null, dest);
   },
   filename(req, file, cb) {

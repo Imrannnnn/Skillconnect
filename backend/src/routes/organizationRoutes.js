@@ -24,7 +24,7 @@ router.post("/:id/logo", protect, upload.single("logo"), async (req, res) => {
     if (!req.file) return res.status(400).json({ message: "No file" });
 
     const orgId = req.params.id;
-    const outDir = path.join(process.cwd(), "backend", "src", "uploads", "organizations", orgId);
+    const outDir = path.join(process.cwd(), "src", "uploads", "organizations", orgId);
     fs.mkdirSync(outDir, { recursive: true });
 
     const outPath = path.join(outDir, "logo.webp");

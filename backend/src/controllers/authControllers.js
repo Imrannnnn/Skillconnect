@@ -39,6 +39,9 @@ export const register = async (req, res) => {
       address,
       logo,
       tagline,
+      city,
+      state,
+      country,
     } = req.body;
 
     const normalizedEmail = String(email || "").trim().toLowerCase();
@@ -65,6 +68,9 @@ export const register = async (req, res) => {
       const orgName = name && String(name).trim();
       if (!orgName) {
         return res.status(400).json({ message: "Organization name is required" });
+      }
+      if (!address) {
+        return res.status(400).json({ message: "Address is required for organizations" });
       }
       let slug = slugifyName(orgName);
       if (slug) {
@@ -153,6 +159,10 @@ export const register = async (req, res) => {
       roles = ["admin"];
     }
 
+    if (!city || !state || !country) {
+      return res.status(400).json({ message: "City, State, and Country are required" });
+    }
+
     const user = await User.create({
       name,
       email: normalizedEmail,
@@ -164,7 +174,13 @@ export const register = async (req, res) => {
       providerMode,
       social: socialPayload,
       verificationToken,
+      verificationToken,
       accountType: "individual",
+      location: {
+        city,
+        state,
+        country,
+      },
     });
 
     const tokenRoles = Array.isArray(user.roles) && user.roles.length

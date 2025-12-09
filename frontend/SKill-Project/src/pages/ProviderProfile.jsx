@@ -4,6 +4,7 @@ import API from "../api/axios.js";
 import { AuthContext } from "../context/auth.js";
 // Payment flow replaced by Booking flow per requirements
 import { useToast } from "../components/toast.js";
+import { getImageUrl } from "../utils/image.js";
 
 export default function ProviderProfile() {
   const params = useParams();
@@ -49,7 +50,7 @@ export default function ProviderProfile() {
         setProvider(data);
         // Fire-and-forget visit event for analytics
         if (data?._id) {
-          API.post(`/providers/${data._id}/visit`).catch(() => {});
+          API.post(`/providers/${data._id}/visit`).catch(() => { });
         }
       } catch (e) {
         setError(e?.response?.data?.message || "Failed to load provider");
@@ -154,17 +155,17 @@ export default function ProviderProfile() {
   const categories = Array.isArray(provider.categories)
     ? provider.categories
     : provider.category
-    ? [provider.category]
-    : [];
+      ? [provider.category]
+      : [];
 
   const jobsDone =
     typeof provider?.jobsDone === "number"
       ? provider.jobsDone
       : typeof provider?.completedJobs === "number"
-      ? provider.completedJobs
-      : typeof provider?.jobsCompleted === "number"
-      ? provider.jobsCompleted
-      : undefined;
+        ? provider.completedJobs
+        : typeof provider?.jobsCompleted === "number"
+          ? provider.jobsCompleted
+          : undefined;
 
   const verification = provider?.verification || {};
   const emailVerified = !!(verification.emailVerified || provider?.verified);
@@ -267,7 +268,7 @@ export default function ProviderProfile() {
   function startProductBooking(p) {
     // Track product order click for simple analytics (fire-and-forget)
     if (p?._id) {
-      API.post(`/products/${p._id}/order-click`).catch(() => {});
+      API.post(`/products/${p._id}/order-click`).catch(() => { });
     }
     setSelectedProduct(p);
     if (!clientName && auth?.user?.name) {
@@ -307,7 +308,7 @@ export default function ProviderProfile() {
               <div className="flex items-start gap-4 md:col-span-2 min-w-0">
                 <div className="h-16 w-16 shrink-0 rounded-full overflow-hidden bg-emerald-100 flex items-center justify-center text-emerald-700 text-xl font-semibold">
                   {provider?.avatarUrl ? (
-                    <img src={provider.avatarUrl} alt="avatar" className="h-full w-full object-cover" />
+                    <img src={getImageUrl(provider.avatarUrl)} alt="avatar" className="h-full w-full object-cover" />
                   ) : (
                     provider?.name?.[0]?.toUpperCase() || "P"
                   )}
@@ -430,7 +431,7 @@ export default function ProviderProfile() {
       <div className="mt-6">
         <h2 className="text-lg font-semibold text-gray-800 mb-2">Rate this provider</h2>
         <div className="flex items-center gap-2">
-          {[1,2,3,4,5].map((s) => (
+          {[1, 2, 3, 4, 5].map((s) => (
             <button
               key={s}
               type="button"
@@ -475,14 +476,14 @@ export default function ProviderProfile() {
                   {Array.isArray(p.images) && p.images.length > 0 && (
                     <div className="mb-2">
                       <div className="overflow-hidden rounded-md">
-                        <img src={p.images[0]} alt={p.name} className="h-32 w-full object-cover" />
+                        <img src={getImageUrl(p.images[0])} alt={p.name} className="h-32 w-full object-cover" />
                       </div>
                       {p.images.length > 1 && (
                         <div className="mt-1 flex gap-1 overflow-x-auto">
                           {p.images.slice(1).map((img, idx) => (
                             <img
                               key={idx}
-                              src={img}
+                              src={getImageUrl(img)}
                               alt={`${p.name} ${idx + 2}`}
                               className="h-12 w-12 object-cover rounded-md flex-shrink-0 border border-gray-200"
                             />
@@ -538,15 +539,14 @@ export default function ProviderProfile() {
                       )}
                       {p.stockStatus && (
                         <span
-                          className={`px-2 py-0.5 rounded-full border text-[10px] ${
-                            p.stockStatus === 'out_of_stock'
+                          className={`px-2 py-0.5 rounded-full border text-[10px] ${p.stockStatus === 'out_of_stock'
                               ? 'bg-rose-50 border-rose-200 text-rose-700'
                               : p.stockStatus === 'low_stock'
-                              ? 'bg-amber-50 border-amber-200 text-amber-700'
-                              : p.stockStatus === 'pre_order'
-                              ? 'bg-sky-50 border-sky-200 text-sky-700'
-                              : 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                          }`}
+                                ? 'bg-amber-50 border-amber-200 text-amber-700'
+                                : p.stockStatus === 'pre_order'
+                                  ? 'bg-sky-50 border-sky-200 text-sky-700'
+                                  : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                            }`}
                         >
                           {p.stockStatus.replace('_', ' ')}
                         </span>
@@ -576,11 +576,10 @@ export default function ProviderProfile() {
                       type="button"
                       onClick={() => startProductBooking(p)}
                       disabled={p.stockStatus === 'out_of_stock'}
-                      className={`px-3 py-1.5 text-xs rounded-md text-white transition ${
-                        p.stockStatus === 'out_of_stock'
+                      className={`px-3 py-1.5 text-xs rounded-md text-white transition ${p.stockStatus === 'out_of_stock'
                           ? 'bg-gray-300 cursor-not-allowed'
                           : 'bg-emerald-600 hover:bg-emerald-700'
-                      }`}
+                        }`}
                     >
                       {p.stockStatus === 'out_of_stock' ? 'Out of stock' : 'Order product'}
                     </button>
@@ -604,7 +603,7 @@ export default function ProviderProfile() {
                 rel="noreferrer"
                 className="block rounded-lg overflow-hidden border border-gray-200 hover:shadow-md transition"
               >
-                <img src={item.url} alt={item.description || `Portfolio ${idx+1}`} className="w-full aspect-[4/3] object-cover" />
+                <img src={getImageUrl(item.url)} alt={item.description || `Portfolio ${idx + 1}`} className="w-full aspect-[4/3] object-cover" />
                 {item.description && (
                   <div className="px-2 py-1 text-xs text-gray-600 bg-white break-words">{item.description}</div>
                 )}
@@ -624,27 +623,27 @@ export default function ProviderProfile() {
             <form onSubmit={submitBooking} className="grid gap-3">
               <label className="grid gap-1 text-sm">
                 <span className="text-gray-700">Your name</span>
-                <input className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500" value={clientName} onChange={(e)=>setClientName(e.target.value)} required />
+                <input className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500" value={clientName} onChange={(e) => setClientName(e.target.value)} required />
               </label>
               <label className="grid gap-1 text-sm">
                 <span className="text-gray-700">Phone number</span>
-                <input className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500" value={clientPhone} onChange={(e)=>setClientPhone(e.target.value)} required />
+                <input className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} required />
               </label>
               <label className="grid gap-1 text-sm">
                 <span className="text-gray-700">Job description / services required</span>
-                <textarea className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[80px]" value={jobDescription} onChange={(e)=>setJobDescription(e.target.value)} required />
+                <textarea className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[80px]" value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} required />
               </label>
               <label className="grid gap-1 text-sm">
                 <span className="text-gray-700">Address / location</span>
-                <input className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500" value={address} onChange={(e)=>setAddress(e.target.value)} />
+                <input className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500" value={address} onChange={(e) => setAddress(e.target.value)} />
               </label>
               <label className="grid gap-1 text-sm">
                 <span className="text-gray-700">Additional details</span>
-                <textarea className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[60px]" value={details} onChange={(e)=>setDetails(e.target.value)} />
+                <textarea className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[60px]" value={details} onChange={(e) => setDetails(e.target.value)} />
               </label>
               <div className="flex items-center gap-2 pt-1">
                 <button type="submit" disabled={bookingSubmitting} className="px-4 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition disabled:opacity-70">{bookingSubmitting ? 'Sending…' : 'Send request'}</button>
-                <button type="button" onClick={()=>setBookingOpen(false)} className="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-50">Cancel</button>
+                <button type="button" onClick={() => setBookingOpen(false)} className="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-50">Cancel</button>
               </div>
             </form>
           </div>

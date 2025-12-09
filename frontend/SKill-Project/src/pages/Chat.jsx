@@ -5,6 +5,7 @@ import { SocketContext } from "../context/socket.js";
 import { useToast } from "../components/toast.js";
 import { AuthContext } from "../context/auth.js";
 import { NetBus } from "../api/axios.js";
+import { getImageUrl } from "../utils/image.js";
 
 export default function Chat() {
   const { chatId } = useParams();
@@ -297,7 +298,7 @@ export default function Chat() {
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-full overflow-hidden bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-semibold">
                   {otherUser?.avatarUrl ? (
-                    <img src={otherUser.avatarUrl} alt="avatar" className="h-full w-full object-cover" />
+                    <img src={getImageUrl(otherUser.avatarUrl)} alt="avatar" className="h-full w-full object-cover" />
                   ) : (
                     (otherUser?.name?.[0] || otherUser?.email?.[0] || 'U')?.toUpperCase?.()
                   )}
@@ -386,9 +387,8 @@ function MessageBubble({ message }) {
   return (
     <div className={`max-w-[75%] ${isSelf ? "ml-auto" : "mr-auto"}`}>
       <div
-        className={`${
-          isSelf ? "bg-emerald-600 text-white" : "bg-white text-gray-800 border border-gray-200"
-        } rounded-2xl px-3 py-2 shadow-sm`}
+        className={`${isSelf ? "bg-emerald-600 text-white" : "bg-white text-gray-800 border border-gray-200"
+          } rounded-2xl px-3 py-2 shadow-sm`}
       >
         <p className="text-sm whitespace-pre-wrap">{message.text}</p>
         <p className={`mt-1 text-[10px] ${isSelf ? "text-emerald-100" : "text-gray-500"}`}>

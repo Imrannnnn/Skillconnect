@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import API from '../api/axios.js'
 import { AuthContext } from '../context/auth.js'
 import { useToast } from '../components/toast.js'
+import { getImageUrl } from '../utils/image.js'
 
 export default function DashboardProvider() {
   const auth = useContext(AuthContext)
@@ -53,7 +54,7 @@ export default function DashboardProvider() {
     : ''
 
   const earnings = useMemo(() => {
-    const eligible = txs.filter((t) => ['paid','released'].includes(t.status))
+    const eligible = txs.filter((t) => ['paid', 'released'].includes(t.status))
     const sum = eligible.reduce((acc, t) => acc + (typeof t.amount === 'number' ? t.amount : 0), 0)
     // assume cents when large
     const normalized = sum / (sum > 1000 ? 100 : 1)
@@ -113,7 +114,7 @@ export default function DashboardProvider() {
             </button>
             <button
               type="button"
-              onClick={() => navigate('/chats') }
+              onClick={() => navigate('/chats')}
               className="relative flex h-10 w-10 items-center justify-center rounded-full border border-gray-100 bg-gray-50 text-gray-700 hover:bg-gray-100"
             >
               <span className="sr-only">Open chats</span>
@@ -143,7 +144,7 @@ export default function DashboardProvider() {
           <div className="flex items-start gap-3">
             <div className="h-12 w-12 shrink-0 rounded-full overflow-hidden bg-emerald-100 flex items-center justify-center text-emerald-700 font-semibold">
               {userSnapshot.avatarUrl ? (
-                <img src={userSnapshot.avatarUrl} alt="avatar" className="h-full w-full object-cover" />
+                <img src={getImageUrl(userSnapshot.avatarUrl)} alt="avatar" className="h-full w-full object-cover" />
               ) : (
                 (userSnapshot.name?.[0] || 'P').toUpperCase()
               )}
@@ -256,7 +257,7 @@ export default function DashboardProvider() {
                   </tr>
                 )}
                 {txs
-                  .filter((t) => ['paid','released'].includes(t.status))
+                  .filter((t) => ['paid', 'released'].includes(t.status))
                   .slice(0, 5)
                   .map((t) => (
                     <tr key={t._id} className="hover:bg-gray-50/70">
@@ -330,15 +331,15 @@ export default function DashboardProvider() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-300">Paid jobs</span>
-                <span className="text-sm font-semibold text-emerald-300">{txs.filter(t=>t.status==='paid').length}</span>
+                <span className="text-sm font-semibold text-emerald-300">{txs.filter(t => t.status === 'paid').length}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-300">Pending jobs</span>
-                <span className="text-sm font-semibold text-amber-300">{txs.filter(t=>t.status==='pending').length}</span>
+                <span className="text-sm font-semibold text-amber-300">{txs.filter(t => t.status === 'pending').length}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-slate-300">Released payouts</span>
-                <span className="text-sm font-semibold text-sky-300">{txs.filter(t=>t.status==='released').length}</span>
+                <span className="text-sm font-semibold text-sky-300">{txs.filter(t => t.status === 'released').length}</span>
               </div>
             </div>
           </div>
@@ -427,10 +428,10 @@ export default function DashboardProvider() {
         </div>
         <div className="flex flex-col items-start md:items-end gap-1 text-[11px] text-emerald-800/80">
           <span>
-            Paid transactions: <span className="font-semibold">{txs.filter(t=>t.status==='paid').length}</span>
+            Paid transactions: <span className="font-semibold">{txs.filter(t => t.status === 'paid').length}</span>
           </span>
           <span>
-            Released transactions: <span className="font-semibold">{txs.filter(t=>t.status==='released').length}</span>
+            Released transactions: <span className="font-semibold">{txs.filter(t => t.status === 'released').length}</span>
           </span>
         </div>
       </section>

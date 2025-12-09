@@ -2,6 +2,7 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "../context/auth.js";
 import API from "../api/axios.js";
 import { useNavigate } from "react-router-dom";
+import { getImageUrl } from "../utils/image.js";
 
 export default function EditProfileProvider() {
   const { user, setUser } = useContext(AuthContext);
@@ -162,7 +163,7 @@ export default function EditProfileProvider() {
               <div className="flex items-center gap-3 mb-2">
                 <div className="h-16 w-16 rounded-full overflow-hidden bg-emerald-100 flex items-center justify-center text-emerald-700 font-semibold">
                   {avatarPreview ? (
-                    <img src={avatarPreview} alt="avatar" className="h-full w-full object-cover" />
+                    <img src={getImageUrl(avatarPreview)} alt="avatar" className="h-full w-full object-cover" />
                   ) : (
                     (user?.name?.[0] || 'P').toUpperCase()
                   )}
@@ -199,7 +200,7 @@ export default function EditProfileProvider() {
                   setDragOver(false);
                   const f = e.dataTransfer.files?.[0];
                   if (!f) return;
-                  if (!['image/png','image/jpeg','image/jpg','image/webp'].includes(f.type)) return;
+                  if (!['image/png', 'image/jpeg', 'image/jpg', 'image/webp'].includes(f.type)) return;
                   setAvatarFile(f);
                   const url = URL.createObjectURL(f);
                   setAvatarPreview(url);

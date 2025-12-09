@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import heroImg from "../assets/ayaz-lalani-no-EShQ7s1A-unsplash.jpg";
 import API from "../api/axios.js";
+import { getImageUrl } from "../utils/image.js";
 
 export default function Home() {
   const categories = ["Plumber", "Driver", "NGO", "Fashion designer", "Cleaner"];
@@ -84,36 +85,36 @@ export default function Home() {
           backgroundPosition: "center",
         }}
       >
-          <div className="absolute inset-0 bg-emerald-900/70" />
-          <div className="relative z-10 text-center max-w-2xl px-6">
-            <h1 className="text-3xl md:text-5xl font-bold drop-shadow-lg">Need Help? Get Help!</h1>
-            <p className="text-base md:text-lg mt-3 opacity-90">
-              Find trusted service providers around you — fast, easy, and secure.
-            </p>
-            <p className="mt-1 text-sm md:text-base opacity-90">
-              Become a provider and offer your services to thousands of clients.
-            </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <Link
-                to="/providers"
-                className="px-5 py-2.5 rounded-md bg-emerald-500 hover:bg-emerald-600 text-white text-sm md:text-base font-medium shadow-md"
-              >
-                Find providers
-              </Link>
-              <Link
-                to="/register"
-                className="px-5 py-2.5 rounded-md border border-emerald-200 bg-white/10 text-white text-sm md:text-base font-medium hover:bg-white/20"
-              >
-                Become a provider
-              </Link>
-            </div>
+        <div className="absolute inset-0 bg-emerald-900/70" />
+        <div className="relative z-10 text-center max-w-2xl px-6">
+          <h1 className="text-3xl md:text-5xl font-bold drop-shadow-lg">Need Help? Get Help!</h1>
+          <p className="text-base md:text-lg mt-3 opacity-90">
+            Find trusted service providers around you — fast, easy, and secure.
+          </p>
+          <p className="mt-1 text-sm md:text-base opacity-90">
+            Become a provider and offer your services to thousands of clients.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <Link
+              to="/providers"
+              className="px-5 py-2.5 rounded-md bg-emerald-500 hover:bg-emerald-600 text-white text-sm md:text-base font-medium shadow-md"
+            >
+              Find providers
+            </Link>
+            <Link
+              to="/register"
+              className="px-5 py-2.5 rounded-md border border-emerald-200 bg-white/10 text-white text-sm md:text-base font-medium hover:bg-white/20"
+            >
+              Become a provider
+            </Link>
           </div>
-        </section>
+        </div>
+      </section>
 
       {/* Core value cards (Find / Book / Chat) */}
       <section className="py-12 sm:py-16 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 grid md:grid-cols-3 gap-6 md:gap-8">
-          {[ 
+          {[
             {
               title: "Find providers",
               desc: "Search for verified and trusted local providers easily.",
@@ -185,7 +186,7 @@ export default function Home() {
                         {org.logo && (
                           <div className="h-10 w-10 flex-shrink-0 rounded-md border border-gray-200 bg-white overflow-hidden">
                             <img
-                              src={org.logo}
+                              src={getImageUrl(org.logo)}
                               alt={`${org.name} logo`}
                               className="h-full w-full object-contain"
                             />
@@ -339,7 +340,7 @@ export default function Home() {
           <div>
             <h2 className="text-xl font-semibold text-gray-900 mb-3">How it works</h2>
             <div className="space-y-3 text-sm">
-              {[ 
+              {[
                 { title: 'Search & match', desc: 'Use smart search and filters to find providers.' },
                 { title: 'Chat & agree', desc: 'Discuss requirements, timelines, and pricing.' },
                 { title: 'Book & track', desc: 'Send a booking, follow the job timeline, and release payment securely.' },

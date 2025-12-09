@@ -23,9 +23,9 @@ export const listUsers = async (req, res) => {
     if (role) filter.role = role;
     if (category) filter.categories = { $regex: new RegExp(category, "i") };
     if (providerType) filter.providerType = providerType;
-    if (city) filter.city = { $regex: new RegExp(city, "i") };
-    if (state) filter.state = { $regex: new RegExp(state, "i") };
-    if (country) filter.country = { $regex: new RegExp(country, "i") };
+    if (city) filter["location.city"] = { $regex: new RegExp(city, "i") };
+    if (state) filter["location.state"] = { $regex: new RegExp(state, "i") };
+    if (country) filter["location.country"] = { $regex: new RegExp(country, "i") };
     const users = await User.find(filter).sort({ ratingAvg: -1, ratingCount: -1, createdAt: -1 });
     res.json({ users });
   } catch (e) { res.status(500).json({ message: "Failed to list users", error: e }); }
@@ -37,7 +37,7 @@ function extractKeywords(raw) {
   const lower = raw.toLowerCase();
   const tokens = lower.split(/[^a-z0-9]+/g).filter(Boolean);
   const stopwords = new Set([
-    "i","need","someone","somebody","to","for","and","the","a","an","my","our","with","on","in","of","is","it","that","this","please","help"
+    "i", "need", "someone", "somebody", "to", "for", "and", "the", "a", "an", "my", "our", "with", "on", "in", "of", "is", "it", "that", "this", "please", "help"
   ]);
   const keywords = tokens.filter((t) => t.length > 2 && !stopwords.has(t));
   // De-duplicate
@@ -426,14 +426,16 @@ export const becomeProvider = async (req, res) => {
     if (Array.isArray(categories) && categories.length) user.categories = categories;
     if (bio) user.bio = bio;
 
-    if (city || state || country) {
-      user.location = {
-        ...(user.location || {}),
-        city,
-        state,
-        country,
-      };
+    if (!city || !state || !country) {
+      return res.status(400).json({ message: "City, State, and Country are required" });
     }
+
+    user.location = {
+      ...(user.location || {}),
+      city,
+      state,
+      country,
+    };
 
     const socialPayload = {
       instagram: social?.instagram ?? instagram,

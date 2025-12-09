@@ -12,7 +12,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 *
 router.put("/:id/avatar", protect, upload.single("avatar"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: "No file" });
-    const outDir = path.join(process.cwd(), "backend", "src", "uploads", req.params.id);
+    const outDir = path.join(process.cwd(), "src", "uploads", req.params.id);
     fs.mkdirSync(outDir, { recursive: true });
     const outPath = path.join(outDir, `avatar.webp`);
     const image = sharp(req.file.buffer).resize(256, 256, { fit: "cover" }).webp({ quality: 85 });
@@ -28,7 +28,7 @@ router.post("/:id/product-image", protect, upload.single("image"), async (req, r
   try {
     if (!req.file) return res.status(400).json({ message: "No file" });
     const providerId = req.params.id;
-    const outDir = path.join(process.cwd(), "backend", "src", "uploads", "products", providerId);
+    const outDir = path.join(process.cwd(), "src", "uploads", "products", providerId);
     fs.mkdirSync(outDir, { recursive: true });
     const filename = `product-${Date.now()}.webp`;
     const outPath = path.join(outDir, filename);
@@ -71,7 +71,7 @@ router.post("/content-image", protect, (req, res) => {
       const base = path.basename(safeName, path.extname(safeName)) || "image";
       const filename = `${base}-${Date.now()}${ext}`;
 
-      const outDir = path.join(process.cwd(), "backend", "src", "uploads", "content");
+      const outDir = path.join(process.cwd(), "src", "uploads", "content");
       fs.mkdirSync(outDir, { recursive: true });
       const outPath = path.join(outDir, filename);
       fs.writeFileSync(outPath, buffer);
