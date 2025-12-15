@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getEventById } from "../../api/eventService";
 import { purchaseTickets } from "../../api/ticketService";
-import { AuthContext } from "../../context/AuthContext";
+import { AuthContext } from "../../context/auth";
 
 const EventDetails = () => {
     const { id } = useParams();
