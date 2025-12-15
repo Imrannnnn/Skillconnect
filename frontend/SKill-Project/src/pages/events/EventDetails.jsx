@@ -53,7 +53,7 @@ const EventDetails = () => {
         try {
             setProcessing(true);
             const items = Object.entries(selectedTickets)
-                .filter(([_, qty]) => qty > 0)
+                .filter((entry) => entry[1] > 0)
                 .map(([ticketTypeId, quantity]) => ({ ticketTypeId, quantity }));
 
             if (items.length === 0) {
@@ -215,8 +215,8 @@ const EventDetails = () => {
                             onClick={handlePurchase}
                             disabled={processing || calculateTotal() === 0}
                             className={`w-full py-3 px-4 rounded-md text-white font-bold text-lg shadow-md transition-colors ${processing || calculateTotal() === 0
-                                    ? "bg-gray-400 cursor-not-allowed"
-                                    : "bg-indigo-600 hover:bg-indigo-700"
+                                ? "bg-gray-400 cursor-not-allowed"
+                                : "bg-indigo-600 hover:bg-indigo-700"
                                 }`}
                         >
                             {processing ? "Processing..." : "Pay Now"}

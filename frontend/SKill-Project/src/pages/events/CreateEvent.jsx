@@ -53,7 +53,10 @@ const CreateEvent = () => {
     };
 
     const removeTicketType = (index) => {
-        const newTicketTypes = formData.ticketTypes.filter((_, i) => i !== index);
+        const newTicketTypes = [
+            ...formData.ticketTypes.slice(0, index),
+            ...formData.ticketTypes.slice(index + 1)
+        ];
         setFormData((prev) => ({ ...prev, ticketTypes: newTicketTypes }));
     };
 
