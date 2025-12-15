@@ -19,3 +19,10 @@ export const getEventAnalytics = async (eventId) => {
     const response = await axios.get(`/tickets/analytics/${eventId}`);
     return response.data;
 };
+
+export const downloadTicket = async (ticketId) => {
+    const response = await axios.get(`/tickets/${ticketId}/download`, {
+        responseType: 'blob',
+    });
+    return response.data;
+};

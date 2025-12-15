@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getTicket } from "../../api/ticketService";
+import { getTicket, downloadTicket } from "../../api/ticketService";
 
 const TicketView = () => {
     const { id } = useParams(); // uniqueTicketId
     const [ticketData, setTicketData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [downloading, setDownloading] = useState(false);
 
     useEffect(() => {
         fetchTicket();
@@ -22,8 +23,23 @@ const TicketView = () => {
         }
     };
 
-    const handleDownload = () => {
-        window.print();
+    const handleDownload = async () => {
+        try {
+            setDownloading(true);
+            const blob = await downloadTicket(ticketData.ticket.uniqueTicketId);
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Ticket-${ticketData.ticket.uniqueTicketId}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode.removeChild(link);
+        } catch (error) {
+            console.error("Download failed:", error);
+            alert("Failed to download ticket PDF");
+        } finally {
+            setDownloading(false);
+        }
     };
 
     if (loading) return <div className="text-center py-10">Loading ticket...</div>;
@@ -89,8 +105,8 @@ const TicketView = () => {
                     {/* Status Badge */}
                     <div className="text-center">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${ticket.status === 'valid' ? 'bg-green-100 text-green-800' :
-                                ticket.status === 'checked-in' ? 'bg-blue-100 text-blue-800' :
-                                    'bg-red-100 text-red-800'
+                            ticket.status === 'checked-in' ? 'bg-blue-100 text-blue-800' :
+                                'bg-red-100 text-red-800'
                             }`}>
                             {ticket.status.toUpperCase()}
                         </span>
@@ -107,9 +123,10 @@ const TicketView = () => {
                     </button>
                     <button
                         onClick={handleDownload}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow-sm"
+                        disabled={downloading}
+                        className={`bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium shadow-sm ${downloading ? 'opacity-75 cursor-wait' : ''}`}
                     >
-                        Download / Print
+                        {downloading ? "Downloading..." : "Download PDF"}
                     </button>
                 </div>
             </div>

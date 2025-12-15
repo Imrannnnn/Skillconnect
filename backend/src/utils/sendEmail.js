@@ -10,7 +10,7 @@ if (!apiKey) {
 
 const defaultFrom = process.env.EMAIL_FROM || process.env.SMTP_USER || "no-reply@example.com";
 
-export default async function sendEmail(to, subject, html) {
+export default async function sendEmail(to, subject, html, attachments = []) {
   try {
     if (!apiKey) {
       throw new Error("Missing SENDGRID_API_KEY env var");
@@ -21,6 +21,7 @@ export default async function sendEmail(to, subject, html) {
       from: defaultFrom,
       subject,
       html,
+      attachments,
     };
 
     await sgMail.send(msg);

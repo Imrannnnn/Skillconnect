@@ -3,6 +3,7 @@ import Ticket from "../models/ticket.js";
 import Event from "../models/event.js";
 import crypto from "crypto";
 import sendEmail from "../utils/sendEmail.js";
+import { generateTicketPDF } from "../utils/pdfGenerator.js";
 
 // Helper to generate unique ticket ID
 const generateTicketId = () => {
@@ -95,11 +96,30 @@ export const purchaseTickets = async (req, res) => {
                 <p>Total Paid: $${totalAmount}</p>
                 <h3>Your Tickets:</h3>
                 ${ticketLinks}
-                <p>Please present the QR code from the ticket link at the entrance.</p>
+                <p>Please present the QR code from the ticket link or the attached PDF at the entrance.</p>
             `;
 
+            // Generate PDFs
+            const attachments = [];
+            for (const ticket of tickets) {
+                const ticketType = event.ticketTypes.id(ticket.ticketTypeId);
+                const ticketWithDetails = { ...ticket.toObject(), ticketType: ticketType.toObject() };
+
+                try {
+                    const pdfBuffer = await generateTicketPDF(ticketWithDetails, event);
+                    attachments.push({
+                        content: pdfBuffer.toString("base64"),
+                        filename: `Ticket-${ticket.uniqueTicketId}.pdf`,
+                        type: "application/pdf",
+                        disposition: "attachment"
+                    });
+                } catch (err) {
+                    console.error("Error generating PDF for ticket", ticket.uniqueTicketId, err);
+                }
+            }
+
             try {
-                await sendEmail(email, `Your Tickets for ${event.title}`, html);
+                await sendEmail(email, `Your Tickets for ${event.title}`, html, attachments);
             } catch (err) {
                 console.error("Failed to send email", err);
             }
@@ -189,5 +209,28 @@ export const getEventAnalytics = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ message: "Error fetching analytics", error: error.message });
+    }
+};
+
+// Download ticket PDF
+export const downloadTicketPDF = async (req, res) => {
+    try {
+        const ticket = await Ticket.findOne({ uniqueTicketId: req.params.id }).populate("eventId");
+        if (!ticket) return res.status(404).json({ message: "Ticket not found" });
+
+        const event = ticket.eventId;
+        const ticketType = event.ticketTypes.id(ticket.ticketTypeId);
+        const ticketWithDetails = { ...ticket.toObject(), ticketType: ticketType.toObject() };
+
+        const pdfBuffer = await generateTicketPDF(ticketWithDetails, event);
+
+        res.set({
+            "Content-Type": "application/pdf",
+            "Content-Disposition": `attachment; filename="Ticket-${ticket.uniqueTicketId}.pdf"`,
+            "Content-Length": pdfBuffer.length
+        });
+        res.send(pdfBuffer);
+    } catch (error) {
+        res.status(500).json({ message: "Error generating PDF", error: error.message });
     }
 };
