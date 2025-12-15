@@ -34,6 +34,12 @@ import CommunityFeed from './pages/CommunityFeed.jsx'
 import ContentDetail from './pages/ContentDetail.jsx'
 import MyContent from './pages/MyContent.jsx'
 import AcceptInvitation from './pages/AcceptInvitation.jsx'
+import CreateEvent from './pages/events/CreateEvent.jsx'
+import EventList from './pages/events/EventList.jsx'
+import EventDetails from './pages/events/EventDetails.jsx'
+import TicketView from './pages/events/TicketView.jsx'
+import OrganizerEvents from './pages/organizer/OrganizerEvents.jsx'
+import CheckInScanner from './pages/organizer/CheckInScanner.jsx'
 
 function App() {
   const [_, __] = useState(null)
@@ -97,6 +103,15 @@ function App() {
             <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
             <Route path="/about" element={<About />} />
             <Route path="/accept-invitation/:token" element={<AcceptInvitation />} />
+
+            {/* Event Routes */}
+            <Route path="/events" element={<EventList />} />
+            <Route path="/events/create" element={<PrivateRoute><CreateEvent /></PrivateRoute>} />
+            <Route path="/events/:id" element={<EventDetails />} />
+            <Route path="/tickets/:id" element={<TicketView />} />
+            <Route path="/organizer/events" element={<PrivateRoute><OrganizerEvents /></PrivateRoute>} />
+            <Route path="/organizer/checkin/:eventId" element={<PrivateRoute><CheckInScanner /></PrivateRoute>} />
+            <Route path="/organizer/checkin" element={<PrivateRoute><CheckInScanner /></PrivateRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           <AiAssistant />
