@@ -164,3 +164,56 @@ Socket.io events: `joinRoom`, `leaveRoom`, `message` (broadcast), `typing({chatI
 - If avatar upload fails, ensure `sharp` is installed and backend restarted
 - SMTP env vars required for provider email notifications
 - Keep frontend BASE and SOCKET URLs aligned to backend origin (default http://localhost:5000)
+
+## Ticketing System (New)
+
+A comprehensive event management and ticketing solution integrated into SkillConnect.
+
+### Key Features
+- **Event Management**:
+  - Organizers can create, update, and delete events.
+  - Support for multiple ticket types (e.g., Regular, VIP) with individual pricing and quantities.
+  - Custom branding for events (logos, colors, background images).
+- **Ticket Purchasing**:
+  - Public event listing and search.
+  - Seamless checkout flow for both guests (no account required) and logged-in users.
+  - Instant email confirmation with ticket details.
+- **Ticket Delivery**:
+  - **Email**: Tickets are sent automatically to the buyer's email.
+  - **PDF**: A professional PDF ticket is attached to the email and available for download on the platform.
+  - **QR Code**: Each ticket includes a unique QR code for secure validation.
+- **Check-in System**:
+  - Dedicated scanner interface for organizers to validate tickets at the door.
+  - Real-time status updates (valid, checked-in, invalid).
+- **Analytics**:
+  - Track revenue, tickets sold, and check-in counts per event.
+
+### API Endpoints (Ticketing)
+- **Events**:
+  - `POST /api/events` - Create a new event
+  - `GET /api/events` - List public events (supports filtering)
+  - `GET /api/events/:id` - Get event details
+  - `GET /api/events/my-events` - List organizer's events
+- **Tickets**:
+  - `POST /api/tickets/purchase` - Purchase tickets
+  - `GET /api/tickets/:id` - View ticket details
+  - `GET /api/tickets/:id/download` - Download ticket PDF
+  - `POST /api/tickets/check-in` - Validate/Check-in a ticket
+  - `GET /api/tickets/analytics/:eventId` - Get event stats
+
+### Frontend Pages (Ticketing)
+- **Event List**: Browse upcoming events with a modern hero section.
+- **Create Event**: Form for organizers to publish events with branding and ticket types.
+- **Event Details**: Detailed event view with ticket selection and checkout.
+- **Ticket View**: Digital ticket display with QR code and "Download PDF" option.
+- **Organizer Dashboard**: Manage events and view analytics.
+- **Check-in Scanner**: Tool for validating tickets.
+
+### Tech Stack Additions
+- **PDF Generation**: `pdfkit`
+- **QR Codes**: `qrcode` (backend), `api.qrserver.com` (frontend display)
+- **Email**: `@sendgrid/mail` (supports attachments)
+
+### Environment Variables
+- `SENDGRID_API_KEY`: Required for sending ticket emails.
+- `FRONTEND_URL`: Used to generate links in emails (e.g., `http://localhost:5173`).
