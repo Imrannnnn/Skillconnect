@@ -104,6 +104,7 @@ export default function Header() {
         </Link>
         <nav className="hidden md:flex flex-wrap items-center gap-2 text-xs sm:text-sm">
           <Link to="/providers" className="text-gray-700 hover:text-emerald-700 transition-all">Providers</Link>
+          <Link to="/events" className="text-gray-700 hover:text-emerald-700 transition-all">Events</Link>
           <Link to="/about" className="text-gray-700 hover:text-emerald-700 transition-all">About</Link>
           <Link to="/chats" className="relative text-gray-700 hover:text-emerald-700 transition-all">
             Chats
@@ -210,6 +211,7 @@ export default function Header() {
           <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-2 text-sm">
             <nav className="flex flex-col gap-2">
               <Link to="/providers" className="text-gray-700 hover:text-emerald-700" onClick={() => setMobileOpen(false)}>Providers</Link>
+              <Link to="/events" className="text-gray-700 hover:text-emerald-700" onClick={() => setMobileOpen(false)}>Events</Link>
               <Link to="/about" className="text-gray-700 hover:text-emerald-700" onClick={() => setMobileOpen(false)}>About</Link>
               <Link to="/chats" className="text-gray-700 hover:text-emerald-700" onClick={() => setMobileOpen(false)}>Chats</Link>
               {roles.includes('provider') && (

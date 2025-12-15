@@ -168,6 +168,9 @@ export default function DashboardProvider() {
             <Link to="/provider/edit-profile" className="inline-flex items-center text-sm px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50">
               Edit profile
             </Link>
+            <Link to="/organizer/events" className="inline-flex items-center text-sm px-3 py-1.5 rounded-md border border-gray-300 hover:bg-gray-50">
+              Manage Events
+            </Link>
             {(userSnapshot?.providerMode === 'both' || userSnapshot?.providerMode === 'product') && (
               <Link to="/provider/products" className="inline-flex items-center text-sm px-3 py-1.5 rounded-md border border-emerald-600 text-emerald-700 hover:bg-emerald-50">
                 Manage product catalog
