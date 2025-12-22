@@ -22,6 +22,7 @@ const bookingSchema = new mongoose.Schema({
     category: String,
     price: Number,
   },
+  quantity: { type: Number, default: 1 },
   // Optional agreed price for this booking (service or product), stored in smallest currency unit (e.g. kobo)
   price: Number,
   currency: String,

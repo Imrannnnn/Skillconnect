@@ -1,49 +1,117 @@
 # SkillConnect User Guide
 
-## 🎟️ For Event Organizers
-
-**1. Create an Account**
-   - Sign up as a **Provider** (or log in if you already have an account).
-   - Go to your **Provider Dashboard**.
-
-**2. Create an Event**
-   - Click on **"Manage Events"** in your dashboard.
-   - Click the **"+ Create New Event"** button.
-   - Fill in the event details:
-     - **Title, Date, Time, Venue**.
-     - **Branding**: Add your logo URL and choose theme colors.
-     - **Ticket Types**: Define tickets (e.g., "VIP", "Regular"), set prices, and quantities.
-   - Click **"Create Event"** to publish it.
-
-**3. Manage Your Event**
-   - In the **"My Events"** section, you can see all your active events.
-   - Click on an event to view its public page.
-
-**4. Check-in Attendees**
-   - On the day of the event, go to **"Manage Events"**.
-   - Click **"Check-in Scanner"** for the specific event.
-   - Use a barcode scanner or manually enter the **Ticket ID** from the attendee's ticket.
-   - The system will tell you if the ticket is **Valid**, **Already Checked-in**, or **Invalid**.
+Welcome to **SkillConnect**, the all-in-one marketplace connecting clients with skilled service providers and event organizers. This guide will help you navigate the platform whether you are looking for a service, offering your skills, or hosting an event.
 
 ---
 
-## 🎫 For Ticket Buyers
+## 🚀 Getting Started
 
-**1. Find an Event**
-   - Click on **"Events"** in the top navigation bar.
-   - Browse the list of upcoming events.
+### 1. Create an Account
+- **Register**: Click **"Get Started"** or **"Register"** on the homepage.
+- **Choose Role**:
+  - **Client**: If you want to hire professionals or buy tickets.
+  - **Provider**: If you want to offer services, sell products, or host events.
+- **Verify Email**: Check your inbox for a verification link to activate your account.
 
-**2. Select Tickets**
-   - Click on an event to view details.
-   - Choose the number of tickets you want for each type (e.g., 2 Regular, 1 VIP).
-   - You can buy tickets as a **Guest** (just enter your email) or **Log in** for faster checkout.
+### 2. Login
+- Click **"Login"** and enter your email and password.
+- **Forgot Password?**: Use the "Forgot password?" link on the login page to reset it via email.
 
-**3. Get Your Ticket**
-   - Click **"Get Tickets"** or **"Complete Order"**.
-   - Once processed, you will see a confirmation screen.
-   - **Check your Email**: You will receive an email with your **PDF Ticket** attached.
-   - **Download**: You can also download the PDF directly from the confirmation page.
+---
 
-**4. Attend the Event**
-   - Open the PDF ticket on your phone or print it out.
-   - Show the **QR Code** at the entrance to be scanned.
+## 🛠️ For Service Providers
+
+**1. Set Up Your Profile**
+- Go to **"My Dashboard"** -> **"Edit Profile"**.
+- Upload a professional **Avatar**.
+- Add a **Bio** and select your **Categories** (e.g., Plumbing, Web Design).
+- Set your **Location** to help local clients find you.
+
+**2. Manage Services & Products**
+- If you offer products, go to **"Manage product catalog"** from your dashboard.
+- Add items with images, descriptions, and prices.
+
+**3. Manage Bookings**
+- View incoming requests in **"Bookings"**.
+- **Accept** or **Decline** jobs.
+- Once a job is done, mark it as **Successful** to get paid.
+
+**4. Wallet & Earnings**
+- Track your income in the **Provider Dashboard**.
+- View **Pending**, **Paid**, and **Released** transactions.
+- **Fund Wallet**: You can also add funds to your wallet for platform fees or other services.
+
+---
+
+## 🔍 For Clients (Hiring Services)
+
+**1. Find a Provider**
+- Click **"Providers"** in the menu.
+- **Filter** by category (e.g., "Electrician") or search by name.
+- Sort by **Rating** to find top-performing professionals.
+
+**2. Book a Service**
+- View a provider's profile to see their bio, rating, and services.
+- Click **"Book Now"** (or similar CTA).
+- Fill in the job details: **Description**, **Date**, **Address**.
+- Submit the request.
+
+**3. Manage Your Bookings**
+- Go to **"My Bookings"** to see the status of your requests.
+- Chat with the provider to discuss details.
+
+---
+
+## 🎟️ Event Ticketing System
+
+### For Organizers (Hosting Events)
+**1. Create an Event**
+- Go to **"My Dashboard"** -> **"Manage Events"**.
+- Click **"+ Create New Event"**.
+- Enter details: **Title, Date, Venue, Description**.
+- **Branding**: Add a logo and custom colors.
+- **Tickets**: Create ticket types (e.g., VIP, Regular) with prices and quantities.
+
+**2. Check-in Attendees**
+- On event day, use the **"Check-in Scanner"** in your dashboard.
+- Scan the attendee's **QR Code** or enter their **Ticket ID**.
+
+### For Buyers (Attending Events)
+**1. Buy Tickets**
+- Browse **"Events"** from the main menu.
+- Select an event and choose your tickets.
+- Checkout as a **Guest** or **Logged-in User**.
+
+**2. Get Your Ticket**
+- After payment, you'll receive an **Email** with a PDF attachment.
+- You can also **Download PDF** directly from the confirmation page.
+- Present the **QR Code** at the venue entrance.
+
+---
+
+## 💬 Chat & Notifications
+
+**1. Real-time Chat**
+- Click **"Chats"** in the header to view your conversations.
+- Chat with providers or clients before/after booking.
+- See **Typing Indicators** and **Read Status**.
+
+**2. Notifications**
+- Click the **Bell Icon** 🔔 in the header.
+- Get updates on:
+  - Booking status changes (Accepted, Completed).
+  - New messages.
+  - Wallet transactions.
+
+---
+
+## ❓ Frequently Asked Questions
+
+**Q: Can I be both a Client and a Provider?**
+A: Yes! You can use the same account. If you registered as a Client but want to offer services, you may need to update your role settings or contact support (depending on current platform configuration).
+
+**Q: How do I get paid?**
+A: Payments are held in escrow and released to your **Wallet** after the job is marked successful.
+
+**Q: Is my ticket valid if I print it in black and white?**
+A: Yes, as long as the **QR Code** is clear and scannable.

@@ -19,6 +19,7 @@ export const createBooking = async (req, res) => {
       details,
       bookingType,
       productId,
+      quantity,
     } = req.body;
 
     if (!providerId || !clientName || !clientPhone || !description) {
@@ -73,6 +74,7 @@ export const createBooking = async (req, res) => {
       address,
       details,
       bookingType: bookingType === "product" ? "product" : "service",
+      quantity: quantity || 1,
     };
 
     if (productId) bookingPayload.productId = productId;
@@ -82,24 +84,25 @@ export const createBooking = async (req, res) => {
 
     const booking = await Booking.create(bookingPayload);
 
-    // Ticket-style email to provider (fire-and-forget; do not block response on email)
+    // Prepare email variables
+    const createdAt = new Date(booking.createdAt).toLocaleString();
+    const isProduct = booking.bookingType === "product" && booking.productSnapshot;
+    const productSection = isProduct
+      ? `<div style="margin: 12px 0; padding: 8px 10px; border-radius: 8px; background: #f9fafb; border: 1px solid #e5e7eb;">
+          <div style="font-weight: 600; margin-bottom: 4px;">Product details</div>
+          <div style="font-size: 13px;">
+            <div><strong>Name:</strong> ${booking.productSnapshot.name || ""}</div>
+            ${booking.productSnapshot.productCode ? `<div><strong>Product ID:</strong> ${booking.productSnapshot.productCode}</div>` : ""}
+            ${typeof booking.productSnapshot.price === "number" ? `<div><strong>Price:</strong> ₦${booking.productSnapshot.price.toLocaleString()}</div>` : ""}
+          </div>
+        </div>`
+      : "";
+
+    // Ticket-style email to provider (fire-and-forget)
     try {
       const dashboardUrl = `${FRONTEND_URL}/provider/bookings`;
-      const createdAt = new Date(booking.createdAt).toLocaleString();
-      const isProduct = booking.bookingType === "product" && booking.productSnapshot;
-
       const providerName = provider?.name || "Provider";
       const subject = "New booking request";
-      const productSection = isProduct
-        ? `<div style="margin: 12px 0; padding: 8px 10px; border-radius: 8px; background: #f9fafb; border: 1px solid #e5e7eb;">
-            <div style="font-weight: 600; margin-bottom: 4px;">Product details</div>
-            <div style="font-size: 13px;">
-              <div><strong>Name:</strong> ${booking.productSnapshot.name || ""}</div>
-              ${booking.productSnapshot.productCode ? `<div><strong>Product ID:</strong> ${booking.productSnapshot.productCode}</div>` : ""}
-              ${typeof booking.productSnapshot.price === "number" ? `<div><strong>Price:</strong> ₦${booking.productSnapshot.price.toLocaleString()}</div>` : ""}
-            </div>
-          </div>`
-        : "";
 
       const html = `
         <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; color: #111827;">
@@ -133,7 +136,39 @@ export const createBooking = async (req, res) => {
       sendEmail(provider.email, subject, html).catch((e) => {
         console.warn("Email send failed (provider notification)", e?.message);
       });
-    } catch {}
+    } catch { }
+
+    // Confirmation email to client (fire-and-forget)
+    if (clientEmail) {
+      try {
+        const subject = isProduct ? "Order Confirmation" : "Booking Request Received";
+        const dashboardUrl = `${FRONTEND_URL}/bookings`;
+
+        const html = `
+          <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; color: #111827;">
+            <h2 style="margin-bottom: 8px;">${subject}</h2>
+            <p style="margin: 0 0 12px 0;">Hi <b>${clientName}</b>, we have received your ${isProduct ? "order" : "booking request"}.</p>
+            <div style="border-radius: 8px; border: 1px solid #e5e7eb; padding: 12px; margin-bottom: 12px;">
+              <h3 style="margin: 0 0 8px 0; font-size: 14px;">Details</h3>
+              <ul style="margin: 0; padding-left: 18px;">
+                <li><b>Type:</b> ${isProduct ? "Product" : "Service"}</li>
+                <li><b>Description:</b> ${description}</li>
+                ${details ? `<li><b>Extra details:</b> ${details}</li>` : ""}
+                <li><b>Requested at:</b> ${createdAt}</li>
+              </ul>
+            </div>
+            ${productSection}
+            <p style="margin: 0 0 16px 0;">The provider will review your request and get back to you shortly.</p>
+            <p style="margin: 0 0 24px 0;">
+              <a href="${dashboardUrl}" style="display: inline-block; padding: 10px 16px; border-radius: 999px; background: #059669; color: #fff; text-decoration: none; font-weight: 500;">View My Bookings</a>
+            </p>
+          </div>`;
+
+        sendEmail(clientEmail, subject, html).catch((e) => {
+          console.warn("Email send failed (client confirmation)", e?.message);
+        });
+      } catch { }
+    }
 
     res.status(201).json({ message: "Booking created", booking });
   } catch (error) {
@@ -197,7 +232,7 @@ export const updateBookingStatus = async (req, res) => {
         ).catch((e) => {
           console.warn("Email send failed (client notification)", e?.message);
         });
-      } catch {}
+      } catch { }
     }
 
     res.json({ message: "Booking updated", booking });

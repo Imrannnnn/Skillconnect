@@ -29,6 +29,7 @@ export default function ProviderProfile() {
   const [products, setProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [quantity, setQuantity] = useState(1);
   const { notify } = useToast();
 
   useEffect(() => {
@@ -240,6 +241,7 @@ export default function ProviderProfile() {
         address,
         details,
         bookingType: selectedProduct ? "product" : "service",
+        quantity: selectedProduct ? quantity : 1,
       };
 
       if (selectedProduct) {
@@ -258,6 +260,7 @@ export default function ProviderProfile() {
       setBookingOpen(false);
       setClientName(""); setClientPhone(""); setJobDescription(""); setAddress(""); setDetails("");
       setSelectedProduct(null);
+      setQuantity(1);
     } catch (e) {
       notify(e?.response?.data?.message || "Failed to send booking", { type: "error" });
     } finally {
@@ -271,6 +274,7 @@ export default function ProviderProfile() {
       API.post(`/products/${p._id}/order-click`).catch(() => { });
     }
     setSelectedProduct(p);
+    setQuantity(1);
     if (!clientName && auth?.user?.name) {
       setClientName(auth.user.name);
     }
@@ -540,12 +544,12 @@ export default function ProviderProfile() {
                       {p.stockStatus && (
                         <span
                           className={`px-2 py-0.5 rounded-full border text-[10px] ${p.stockStatus === 'out_of_stock'
-                              ? 'bg-rose-50 border-rose-200 text-rose-700'
-                              : p.stockStatus === 'low_stock'
-                                ? 'bg-amber-50 border-amber-200 text-amber-700'
-                                : p.stockStatus === 'pre_order'
-                                  ? 'bg-sky-50 border-sky-200 text-sky-700'
-                                  : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                            ? 'bg-rose-50 border-rose-200 text-rose-700'
+                            : p.stockStatus === 'low_stock'
+                              ? 'bg-amber-50 border-amber-200 text-amber-700'
+                              : p.stockStatus === 'pre_order'
+                                ? 'bg-sky-50 border-sky-200 text-sky-700'
+                                : 'bg-emerald-50 border-emerald-200 text-emerald-700'
                             }`}
                         >
                           {p.stockStatus.replace('_', ' ')}
@@ -577,8 +581,8 @@ export default function ProviderProfile() {
                       onClick={() => startProductBooking(p)}
                       disabled={p.stockStatus === 'out_of_stock'}
                       className={`px-3 py-1.5 text-xs rounded-md text-white transition ${p.stockStatus === 'out_of_stock'
-                          ? 'bg-gray-300 cursor-not-allowed'
-                          : 'bg-emerald-600 hover:bg-emerald-700'
+                        ? 'bg-gray-300 cursor-not-allowed'
+                        : 'bg-emerald-600 hover:bg-emerald-700'
                         }`}
                     >
                       {p.stockStatus === 'out_of_stock' ? 'Out of stock' : 'Order product'}
@@ -614,38 +618,55 @@ export default function ProviderProfile() {
       )}
       {/* Booking Modal */}
       {bookingOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-          <div className="w-full max-w-md bg-white rounded-lg border border-gray-200 p-4">
-            <div className="flex items-center justify-between mb-2">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-white rounded-xl border border-gray-200 shadow-2xl max-h-[90vh] overflow-y-auto flex flex-col">
+            <div className="p-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
               <h3 className="font-semibold">Request booking</h3>
               <button onClick={() => setBookingOpen(false)} className="text-gray-500 hover:text-gray-700">✕</button>
             </div>
-            <form onSubmit={submitBooking} className="grid gap-3">
-              <label className="grid gap-1 text-sm">
-                <span className="text-gray-700">Your name</span>
-                <input className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500" value={clientName} onChange={(e) => setClientName(e.target.value)} required />
-              </label>
-              <label className="grid gap-1 text-sm">
-                <span className="text-gray-700">Phone number</span>
-                <input className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} required />
-              </label>
-              <label className="grid gap-1 text-sm">
-                <span className="text-gray-700">Job description / services required</span>
-                <textarea className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[80px]" value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} required />
-              </label>
-              <label className="grid gap-1 text-sm">
-                <span className="text-gray-700">Address / location</span>
-                <input className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500" value={address} onChange={(e) => setAddress(e.target.value)} />
-              </label>
-              <label className="grid gap-1 text-sm">
-                <span className="text-gray-700">Additional details</span>
-                <textarea className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[60px]" value={details} onChange={(e) => setDetails(e.target.value)} />
-              </label>
-              <div className="flex items-center gap-2 pt-1">
-                <button type="submit" disabled={bookingSubmitting} className="px-4 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition disabled:opacity-70">{bookingSubmitting ? 'Sending…' : 'Send request'}</button>
-                <button type="button" onClick={() => setBookingOpen(false)} className="px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-50">Cancel</button>
-              </div>
-            </form>
+            <div className="p-4">
+              <form onSubmit={submitBooking} className="grid gap-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="grid gap-1 text-xs font-medium">
+                    <span className="text-gray-700">Your name</span>
+                    <input className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" value={clientName} onChange={(e) => setClientName(e.target.value)} required />
+                  </label>
+                  <label className="grid gap-1 text-xs font-medium">
+                    <span className="text-gray-700">Phone number</span>
+                    <input className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} required />
+                  </label>
+                </div>
+                <label className="grid gap-1 text-xs font-medium">
+                  <span className="text-gray-700">Job description / services required</span>
+                  <textarea className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[60px] text-sm" value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} required />
+                </label>
+                <label className="grid gap-1 text-xs font-medium">
+                  <span className="text-gray-700">Address / location</span>
+                  <input className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" value={address} onChange={(e) => setAddress(e.target.value)} />
+                </label>
+                <label className="grid gap-1 text-xs font-medium">
+                  <span className="text-gray-700">Additional details</span>
+                  <textarea className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[50px] text-sm" value={details} onChange={(e) => setDetails(e.target.value)} />
+                </label>
+                {selectedProduct && (
+                  <label className="grid gap-1 text-xs font-medium">
+                    <span className="text-gray-700">Quantity</span>
+                    <input
+                      type="number"
+                      min="1"
+                      className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                      value={quantity}
+                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                      required
+                    />
+                  </label>
+                )}
+                <div className="flex items-center gap-2 pt-2">
+                  <button type="submit" disabled={bookingSubmitting} className="flex-1 px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition disabled:opacity-70 text-sm font-medium">{bookingSubmitting ? 'Sending…' : 'Send request'}</button>
+                  <button type="button" onClick={() => setBookingOpen(false)} className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 text-sm font-medium">Cancel</button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
