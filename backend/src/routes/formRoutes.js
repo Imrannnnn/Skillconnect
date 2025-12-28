@@ -12,6 +12,7 @@ import {
   getFormResponse,
   deleteFormResponse,
   exportFormResponsesCsv,
+  deleteForm,
 } from "../controllers/formController.js";
 
 const router = express.Router();
@@ -39,6 +40,7 @@ router.post("/", protect, createForm);
 router.put("/:id", protect, updateForm);
 router.get("/", protect, listForms);
 router.get("/:id", getForm); // public definition for rendering forms
+router.delete("/:id", protect, deleteForm);
 
 // Form responses
 router.get("/:id/export/csv", protect, exportFormResponsesCsv);

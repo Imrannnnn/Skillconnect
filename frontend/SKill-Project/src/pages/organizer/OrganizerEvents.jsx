@@ -73,6 +73,12 @@ const OrganizerEvents = () => {
                                             <p className="flex items-center text-sm text-gray-500">
                                                 Venue: {event.venue}
                                             </p>
+                                            {event.sponsorship?.enabled && (
+                                                <p className="ml-4 flex items-center text-sm text-gray-500">
+                                                    Raised: <span className="font-semibold text-emerald-600 ml-1">${event.sponsorship.raised || 0}</span>
+                                                    {event.sponsorship.goal > 0 && <span className="ml-1">/ ${event.sponsorship.goal}</span>}
+                                                </p>
+                                            )}
                                         </div>
                                         <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
                                             <p>

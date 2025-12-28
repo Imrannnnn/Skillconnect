@@ -11,7 +11,10 @@ const ticketTypeSchema = new mongoose.Schema({
 });
 
 const eventSchema = new mongoose.Schema({
-    organizerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    // Organizer can be User or Organization
+    organizerId: { type: mongoose.Schema.Types.ObjectId, required: true, refPath: 'organizerModel' },
+    organizerModel: { type: String, required: true, enum: ['User', 'Organization'], default: 'User' },
+
     title: { type: String, required: true, trim: true },
     description: { type: String, required: true },
     date: { type: Date, required: true },
@@ -29,6 +32,19 @@ const eventSchema = new mongoose.Schema({
     },
 
     ticketTypes: [ticketTypeSchema],
+
+    // Sponsorship & Donations (Only for Organizations)
+    sponsorship: {
+        enabled: { type: Boolean, default: false },
+        goal: { type: Number, default: 0 },
+        raised: { type: Number, default: 0 },
+        tiers: [{
+            name: { type: String, required: true },
+            amount: { type: Number, required: true },
+            benefits: [String],
+            color: String
+        }]
+    },
 
     status: {
         type: String,

@@ -218,7 +218,8 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
     const normalizedEmail = String(email || "").trim().toLowerCase();
     const user = await User.findOne({ email: normalizedEmail }); if (!user) return res.status(400).json({ message: "Invalid credentials" });
-    const ok = await bcrypt.compare(password, user.password || ""); if (!ok) return res.status(400).json({ message: "Invalid credentials" });
+    if (!user.password) return res.status(400).json({ message: "Invalid credentials" });
+    const ok = await bcrypt.compare(password, user.password); if (!ok) return res.status(400).json({ message: "Invalid credentials" });
     const tokenRoles = Array.isArray(user.roles) && user.roles.length
       ? user.roles
       : (user.role ? [user.role] : []);

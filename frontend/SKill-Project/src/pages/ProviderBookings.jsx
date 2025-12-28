@@ -13,6 +13,10 @@ export default function ProviderBookings() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
 
+  const isProduct = user?.providerMode === 'product';
+  const term = isProduct ? 'Order' : 'Booking';
+  const termPlural = isProduct ? 'Orders' : 'Bookings';
+
   useEffect(() => {
     let mounted = true;
     async function load() {
@@ -35,10 +39,10 @@ export default function ProviderBookings() {
       setUpdatingId(id);
       const { data } = await API.put(`/bookings/${id}/status`, { status });
       setItems((prev) => prev.map((b) => (b._id === id ? data.booking : b)));
-      notify(`Booking marked as ${status}`, { type: status === 'successful' ? 'success' : status === 'declined' ? 'error' : 'info' });
+      notify(`${term} marked as ${status}`, { type: status === 'successful' ? 'success' : status === 'declined' ? 'error' : 'info' });
       NetBus.emit({ bookingsUpdated: true, at: Date.now() });
     } catch (e) {
-      notify(e?.response?.data?.message || 'Failed to update booking', { type: 'error' });
+      notify(e?.response?.data?.message || `Failed to update ${term.toLowerCase()}`, { type: 'error' });
     } finally {
       setUpdatingId(null);
     }
@@ -51,9 +55,9 @@ export default function ProviderBookings() {
       if (data?.booking) {
         setItems((prev) => prev.map((b) => (b._id === id ? data.booking : b)));
       }
-      notify(`Booking moved to ${data?.booking?.flowStatus || 'next'} stage`, { type: 'info' });
+      notify(`${term} moved to ${data?.booking?.flowStatus || 'next'} stage`, { type: 'info' });
     } catch (e) {
-      notify(e?.response?.data?.message || 'Failed to update booking flow', { type: 'error' });
+      notify(e?.response?.data?.message || `Failed to update ${term.toLowerCase()} flow`, { type: 'error' });
     } finally {
       setUpdatingId(null);
     }
@@ -62,9 +66,9 @@ export default function ProviderBookings() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <div className="flex items-center gap-2">
-        <h2 className="text-2xl font-semibold">Bookings</h2>
+        <h2 className="text-2xl font-semibold">{termPlural}</h2>
         <span className="text-xs px-2 py-0.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700">
-          Pending: {items.filter((b)=>b.status==='pending').length}
+          Pending: {items.filter((b) => b.status === 'pending').length}
         </span>
       </div>
       {loading && (
@@ -75,95 +79,129 @@ export default function ProviderBookings() {
       <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-500">Status:</span>
-          <FilterButton label="All" active={statusFilter==='all'} onClick={()=>setStatusFilter('all')} />
-          <FilterButton label="Pending" active={statusFilter==='pending'} onClick={()=>setStatusFilter('pending')} />
-          <FilterButton label="Successful" active={statusFilter==='successful'} onClick={()=>setStatusFilter('successful')} />
-          <FilterButton label="Declined" active={statusFilter==='declined'} onClick={()=>setStatusFilter('declined')} />
+          <FilterButton label="All" active={statusFilter === 'all'} onClick={() => setStatusFilter('all')} />
+          <FilterButton label="Pending" active={statusFilter === 'pending'} onClick={() => setStatusFilter('pending')} />
+          <FilterButton label="Successful" active={statusFilter === 'successful'} onClick={() => setStatusFilter('successful')} />
+          <FilterButton label="Declined" active={statusFilter === 'declined'} onClick={() => setStatusFilter('declined')} />
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-500">Type:</span>
-          <FilterButton label="All" active={typeFilter==='all'} onClick={()=>setTypeFilter('all')} />
-          <FilterButton label="Service" active={typeFilter==='service'} onClick={()=>setTypeFilter('service')} />
-          <FilterButton label="Product" active={typeFilter==='product'} onClick={()=>setTypeFilter('product')} />
+          <FilterButton label="All" active={typeFilter === 'all'} onClick={() => setTypeFilter('all')} />
+          <FilterButton label="Service" active={typeFilter === 'service'} onClick={() => setTypeFilter('service')} />
+          <FilterButton label="Product" active={typeFilter === 'product'} onClick={() => setTypeFilter('product')} />
         </div>
       </div>
-      {!loading && items.length === 0 && <p className="text-sm text-gray-500 mt-2">No bookings yet.</p>}
+      {!loading && items.length === 0 && <p className="text-sm text-gray-500 mt-2">No {termPlural.toLowerCase()} yet.</p>}
       <div className="mt-4 space-y-2">
         {items
-          .filter((b) => statusFilter==='all' ? true : b.status===statusFilter)
+          .filter((b) => statusFilter === 'all' ? true : b.status === statusFilter)
           .filter((b) => {
             if (typeFilter === 'all') return true;
             const t = b.bookingType || 'service';
             return typeFilter === t;
           })
           .map((b) => {
-          const flow = b.flowStatus || "requested";
-          const canOnTheWay = flow === "provider_accepted";
-          const canStartJob = flow === "provider_accepted" || flow === "on_the_way";
-          const canComplete = flow === "provider_accepted" || flow === "on_the_way" || flow === "job_started";
+            const flow = b.flowStatus || "requested";
+            const canOnTheWay = flow === "provider_accepted";
+            const canStartJob = flow === "provider_accepted" || flow === "on_the_way";
+            const canComplete = flow === "provider_accepted" || flow === "on_the_way" || flow === "job_started";
 
-          return (
-          <div key={b._id} className="rounded-lg border border-gray-200 bg-white p-4 flex items-start gap-4">
-            <div className="min-w-0 flex-1">
-              <div className="font-medium text-gray-800 flex flex-wrap items-center gap-2">
-                <span>{b.clientName}</span>
-                <span className="text-xs text-gray-500">({b.clientPhone})</span>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${b.bookingType === 'product' ? 'bg-sky-50 border-sky-200 text-sky-700' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
-                  {b.bookingType === 'product' ? 'Product' : 'Service'}
-                </span>
-              </div>
-              <div className="text-sm text-gray-700 mt-1 break-words">{b.description}</div>
-              {b.productSnapshot?.name && (
-                <div className="text-xs text-gray-600 mt-1">
-                  Product: {b.productSnapshot.name}
-                  {b.productSnapshot.productCode && (
-                    <span className="ml-1 text-[10px] text-gray-500">(ID: {b.productSnapshot.productCode})</span>
+            return (
+              <div key={b._id} className="rounded-lg border border-gray-200 bg-white p-4 flex items-start gap-4">
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium text-gray-800 flex flex-wrap items-center gap-2">
+                    <span>{b.clientName}</span>
+                    <span className="text-xs text-gray-500">({b.clientPhone})</span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${b.bookingType === 'product' ? 'bg-sky-50 border-sky-200 text-sky-700' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
+                      {b.bookingType === 'product' ? 'Product' : 'Service'}
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-700 mt-1 break-words">{b.description}</div>
+                  {b.productSnapshot?.name && (
+                    <div className="text-xs text-gray-600 mt-1">
+                      Product: {b.productSnapshot.name}
+                      {b.productSnapshot.productCode && (
+                        <span className="ml-1 text-[10px] text-gray-500">(ID: {b.productSnapshot.productCode})</span>
+                      )}
+                      {b.quantity && (
+                        <span className="ml-2 font-medium text-emerald-700">Qty: {b.quantity}</span>
+                      )}
+                    </div>
+                  )}
+                  {b.address && <div className="text-xs text-gray-500 mt-1">{b.address}</div>}
+                  {b.details && <div className="text-xs text-gray-500 mt-1">{b.details}</div>}
+                  <div className="text-xs text-gray-500 mt-1">{new Date(b.createdAt).toLocaleString()}</div>
+                  {b.flowStatus && (
+                    <div className="mt-1 text-[11px] text-gray-500">
+                      Flow: <span className="font-semibold text-gray-700">{b.flowStatus}</span>
+                    </div>
                   )}
                 </div>
-              )}
-              {b.address && <div className="text-xs text-gray-500 mt-1">{b.address}</div>}
-              {b.details && <div className="text-xs text-gray-500 mt-1">{b.details}</div>}
-              <div className="text-xs text-gray-500 mt-1">{new Date(b.createdAt).toLocaleString()}</div>
-              {b.flowStatus && (
-                <div className="mt-1 text-[11px] text-gray-500">
-                  Flow: <span className="font-semibold text-gray-700">{b.flowStatus}</span>
+                <div className="flex items-center gap-2">
+                  <StatusPill status={b.status} />
+                  <div className="hidden sm:flex items-center gap-2">
+                    <button disabled={updatingId === b._id} onClick={() => setStatus(b._id, 'successful')} className="px-2 py-1 text-xs rounded-md border border-emerald-600 text-emerald-700 hover:bg-emerald-50 disabled:opacity-70">Accept</button>
+                    <button disabled={updatingId === b._id} onClick={() => setStatus(b._id, 'declined')} className="px-2 py-1 text-xs rounded-md border border-rose-600 text-rose-700 hover:bg-rose-50 disabled:opacity-70">Decline</button>
+                    <button disabled={updatingId === b._id} onClick={() => setStatus(b._id, 'pending')} className="px-2 py-1 text-xs rounded-md border border-gray-300 hover:bg-gray-50 disabled:opacity-70">Pending</button>
+                    <button type="button" onClick={() => copyBooking(b)} className="px-2 py-1 text-xs rounded-md border border-gray-300 hover:bg-gray-50">Copy</button>
+                  </div>
+                  <div className="hidden sm:flex flex-col items-stretch gap-1 ml-2">
+                    {/* Product Flow Actions */}
+                    {b.bookingType === 'product' ? (
+                      <>
+                        <button
+                          disabled={updatingId === b._id || flow !== 'provider_accepted'}
+                          onClick={() => updateFlow(b._id, 'process_order')}
+                          className="px-2 py-0.5 text-[10px] rounded-md border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:bg-gray-50"
+                        >
+                          Process Order
+                        </button>
+                        <button
+                          disabled={updatingId === b._id || flow !== 'processing'}
+                          onClick={() => updateFlow(b._id, 'dispatch_order')}
+                          className="px-2 py-0.5 text-[10px] rounded-md border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:bg-gray-50"
+                        >
+                          Dispatch
+                        </button>
+                        <button
+                          disabled={updatingId === b._id || flow !== 'on_the_way'}
+                          onClick={() => updateFlow(b._id, 'deliver_order')}
+                          className="px-2 py-0.5 text-[10px] rounded-md border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:bg-gray-50"
+                        >
+                          Mark Delivered
+                        </button>
+                      </>
+                    ) : (
+                      /* Service Flow Actions */
+                      <>
+                        <button
+                          disabled={updatingId === b._id || !canOnTheWay}
+                          onClick={() => updateFlow(b._id, 'on_the_way')}
+                          className="px-2 py-0.5 text-[10px] rounded-md border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:bg-gray-50"
+                        >
+                          Mark on the way
+                        </button>
+                        <button
+                          disabled={updatingId === b._id || !canStartJob}
+                          onClick={() => updateFlow(b._id, 'start_job')}
+                          className="px-2 py-0.5 text-[10px] rounded-md border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:bg-gray-50"
+                        >
+                          Start job
+                        </button>
+                        <button
+                          disabled={updatingId === b._id || !canComplete}
+                          onClick={() => updateFlow(b._id, 'complete_job')}
+                          className="px-2 py-0.5 text-[10px] rounded-md border border-emerald-600 text-emerald-700 hover:bg-emerald-50 disabled:opacity-50 disabled:bg-gray-50"
+                        >
+                          Mark completed
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <StatusPill status={b.status} />
-              <div className="hidden sm:flex items-center gap-2">
-                <button disabled={updatingId===b._id} onClick={()=>setStatus(b._id,'successful')} className="px-2 py-1 text-xs rounded-md border border-emerald-600 text-emerald-700 hover:bg-emerald-50 disabled:opacity-70">Accept</button>
-                <button disabled={updatingId===b._id} onClick={()=>setStatus(b._id,'declined')} className="px-2 py-1 text-xs rounded-md border border-rose-600 text-rose-700 hover:bg-rose-50 disabled:opacity-70">Decline</button>
-                <button disabled={updatingId===b._id} onClick={()=>setStatus(b._id,'pending')} className="px-2 py-1 text-xs rounded-md border border-gray-300 hover:bg-gray-50 disabled:opacity-70">Pending</button>
-                <button type="button" onClick={()=>copyBooking(b)} className="px-2 py-1 text-xs rounded-md border border-gray-300 hover:bg-gray-50">Copy</button>
               </div>
-               <div className="hidden sm:flex flex-col items-stretch gap-1 ml-2">
-                 <button
-                   disabled={updatingId===b._id || !canOnTheWay}
-                   onClick={()=>updateFlow(b._id,'on_the_way')}
-                   className="px-2 py-0.5 text-[10px] rounded-md border border-gray-300 hover:bg-gray-50 disabled:opacity-70"
-                 >
-                   Mark on the way
-                 </button>
-                 <button
-                   disabled={updatingId===b._id || !canStartJob}
-                   onClick={()=>updateFlow(b._id,'start_job')}
-                   className="px-2 py-0.5 text-[10px] rounded-md border border-gray-300 hover:bg-gray-50 disabled:opacity-70"
-                 >
-                   Start job
-                 </button>
-                 <button
-                   disabled={updatingId===b._id || !canComplete}
-                   onClick={()=>updateFlow(b._id,'complete_job')}
-                   className="px-2 py-0.5 text-[10px] rounded-md border border-emerald-600 text-emerald-700 hover:bg-emerald-50 disabled:opacity-70"
-                 >
-                   Mark completed
-                 </button>
-              </div>
-            </div>
-          </div>
-        )})}
+            )
+          })}
       </div>
     </div>
   );

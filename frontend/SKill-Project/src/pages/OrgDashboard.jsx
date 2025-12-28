@@ -177,8 +177,10 @@ export default function OrgDashboard() {
   const [responses, setResponses] = useState([])
   const [loadingResponses, setLoadingResponses] = useState(false)
   const [deletingResponseId, setDeletingResponseId] = useState(null)
+  const [deletingFormId, setDeletingFormId] = useState(null) // For delete confirmation state
   const [templateKey, setTemplateKey] = useState('')
   const [orgDraft, setOrgDraft] = useState(null)
+
   const [savingOrgProfile, setSavingOrgProfile] = useState(false)
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [showProfileEditor, setShowProfileEditor] = useState(false)
@@ -1373,7 +1375,7 @@ export default function OrgDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {loadingOrg && (
           <div className="mb-6 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
             Loading your organization workspace…
@@ -1476,186 +1478,9 @@ export default function OrgDashboard() {
           </div>
         </section>
 
-        {/* Collaborators Section */}
-        <section className="mt-8 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Collaborators</h2>
-          {loadingCollaborators ? (
-            <p className="text-sm text-gray-500">Loading collaborators…</p>
-          ) : (
-            <div className="space-y-4">
-              {/* Invite Form */}
-              <form onSubmit={handleInvite} className="flex flex-wrap gap-2 items-end">
-                <input
-                  type="email"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  placeholder="Email address"
-                  className="flex-1 min-w-[200px] rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  required
-                />
-                <select
-                  value={inviteRole}
-                  onChange={(e) => setInviteRole(e.target.value)}
-                  className="rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                >
-                  <option value="staff">Staff</option>
-                  <option value="admin">Admin</option>
-                </select>
-                <button
-                  type="submit"
-                  disabled={inviting}
-                  className="inline-flex items-center justify-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
-                >
-                  {inviting ? 'Sending…' : 'Invite'}
-                </button>
-              </form>
-
-              {/* Owner */}
-              {collaborators.owner && (
-                <div>
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Owner</h3>
-                  <div className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
-                    <div className="text-sm">
-                      <p className="font-medium text-gray-900">{collaborators.owner.name || '—'}</p>
-                      <p className="text-xs text-gray-500">{collaborators.owner.email}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Admins */}
-              {collaborators.admins.length > 0 && (
-                <div>
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Admins</h3>
-                  <div className="space-y-2">
-                    {collaborators.admins.map((u) => (
-                      <div key={u._id} className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2">
-                        <div className="text-sm">
-                          <p className="font-medium text-gray-900">{u.name || '—'}</p>
-                          <p className="text-xs text-gray-500">{u.email}</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveCollaborator(u._id)}
-                          className="text-xs text-rose-600 hover:text-rose-700"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Staff */}
-              {collaborators.staff.length > 0 && (
-                <div>
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Staff</h3>
-                  <div className="space-y-2">
-                    {collaborators.staff.map((u) => (
-                      <div key={u._id} className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2">
-                        <div className="text-sm">
-                          <p className="font-medium text-gray-900">{u.name || '—'}</p>
-                          <p className="text-xs text-gray-500">{u.email}</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveCollaborator(u._id)}
-                          className="text-xs text-rose-600 hover:text-rose-700"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {collaborators.admins.length === 0 && collaborators.staff.length === 0 && (
-                <p className="text-sm text-gray-500">No other collaborators yet.</p>
-              )}
-            </div>
-          )}
-        </section>
-
-        <section className="mt-8 grid gap-6 lg:grid-cols-[2fr,1fr]">
-          <div className="space-y-6">
-            <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900">Public profile preview</h2>
-              <p className="mt-1 text-xs text-gray-500">A quick snapshot of what visitors see before opening the full profile.</p>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl border border-gray-100 p-4">
-                  <h3 className="text-sm font-semibold text-gray-900">Overview</h3>
-                  {truncatedDescription ? (
-                    <p className="mt-2 text-sm text-gray-600">{truncatedDescription}</p>
-                  ) : (
-                    <p className="mt-2 text-sm text-gray-400">Add a description so clients know what you do.</p>
-                  )}
-                  <dl className="mt-4 space-y-2 text-xs text-gray-600">
-                    {profileSectionsList.map((section) => (
-                      <div key={section.key} className="flex items-center justify-between rounded-lg border border-dashed border-gray-200 px-3 py-2">
-                        <dt>{section.label}</dt>
-                        <dd className="font-medium text-gray-900">{section.count}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                  {!hasProfileDetails && (
-                    <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-                      Share highlights like services, projects, or testimonials to make your profile feel complete.
-                    </p>
-                  )}
-                </div>
-                <div className="rounded-2xl border border-gray-100 p-4">
-                  <h3 className="text-sm font-semibold text-gray-900">Contact & visibility</h3>
-                  <div className="mt-2 space-y-2">
-                    {hasContactInfo ? (
-                      contactEntries.map((entry) => (
-                        <a
-                          key={entry.label}
-                          href={entry.href || undefined}
-                          target={entry.external ? '_blank' : undefined}
-                          rel={entry.external ? 'noreferrer' : undefined}
-                          className={`flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2 text-xs text-gray-700 hover:border-emerald-200 hover:text-emerald-700 ${entry.href ? 'cursor-pointer' : 'cursor-default'}`}
-                        >
-                          <span>{entry.label}</span>
-                          <span className="truncate text-right text-[11px] text-gray-500">{entry.value}</span>
-                        </a>
-                      ))
-                    ) : (
-                      <p className="text-sm text-gray-400">Add contact details so clients can reach you easily.</p>
-                    )}
-                  </div>
-                  <div className="mt-4 rounded-xl bg-emerald-50 p-3 text-xs text-emerald-700">
-                    Keep your profile up to date to boost trust and conversions. Highlight key services, projects, and partners.
-                  </div>
-                </div>
-              </div>
-              <div className="mt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowProfileEditor((prev) => !prev)}
-                  className="inline-flex items-center rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
-                >
-                  {showProfileEditor ? 'Close editor' : 'Expand profile editor'}
-                </button>
-              </div>
-              {showProfileEditor && (
-                <div className="mt-6 border-t border-gray-100 pt-6">
-                  {renderProfileEditor()}
-                  <div className="mt-6 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={handleSaveOrgProfile}
-                      disabled={savingOrgProfile}
-                      className="inline-flex items-center justify-center rounded-md bg-emerald-600 px-4 py-2 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
-                    >
-                      {savingOrgProfile ? 'Saving…' : 'Save profile'}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* LEFT COLUMN (2/3) - Forms */}
+          <div className="lg:col-span-2 space-y-8">
             <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
               <h2 className="text-lg font-semibold text-gray-900">Form workspace</h2>
               <p className="mt-1 text-xs text-gray-500">Build forms, share them, and keep track of submissions in one place.</p>
@@ -1699,24 +1524,41 @@ export default function OrgDashboard() {
 
                   <div className="space-y-2">
                     <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-700">Your forms</h3>
-                    <div className="max-h-60 space-y-2 overflow-y-auto pr-1">
+                    <div className="max-h-96 space-y-2 overflow-y-auto pr-1">
                       {forms.length === 0 && !loadingForms && (
                         <p className="text-[11px] text-gray-500">Create your first form to start collecting responses.</p>
                       )}
                       {loadingForms && <p className="text-[11px] text-gray-500">Loading forms…</p>}
                       {forms.map((form) => (
-                        <button
+                        <div
                           key={form._id}
-                          type="button"
-                          onClick={() => setActiveFormId(form._id)}
-                          className={`flex w-full flex-col items-start rounded-xl border px-3 py-2 text-left text-xs transition ${activeFormId === form._id
-                              ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
-                              : 'border-gray-200 bg-white text-gray-700 hover:border-emerald-200 hover:text-emerald-700'
+                          className={`group flex w-full flex-col items-start rounded-xl border px-3 py-2 text-left text-xs transition relative ${activeFormId === form._id
+                            ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                            : 'border-gray-200 bg-white text-gray-700 hover:border-emerald-200 hover:text-emerald-700'
                             }`}
                         >
-                          <span className="font-medium">{form.name}</span>
-                          <span className="mt-0.5 text-[11px] text-gray-500">{form.status || 'draft'}</span>
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => setActiveFormId(form._id)}
+                            className="w-full text-left"
+                          >
+                            <span className="font-medium block pr-6">{form.name}</span>
+                            <span className="mt-0.5 text-[11px] text-gray-500 block">{form.status || 'draft'}</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteForm(form._id, e)}
+                            className={`absolute top-2 right-2 p-1 rounded hover:bg-rose-100 text-rose-500 ${deletingFormId === form._id ? 'bg-rose-100 text-rose-700 ring-1 ring-rose-300' : 'opacity-0 group-hover:opacity-100'}`}
+                            title="Delete form"
+                          >
+                            {deletingFormId === form._id ? (
+                              <span className="text-[10px] font-bold px-1">CONFIRM?</span>
+                            ) : (
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            )}
+                          </button>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -1724,8 +1566,9 @@ export default function OrgDashboard() {
 
                 <div className="space-y-4">
                   {!editableForm && !loadingForms && (
-                    <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-sm text-gray-600">
-                      Select or create a form to start configuring fields.
+                    <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-sm text-gray-600 flex flex-col items-center justify-center text-center h-64">
+                      <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center mb-3 text-2xl">📝</div>
+                      <p>Select a form to edit or create a new one.</p>
                     </div>
                   )}
 
@@ -1739,7 +1582,7 @@ export default function OrgDashboard() {
                               value={editableForm.name || ''}
                               onChange={(e) => setEditableForm((prev) => ({ ...prev, name: e.target.value }))}
                               placeholder="Form name"
-                              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm font-medium"
                             />
                             <textarea
                               value={editableForm.description || ''}
@@ -1800,13 +1643,13 @@ export default function OrgDashboard() {
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
                         <button
                           type="button"
                           onClick={() => setViewMode('builder')}
-                          className={`rounded-full px-3 py-1 text-xs font-medium ${viewMode === 'builder'
-                              ? 'bg-emerald-100 text-emerald-700'
-                              : 'bg-white text-gray-600 hover:bg-gray-50'
+                          className={`rounded-full px-4 py-1.5 text-xs font-medium transition ${viewMode === 'builder'
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-white text-gray-600 hover:bg-gray-50'
                             }`}
                         >
                           Builder
@@ -1814,9 +1657,9 @@ export default function OrgDashboard() {
                         <button
                           type="button"
                           onClick={() => setViewMode('submissions')}
-                          className={`rounded-full px-3 py-1 text-xs font-medium ${viewMode === 'submissions'
-                              ? 'bg-emerald-100 text-emerald-700'
-                              : 'bg-white text-gray-600 hover:bg-gray-50'
+                          className={`rounded-full px-4 py-1.5 text-xs font-medium transition ${viewMode === 'submissions'
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-white text-gray-600 hover:bg-gray-50'
                             }`}
                         >
                           Submissions
@@ -1824,22 +1667,25 @@ export default function OrgDashboard() {
                       </div>
 
                       {viewMode === 'builder' && (
-                        <div className="space-y-3">
+                        <div className="space-y-4">
                           <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-semibold text-gray-900">Fields</h3>
+                            <h3 className="text-sm font-semibold text-gray-900">Form Fields</h3>
                             <button
                               type="button"
                               onClick={handleAddField}
                               className="rounded-full border border-emerald-200 px-3 py-1 text-[11px] font-medium text-emerald-700 hover:bg-emerald-50"
                             >
-                              Add field
+                              + Add field
                             </button>
                           </div>
-                          <div className="space-y-2">
+                          <div className="space-y-3">
                             {Array.isArray(editableForm.fields) && editableForm.fields.length > 0 ? (
                               editableForm.fields.map((field, index) => renderFieldRow(field, index))
                             ) : (
-                              <p className="text-xs text-gray-500">No fields yet. Click "Add field" to start building your form.</p>
+                              <div className="text-center py-8 border-2 border-dashed border-gray-100 rounded-xl">
+                                <p className="text-xs text-gray-500 mb-2">No fields yet.</p>
+                                <button onClick={handleAddField} className="text-xs text-emerald-600 font-medium hover:underline">Add your first field</button>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -1867,48 +1713,229 @@ export default function OrgDashboard() {
             </div>
           </div>
 
-          <aside className="space-y-6">
+          {/* RIGHT COLUMN (1/3) - Sidebar */}
+          <div className="space-y-8">
+            {/* Public Profile Preview */}
             <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
-              <h3 className="text-sm font-semibold text-gray-900">Platform highlights</h3>
-              <div className="mt-4 space-y-3">
-                {CAPABILITY_HIGHLIGHTS.map((highlight) => (
-                  <div key={highlight.title} className="flex gap-3 rounded-2xl border border-gray-100 p-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-lg">{highlight.icon}</div>
-                    <div className="flex-1 text-xs text-gray-600">
-                      <p className="font-semibold text-gray-900">{highlight.title}</p>
-                      <p className="mt-1 leading-5">{highlight.description}</p>
-                    </div>
+              <h2 className="text-lg font-semibold text-gray-900">Public profile preview</h2>
+              <p className="mt-1 text-xs text-gray-500">A quick snapshot of what visitors see.</p>
+              <div className="mt-4 space-y-4">
+                <div className="rounded-2xl border border-gray-100 p-4">
+                  <h3 className="text-sm font-semibold text-gray-900">Overview</h3>
+                  {truncatedDescription ? (
+                    <p className="mt-2 text-sm text-gray-600">{truncatedDescription}</p>
+                  ) : (
+                    <p className="mt-2 text-sm text-gray-400">Add a description so clients know what you do.</p>
+                  )}
+                  <dl className="mt-4 space-y-2 text-xs text-gray-600">
+                    {profileSectionsList.map((section) => (
+                      <div key={section.key} className="flex items-center justify-between rounded-lg border border-dashed border-gray-200 px-3 py-2">
+                        <dt>{section.label}</dt>
+                        <dd className="font-medium text-gray-900">{section.count}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                  {!hasProfileDetails && (
+                    <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                      Share highlights like services or projects.
+                    </p>
+                  )}
+                </div>
+                <div className="rounded-2xl border border-gray-100 p-4">
+                  <h3 className="text-sm font-semibold text-gray-900">Contact & visibility</h3>
+                  <div className="mt-2 space-y-2">
+                    {hasContactInfo ? (
+                      contactEntries.map((entry) => (
+                        <a
+                          key={entry.label}
+                          href={entry.href || undefined}
+                          target={entry.external ? '_blank' : undefined}
+                          rel={entry.external ? 'noreferrer' : undefined}
+                          className={`flex items-center justify-between rounded-lg border border-gray-100 px-3 py-2 text-xs text-gray-700 hover:border-emerald-200 hover:text-emerald-700 ${entry.href ? 'cursor-pointer' : 'cursor-default'}`}
+                        >
+                          <span>{entry.label}</span>
+                          <span className="truncate text-right text-[11px] text-gray-500">{entry.value}</span>
+                        </a>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-400">Add contact details.</p>
+                    )}
                   </div>
-                ))}
+                </div>
               </div>
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowProfileEditor((prev) => !prev)}
+                  className="w-full inline-flex justify-center items-center rounded-md border border-gray-200 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  {showProfileEditor ? 'Close editor' : 'Edit public profile'}
+                </button>
+              </div>
+              {showProfileEditor && (
+                <div className="mt-6 border-t border-gray-100 pt-6">
+                  {renderProfileEditor()}
+                  <div className="mt-6 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleSaveOrgProfile}
+                      disabled={savingOrgProfile}
+                      className="inline-flex items-center justify-center rounded-md bg-emerald-600 px-4 py-2 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
+                    >
+                      {savingOrgProfile ? 'Saving…' : 'Save profile'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
+            {/* Collaborators Section */}
             <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
-              <h3 className="text-sm font-semibold text-gray-900">What you can do here</h3>
-              <ul className="mt-4 space-y-2 text-xs text-gray-600">
-                {DASHBOARD_TASKS.map((task) => (
-                  <li key={task} className="flex items-start gap-2">
-                    <span className="mt-0.5 text-emerald-600">•</span>
-                    <span>{task}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Collaborators</h2>
+              {loadingCollaborators ? (
+                <p className="text-sm text-gray-500">Loading collaborators…</p>
+              ) : (
+                <div className="space-y-4">
+                  {/* Invite Form */}
+                  <form onSubmit={handleInvite} className="flex flex-col gap-2">
+                    <input
+                      type="email"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      placeholder="Email address"
+                      className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      required
+                    />
+                    <div className="flex gap-2">
+                      <select
+                        value={inviteRole}
+                        onChange={(e) => setInviteRole(e.target.value)}
+                        className="flex-1 rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      >
+                        <option value="staff">Staff</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                      <button
+                        type="submit"
+                        disabled={inviting}
+                        className="inline-flex items-center justify-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
+                      >
+                        {inviting ? '...' : 'Invite'}
+                      </button>
+                    </div>
+                  </form>
 
-            <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
-              <h3 className="text-sm font-semibold text-gray-900">Staff permissions</h3>
-              <ul className="mt-4 space-y-2 text-xs text-gray-600">
-                {STAFF_PERMISSIONS.map((permission) => (
-                  <li key={permission} className="flex items-start gap-2">
-                    <span className="mt-0.5 text-emerald-600">✔</span>
-                    <span>{permission}</span>
-                  </li>
-                ))}
-              </ul>
+                  <div className="max-h-60 overflow-y-auto pr-1 space-y-4">
+                    {/* Owner */}
+                    {collaborators.owner && (
+                      <div>
+                        <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Owner</h3>
+                        <div className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                          <div className="text-sm">
+                            <p className="font-medium text-gray-900">{collaborators.owner.name || '—'}</p>
+                            <p className="text-xs text-gray-500">{collaborators.owner.email}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Admins */}
+                    {collaborators.admins.length > 0 && (
+                      <div>
+                        <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Admins</h3>
+                        <div className="space-y-2">
+                          {collaborators.admins.map((u) => (
+                            <div key={u._id} className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2">
+                              <div className="text-sm">
+                                <p className="font-medium text-gray-900">{u.name || '—'}</p>
+                                <p className="text-xs text-gray-500">{u.email}</p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveCollaborator(u._id)}
+                                className="text-xs text-rose-600 hover:text-rose-700"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Staff */}
+                    {collaborators.staff.length > 0 && (
+                      <div>
+                        <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Staff</h3>
+                        <div className="space-y-2">
+                          {collaborators.staff.map((u) => (
+                            <div key={u._id} className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2">
+                              <div className="text-sm">
+                                <p className="font-medium text-gray-900">{u.name || '—'}</p>
+                                <p className="text-xs text-gray-500">{u.email}</p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveCollaborator(u._id)}
+                                className="text-xs text-rose-600 hover:text-rose-700"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-          </aside>
-        </section>
+          </div>
+        </div>
+
+        {/* BOTTOM SECTION - Info Grid */}
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
+            <h3 className="text-sm font-semibold text-gray-900">Platform highlights</h3>
+            <div className="mt-4 space-y-3">
+              {CAPABILITY_HIGHLIGHTS.map((highlight) => (
+                <div key={highlight.title} className="flex gap-3 rounded-2xl border border-gray-100 p-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-lg">{highlight.icon}</div>
+                  <div className="flex-1 text-xs text-gray-600">
+                    <p className="font-semibold text-gray-900">{highlight.title}</p>
+                    <p className="mt-1 leading-5">{highlight.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
+            <h3 className="text-sm font-semibold text-gray-900">What you can do here</h3>
+            <ul className="mt-4 space-y-2 text-xs text-gray-600">
+              {DASHBOARD_TASKS.map((task) => (
+                <li key={task} className="flex items-start gap-2">
+                  <span className="mt-0.5 text-emerald-600">•</span>
+                  <span>{task}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
+            <h3 className="text-sm font-semibold text-gray-900">Staff permissions</h3>
+            <ul className="mt-4 space-y-2 text-xs text-gray-600">
+              {STAFF_PERMISSIONS.map((permission) => (
+                <li key={permission} className="flex items-start gap-2">
+                  <span className="mt-0.5 text-emerald-600">✔</span>
+                  <span>{permission}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   )
+
 }

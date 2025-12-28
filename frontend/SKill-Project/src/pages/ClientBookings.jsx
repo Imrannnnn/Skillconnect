@@ -29,6 +29,21 @@ export default function ClientBookings() {
     return () => { mounted = false };
   }, [user?._id]);
 
+  async function updateFlow(id, action) {
+    try {
+      setUpdatingId(id);
+      const { data } = await API.put(`/bookings/${id}/timeline`, { action });
+      if (data?.booking) {
+        setItems((prev) => prev.map((b) => (b._id === id ? data.booking : b)));
+      }
+      notify("Status updated", { type: "success" });
+    } catch (e) {
+      notify(e?.response?.data?.message || "Failed to update status", { type: "error" });
+    } finally {
+      setUpdatingId(null);
+    }
+  }
+
   async function releasePayment(id) {
     try {
       setUpdatingId(id);
@@ -46,7 +61,7 @@ export default function ClientBookings() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
-      <h2 className="text-2xl font-semibold">My Bookings</h2>
+      <h2 className="text-2xl font-semibold">My Orders & Bookings</h2>
       {loading && (
         <div className="mt-4 flex items-center justify-center">
           <div className="loader" />
@@ -55,80 +70,95 @@ export default function ClientBookings() {
       <div className="mt-3 flex flex-wrap items-center gap-4 text-sm">
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-500">Status:</span>
-          <FilterButton label="All" active={statusFilter==='all'} onClick={()=>setStatusFilter('all')} />
-          <FilterButton label="Pending" active={statusFilter==='pending'} onClick={()=>setStatusFilter('pending')} />
-          <FilterButton label="Successful" active={statusFilter==='successful'} onClick={()=>setStatusFilter('successful')} />
-          <FilterButton label="Declined" active={statusFilter==='declined'} onClick={()=>setStatusFilter('declined')} />
+          <FilterButton label="All" active={statusFilter === 'all'} onClick={() => setStatusFilter('all')} />
+          <FilterButton label="Pending" active={statusFilter === 'pending'} onClick={() => setStatusFilter('pending')} />
+          <FilterButton label="Successful" active={statusFilter === 'successful'} onClick={() => setStatusFilter('successful')} />
+          <FilterButton label="Declined" active={statusFilter === 'declined'} onClick={() => setStatusFilter('declined')} />
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-500">Type:</span>
-          <FilterButton label="All" active={typeFilter==='all'} onClick={()=>setTypeFilter('all')} />
-          <FilterButton label="Service" active={typeFilter==='service'} onClick={()=>setTypeFilter('service')} />
-          <FilterButton label="Product" active={typeFilter==='product'} onClick={()=>setTypeFilter('product')} />
+          <FilterButton label="All" active={typeFilter === 'all'} onClick={() => setTypeFilter('all')} />
+          <FilterButton label="Service" active={typeFilter === 'service'} onClick={() => setTypeFilter('service')} />
+          <FilterButton label="Product" active={typeFilter === 'product'} onClick={() => setTypeFilter('product')} />
         </div>
       </div>
-      {!loading && items.length === 0 && <p className="text-sm text-gray-500 mt-2">No bookings yet.</p>}
+      {!loading && items.length === 0 && <p className="text-sm text-gray-500 mt-2">No orders or bookings yet.</p>}
       <div className="mt-4 space-y-2">
         {items
-          .filter((b) => statusFilter==='all' ? true : b.status===statusFilter)
+          .filter((b) => statusFilter === 'all' ? true : b.status === statusFilter)
           .filter((b) => {
             if (typeFilter === 'all') return true;
             const t = b.bookingType || 'service';
             return typeFilter === t;
           })
           .map((b) => (
-          <div key={b._id} className="rounded-lg border border-gray-200 bg-white p-4 flex items-start gap-4">
-            <div className="min-w-0 flex-1">
-              <div className="font-medium text-gray-800 flex items-center gap-2">
-                <span className="truncate">{b.description}</span>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${b.bookingType === 'product' ? 'bg-sky-50 border-sky-200 text-sky-700' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
-                  {b.bookingType === 'product' ? 'Product' : 'Service'}
-                </span>
+            <div key={b._id} className="rounded-lg border border-gray-200 bg-white p-4 flex items-start gap-4">
+              <div className="min-w-0 flex-1">
+                <div className="font-medium text-gray-800 flex items-center gap-2">
+                  <span className="truncate">{b.description}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${b.bookingType === 'product' ? 'bg-sky-50 border-sky-200 text-sky-700' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
+                    {b.bookingType === 'product' ? 'Product' : 'Service'}
+                  </span>
+                </div>
+                {b.productSnapshot?.name && (
+                  <div className="text-xs text-gray-600 mt-1">
+                    Product: {b.productSnapshot.name}
+                    {b.productSnapshot.productCode && (
+                      <span className="ml-1 text-[10px] text-gray-500">(ID: {b.productSnapshot.productCode})</span>
+                    )}
+                    {b.quantity && (
+                      <span className="ml-2 font-medium text-emerald-700">Qty: {b.quantity}</span>
+                    )}
+                  </div>
+                )}
+                {b.address && <div className="text-xs text-gray-500 mt-1">{b.address}</div>}
+                {b.details && <div className="text-xs text-gray-500 mt-1">{b.details}</div>}
+                <div className="text-xs text-gray-500 mt-1">{new Date(b.createdAt).toLocaleString()}</div>
+                {b.flowStatus && (
+                  <div className="mt-1 text-[11px] text-gray-500">
+                    Flow: <span className="font-semibold text-gray-700">{b.flowStatus}</span>
+                  </div>
+                )}
+                {Array.isArray(b.statusHistory) && b.statusHistory.length > 0 && (
+                  <div className="mt-1 flex flex-col gap-0.5 text-[11px] text-gray-500">
+                    {b.statusHistory.slice(-3).map((h, idx) => (
+                      <div key={idx} className="flex items-center gap-1">
+                        <span className="h-1 w-1 rounded-full bg-gray-400" />
+                        <span className="truncate">
+                          {h.status} · {h.at ? new Date(h.at).toLocaleString() : ''}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {b.flowStatus === 'job_completed' && (
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      disabled={updatingId === b._id}
+                      onClick={() => releasePayment(b._id)}
+                      className="px-3 py-1 text-xs rounded-md bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-70"
+                    >
+                      Release payment
+                    </button>
+                  </div>
+                )}
+                {b.flowStatus === 'delivered' && (
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      disabled={updatingId === b._id}
+                      onClick={() => updateFlow(b._id, 'confirm_receipt')}
+                      className="px-3 py-1 text-xs rounded-md bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-70"
+                    >
+                      Confirm Receipt
+                    </button>
+                  </div>
+                )}
               </div>
-              {b.productSnapshot?.name && (
-                <div className="text-xs text-gray-600 mt-1">
-                  Product: {b.productSnapshot.name}
-                  {b.productSnapshot.productCode && (
-                    <span className="ml-1 text-[10px] text-gray-500">(ID: {b.productSnapshot.productCode})</span>
-                  )}
-                </div>
-              )}
-              {b.address && <div className="text-xs text-gray-500 mt-1">{b.address}</div>}
-              {b.details && <div className="text-xs text-gray-500 mt-1">{b.details}</div>}
-              <div className="text-xs text-gray-500 mt-1">{new Date(b.createdAt).toLocaleString()}</div>
-              {b.flowStatus && (
-                <div className="mt-1 text-[11px] text-gray-500">
-                  Flow: <span className="font-semibold text-gray-700">{b.flowStatus}</span>
-                </div>
-              )}
-              {Array.isArray(b.statusHistory) && b.statusHistory.length > 0 && (
-                <div className="mt-1 flex flex-col gap-0.5 text-[11px] text-gray-500">
-                  {b.statusHistory.slice(-3).map((h, idx) => (
-                    <div key={idx} className="flex items-center gap-1">
-                      <span className="h-1 w-1 rounded-full bg-gray-400" />
-                      <span className="truncate">
-                        {h.status} · {h.at ? new Date(h.at).toLocaleString() : ''}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {b.flowStatus === 'job_completed' && (
-                <div className="mt-2">
-                  <button
-                    type="button"
-                    disabled={updatingId === b._id}
-                    onClick={() => releasePayment(b._id)}
-                    className="px-3 py-1 text-xs rounded-md bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-70"
-                  >
-                    Release payment
-                  </button>
-                </div>
-              )}
+              <StatusPill status={b.status} />
             </div>
-            <StatusPill status={b.status} />
-          </div>
-        ))}
+          ))}
       </div>
     </div>
   );

@@ -38,7 +38,9 @@ const bookingSchema = new mongoose.Schema({
     enum: [
       "requested",
       "provider_accepted",
+      "processing",
       "on_the_way",
+      "delivered",
       "job_started",
       "job_completed",
       "payment_released",

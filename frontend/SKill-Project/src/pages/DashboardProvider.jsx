@@ -223,7 +223,9 @@ export default function DashboardProvider() {
         <section className="w-full lg:col-span-2 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-2.5">
             <div>
-              <h3 className="text-sm font-semibold text-gray-900">Top selling services</h3>
+              <h3 className="text-sm font-semibold text-gray-900">
+                {userSnapshot?.providerMode === 'product' ? 'Top selling products' : 'Top selling services'}
+              </h3>
               <p className="mt-1 text-xs text-gray-500">Snapshot of your most recent paid and released jobs.</p>
             </div>
             <div className="flex items-center gap-2 text-xs">
@@ -244,7 +246,9 @@ export default function DashboardProvider() {
               <thead>
                 <tr className="border-b border-gray-100 text-[11px] uppercase tracking-wide text-gray-500">
                   <th className="py-2.5 pr-3 font-medium align-middle w-8"></th>
-                  <th className="py-2.5 pr-3 font-medium align-middle">Service</th>
+                  <th className="py-2.5 pr-3 font-medium align-middle">
+                    {userSnapshot?.providerMode === 'product' ? 'Product' : 'Service'}
+                  </th>
                   <th className="py-2.5 pr-3 font-medium align-middle">Client</th>
                   <th className="py-2.5 pr-3 font-medium align-middle whitespace-nowrap">Price</th>
                   <th className="py-2.5 pr-3 font-medium align-middle whitespace-nowrap">Status</th>
@@ -255,7 +259,7 @@ export default function DashboardProvider() {
                 {txs.length === 0 && (
                   <tr>
                     <td colSpan={6} className="py-4 text-center text-xs text-gray-500">
-                      No transactions yet. Once you start getting bookings, your top services will appear here.
+                      No transactions yet. Once you start getting {userSnapshot?.providerMode === 'product' ? 'orders' : 'bookings'}, your top {userSnapshot?.providerMode === 'product' ? 'products' : 'services'} will appear here.
                     </td>
                   </tr>
                 )}
@@ -348,45 +352,34 @@ export default function DashboardProvider() {
           </div>
         </section>
       </div>
-      <section className="mt-6 rounded-lg border border-gray-200 bg-white p-4">
-        <h3 className="font-semibold mb-2 text-sm text-gray-800">Recent wallet activity</h3>
-        {walletTxs.length === 0 && (
-          <p className="text-sm text-gray-500">No wallet transactions yet.</p>
-        )}
-        <div className="space-y-2 mt-1">
-          {walletTxs.map((t) => (
-            <div key={t._id} className="flex items-center justify-between text-xs border border-gray-100 rounded-md px-3 py-2">
-              <div className="min-w-0">
-                <div className="font-medium text-gray-800 truncate">{t.type === 'fund' ? 'Wallet funding' : (t.type || 'Transaction')}</div>
-                <div className="text-[11px] text-gray-500 truncate">{new Date(t.createdAt || Date.now()).toLocaleString()}</div>
-              </div>
-              <div className="text-right">
-                <div className="font-semibold text-gray-800">{formatAmount(t.amount, t.currency || 'ngn')}</div>
-                <div className="text-[11px] text-gray-500 capitalize">{t.status || 'pending'}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-      <section className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div>
-          <div className="text-sm text-emerald-700">Wallet balance</div>
-          <div className="text-2xl font-semibold text-emerald-900 mt-1">
-            {formatWalletAmount(wallet)}
+      <div className="mt-6 grid gap-6 md:grid-cols-2">
+        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-gray-800">Wallet & Earnings</h3>
+            <Link to="/payments" className="text-xs text-emerald-600 hover:text-emerald-700 font-medium">View all</Link>
           </div>
-          <p className="mt-2 text-[11px] text-emerald-800/80 max-w-md">
-            This is your SkillConnect wallet balance. When clients fund jobs, money is held in escrow and released here after you complete bookings.
-          </p>
-          <div className="mt-3 flex flex-col gap-2">
-            <div className="flex items-center gap-2">
+
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-100">
+              <p className="text-xs text-emerald-600 font-medium mb-1">Available Balance</p>
+              <p className="text-xl font-bold text-emerald-700">{formatWalletAmount(wallet)}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-gray-50 border border-gray-100">
+              <p className="text-xs text-gray-500 font-medium mb-1">Total Earnings</p>
+              <p className="text-xl font-bold text-gray-700">{earnings}</p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex gap-2">
               <input
                 type="number"
                 min="1"
                 step="0.01"
                 value={fundAmount}
                 onChange={(e) => setFundAmount(e.target.value)}
-                placeholder="Amount (e.g. 5000)"
-                className="flex-1 px-2 py-1.5 rounded-md border border-emerald-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                placeholder="Amount to fund"
+                className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
               <button
                 type="button"
@@ -394,79 +387,82 @@ export default function DashboardProvider() {
                 onClick={async () => {
                   const amt = Number(fundAmount)
                   if (!Number.isFinite(amt) || amt <= 0) {
-                    notify('Enter a valid amount to fund your wallet.', { type: 'info' })
+                    notify('Enter a valid amount.', { type: 'info' })
                     return
                   }
                   setFunding(true)
                   try {
                     const { data } = await API.post('/wallet/fund/initiate', { amount: amt })
-                    notify(data?.message || 'Funding initialized. Redirecting to Paystack…', { type: 'success' })
-                    if (data?.checkoutUrl) {
-                      window.location.href = data.checkoutUrl
-                    }
+                    notify(data?.message || 'Redirecting to Paystack…', { type: 'success' })
+                    if (data?.checkoutUrl) window.location.href = data.checkoutUrl
                   } catch (e) {
-                    notify(e?.response?.data?.message || 'Failed to initiate wallet funding', { type: 'error' })
+                    notify(e?.response?.data?.message || 'Funding failed', { type: 'error' })
                   } finally {
                     setFunding(false)
                   }
                 }}
-                className="px-3 py-1.5 rounded-md bg-emerald-600 text-white text-[11px] hover:bg-emerald-700 disabled:opacity-60"
+                className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-70"
               >
-                {funding ? 'Starting…' : 'Fund wallet'}
+                {funding ? '...' : 'Fund'}
               </button>
             </div>
-            <div className="flex flex-wrap items-center gap-2 text-[10px] text-emerald-800/70">
-              <button
-                type="button"
-                onClick={() => navigate('/payments')}
-                className="inline-flex items-center px-3 py-1.5 rounded-md border border-emerald-600 text-emerald-700 bg-white hover:bg-emerald-50"
-              >
-                View wallet & payments
-              </button>
-              <span className="block">
-                You will be redirected to Paystack to complete funding. After success, your wallet balance updates automatically.
-              </span>
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-col items-start md:items-end gap-1 text-[11px] text-emerald-800/80">
-          <span>
-            Paid transactions: <span className="font-semibold">{txs.filter(t => t.status === 'paid').length}</span>
-          </span>
-          <span>
-            Released transactions: <span className="font-semibold">{txs.filter(t => t.status === 'released').length}</span>
-          </span>
-        </div>
-      </section>
-
-      {userSnapshot && typeof userSnapshot.profileViews === 'number' && (
-        <section className="mt-4 rounded-lg border border-gray-200 bg-white p-4">
-          <h3 className="font-semibold mb-1 text-sm text-gray-800">Profile analytics</h3>
-          <p className="text-xs text-gray-600 mb-2">Basic visibility into how many times clients have opened your public profile link.</p>
-          <div className="text-sm text-gray-800">
-            Profile views: <span className="font-semibold">{userSnapshot.profileViews}</span>
+            <p className="text-[10px] text-gray-400">Funds are held in escrow until job completion.</p>
           </div>
         </section>
-      )}
 
-      <section className="rounded-lg border border-gray-200 bg-white p-4 mt-6">
-        <h3 className="font-semibold mb-2">Recent Transactions</h3>
-        <div className="space-y-2">
-          {txs.length === 0 && <p className="text-sm text-gray-500">No transactions yet.</p>}
-          {txs.slice(0, 8).map((t) => (
-            <div key={t._id} className="px-3 py-2 rounded-md border border-gray-200 flex items-center justify-between">
-              <div className="min-w-0">
-                <div className="text-sm font-medium text-gray-800 truncate">{t.clientName || t.clientId}</div>
-                <div className="text-xs text-gray-500">{new Date(t.createdAt || Date.now()).toLocaleString()} • {t.paymentProvider || 'stripe'}</div>
+        <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm flex flex-col">
+          <h3 className="font-semibold text-gray-800 mb-4">Recent Activity</h3>
+          <div className="flex-1 overflow-y-auto max-h-[240px] pr-1 space-y-3">
+            {walletTxs.length === 0 && <p className="text-sm text-gray-400 italic">No recent activity.</p>}
+            {walletTxs.map((t) => (
+              <div key={t._id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-700 truncate">{t.type === 'fund' ? 'Wallet Funding' : (t.type || 'Transaction')}</p>
+                  <p className="text-[10px] text-gray-400">{new Date(t.createdAt || Date.now()).toLocaleDateString()}</p>
+                </div>
+                <div className="text-right">
+                  <p className={`text-sm font-semibold ${t.type === 'debit' ? 'text-gray-800' : 'text-emerald-600'}`}>
+                    {t.type === 'debit' ? '-' : '+'}{formatAmount(t.amount, t.currency || 'ngn')}
+                  </p>
+                  <p className="text-[10px] text-gray-400 capitalize">{t.status}</p>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <StatusPill status={t.status} />
-                <div className="text-sm font-semibold text-gray-800">{formatAmount(t.amount, t.currency)}</div>
-              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      {userSnapshot && typeof userSnapshot.profileViews === 'number' && (
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="rounded-xl border border-gray-200 bg-white p-4 flex items-center justify-between shadow-sm">
+            <div>
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Profile Views</p>
+              <p className="text-2xl font-bold text-gray-800 mt-1">{userSnapshot.profileViews}</p>
             </div>
-          ))}
+            <div className="h-8 w-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </div>
+          </div>
+          <div className="rounded-xl border border-gray-200 bg-white p-4 flex items-center justify-between shadow-sm">
+            <div>
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">{userSnapshot?.providerMode === 'product' ? 'Paid Orders' : 'Paid Jobs'}</p>
+              <p className="text-2xl font-bold text-gray-800 mt-1">{txs.filter(t => t.status === 'paid').length}</p>
+            </div>
+            <div className="h-8 w-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+          </div>
+          <div className="rounded-xl border border-gray-200 bg-white p-4 flex items-center justify-between shadow-sm">
+            <div>
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Pending</p>
+              <p className="text-2xl font-bold text-gray-800 mt-1">{txs.filter(t => t.status === 'pending').length}</p>
+            </div>
+            <div className="h-8 w-8 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            </div>
+          </div>
         </div>
-      </section>
+      )}
     </div>
   )
 }

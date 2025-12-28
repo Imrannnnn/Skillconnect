@@ -267,16 +267,32 @@ export const updateBookingFlow = async (req, res) => {
         from: ["requested"],
         to: "provider_accepted",
       },
-      on_the_way: {
+      process_order: {
         from: ["provider_accepted"],
+        to: "processing",
+      },
+      dispatch_order: {
+        from: ["processing", "provider_accepted"],
         to: "on_the_way",
+      },
+      on_the_way: {
+        from: ["provider_accepted", "processing"],
+        to: "on_the_way",
+      },
+      deliver_order: {
+        from: ["on_the_way"],
+        to: "delivered",
+      },
+      confirm_receipt: {
+        from: ["delivered"],
+        to: "job_completed",
       },
       start_job: {
         from: ["on_the_way", "provider_accepted"],
         to: "job_started",
       },
       complete_job: {
-        from: ["job_started", "on_the_way", "provider_accepted"],
+        from: ["job_started", "on_the_way", "provider_accepted", "delivered"],
         to: "job_completed",
       },
       release_payment: {
@@ -284,7 +300,7 @@ export const updateBookingFlow = async (req, res) => {
         to: "payment_released",
       },
       cancel: {
-        from: ["requested", "provider_accepted"],
+        from: ["requested", "provider_accepted", "processing"],
         to: "cancelled",
       },
       decline: {

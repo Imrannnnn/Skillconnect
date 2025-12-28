@@ -6,7 +6,7 @@ import { NetBus } from "../api/axios.js";
 import { useToast } from "./toast.js";
 import { getImageUrl } from "../utils/image.js";
 
-export default function Header() {
+export default function Header({ minimal, toggleSidebar }) {
   const auth = useContext(AuthContext);
   const roles = useMemo(() => {
     const user = auth?.user;
@@ -18,7 +18,6 @@ export default function Header() {
   const [pendingCount, setPendingCount] = useState(0);
   const [unreadChats, setUnreadChats] = useState(0);
   const [resending, setResending] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
   const { notify } = useToast();
 
@@ -99,43 +98,28 @@ export default function Header() {
         </div>
       )}
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-4">
-        <Link to="/" className="text-emerald-700 font-semibold" onClick={() => setMobileOpen(false)}>
+        {/* Mobile Sidebar Toggle - visible only on mobile */}
+        <button
+          onClick={toggleSidebar}
+          className="md:hidden text-gray-500 hover:text-emerald-600 focus:outline-none"
+          aria-label="Toggle navigation"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+
+        <Link to="/" className="text-emerald-700 font-semibold text-lg">
           SkillConnect
         </Link>
-        <nav className="hidden md:flex flex-wrap items-center gap-2 text-xs sm:text-sm">
-          <Link to="/providers" className="text-gray-700 hover:text-emerald-700 transition-all">Providers</Link>
-          <Link to="/events" className="text-gray-700 hover:text-emerald-700 transition-all">Events</Link>
-          <Link to="/about" className="text-gray-700 hover:text-emerald-700 transition-all">About</Link>
-          <Link to="/chats" className="relative text-gray-700 hover:text-emerald-700 transition-all">
-            Chats
-            {unreadChats > 0 && (
-              <span className="absolute -top-2 -right-3 text-[10px] px-1.5 py-0.5 rounded-full bg-rose-600 text-white">{unreadChats}</span>
-            )}
-          </Link>
-          {roles.includes('provider') && (
-            <Link to="/provider/bookings" className="relative text-gray-700 hover:text-emerald-700 transition-all">
-              Bookings
-              {pendingCount > 0 && (
-                <span className="absolute -top-2 -right-3 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-600 text-white">{pendingCount}</span>
-              )}
-            </Link>
-          )}
-          {roles.includes('client') && (
-            <Link to="/bookings" className="text-gray-700 hover:text-emerald-700 transition-all">My bookings</Link>
-          )}
-        </nav>
-        <label className="burger ml-auto md:hidden" htmlFor="main-burger">
-          <input
-            type="checkbox"
-            id="main-burger"
-            checked={mobileOpen}
-            onChange={(e) => setMobileOpen(e.target.checked)}
-            aria-label="Toggle navigation"
-          />
-          <span />
-          <span />
-          <span />
-        </label>
+        {!minimal && (
+          <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+            <Link to="/providers" className="text-gray-600 hover:text-emerald-600 transition-colors">Find Providers</Link>
+            <Link to="/events" className="text-gray-600 hover:text-emerald-600 transition-colors">Events</Link>
+            <Link to="/about" className="text-gray-600 hover:text-emerald-600 transition-colors">About</Link>
+          </nav>
+        )}
+
         <div className="ml-auto hidden md:flex items-center gap-3">
           {!auth?.user && (
             <>
@@ -154,141 +138,67 @@ export default function Header() {
             </>
           )}
           {auth?.user && (
-            <div className="flex items-center gap-2">
-              <div className="h-7 w-7 rounded-full overflow-hidden bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-semibold">
+            <div className="flex items-center gap-3 relative group">
+              <Link to="/chats" className="relative text-gray-500 hover:text-emerald-600 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                {unreadChats > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 h-4 w-4 flex items-center justify-center text-[9px] rounded-full bg-rose-500 text-white font-medium ring-2 ring-white">{unreadChats}</span>
+                )}
+              </Link>
+
+              <div className="h-8 w-8 rounded-full overflow-hidden bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-semibold ring-2 ring-transparent hover:ring-emerald-100 transition-all cursor-pointer">
                 {auth?.user?.avatarUrl ? (
                   <img src={getImageUrl(auth.user.avatarUrl)} alt="avatar" className="h-full w-full object-cover" />
                 ) : (
                   (auth?.user?.name?.[0] || auth?.user?.email?.[0] || 'U').toUpperCase()
                 )}
               </div>
-              <span className="text-sm text-gray-700 max-w-[200px] truncate" title={auth?.user?.name || auth?.user?.email}>
-                {auth?.user?.name || auth?.user?.email}
-              </span>
-              {roles.includes('admin') && (
-                <Link
-                  to="/admin/forms"
-                  className="text-xs text-emerald-700 hover:text-emerald-800 px-2 py-1 rounded-md border border-emerald-200 hover:bg-emerald-50"
+
+              {/* Dropdown Menu */}
+              <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right z-50">
+                <div className="px-4 py-2 border-b border-gray-50 mb-1">
+                  <p className="text-sm font-medium text-gray-900 truncate">{auth?.user?.name || 'User'}</p>
+                  <p className="text-xs text-gray-500 truncate">{auth?.user?.email}</p>
+                </div>
+
+                {roles.includes('admin') && (
+                  <Link to="/admin/forms" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-emerald-600">Admin Dashboard</Link>
+                )}
+                {accountType === 'organization' && (
+                  <Link to="/org/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-emerald-600">Organization Dashboard</Link>
+                )}
+                {roles.includes('provider') && (
+                  <Link to="/provider/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-emerald-600">Provider Dashboard</Link>
+                )}
+
+                <div className="my-1 border-t border-gray-50"></div>
+
+                {roles.includes('client') && (
+                  <Link to="/bookings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-emerald-600">My Bookings</Link>
+                )}
+                {roles.includes('provider') && (
+                  <Link to="/provider/bookings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-emerald-600">
+                    {auth?.user?.providerMode === 'product' ? 'Client Orders' : 'Client Bookings'}
+                    {pendingCount > 0 && <span className="ml-2 text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">{pendingCount}</span>}
+                  </Link>
+                )}
+
+
+
+                <div className="my-1 border-t border-gray-50"></div>
+
+                <Link to="/settings/account" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-emerald-600">Settings</Link>
+                <button
+                  onClick={() => { auth.logout(); navigate('/'); }}
+                  className="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50"
                 >
-                  Admin forms
-                </Link>
-              )}
-              <Link
-                to="/settings/account"
-                className="text-xs text-gray-600 hover:text-emerald-700 px-2 py-1 rounded-md border border-transparent hover:border-emerald-200 hover:bg-emerald-50"
-              >
-                Account settings
-              </Link>
-              {accountType === 'organization' && (
-                <Link
-                  to="/org/dashboard"
-                  className="text-xs text-emerald-700 hover:text-emerald-800 px-2 py-1 rounded-md border border-emerald-200 hover:bg-emerald-50"
-                >
-                  Org dashboard
-                </Link>
-              )}
-              {roles.includes('provider') && (
-                <Link
-                  to="/provider/dashboard"
-                  className="text-xs text-emerald-700 hover:text-emerald-800 px-2 py-1 rounded-md border border-emerald-200 hover:bg-emerald-50"
-                >
-                  My dashboard
-                </Link>
-              )}
-              <button
-                type="button"
-                onClick={() => { auth.logout(); navigate('/'); setMobileOpen(false); }}
-                className="ml-2 px-2 py-1 text-xs rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
-              >
-                Logout
-              </button>
+                  Sign out
+                </button>
+              </div>
             </div>
           )}
         </div>
       </div>
-      {mobileOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-white">
-          <div className="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-2 text-sm">
-            <nav className="flex flex-col gap-2">
-              <Link to="/providers" className="text-gray-700 hover:text-emerald-700" onClick={() => setMobileOpen(false)}>Providers</Link>
-              <Link to="/events" className="text-gray-700 hover:text-emerald-700" onClick={() => setMobileOpen(false)}>Events</Link>
-              <Link to="/about" className="text-gray-700 hover:text-emerald-700" onClick={() => setMobileOpen(false)}>About</Link>
-              <Link to="/chats" className="text-gray-700 hover:text-emerald-700" onClick={() => setMobileOpen(false)}>Chats</Link>
-              {roles.includes('provider') && (
-                <Link to="/provider/bookings" className="text-gray-700 hover:text-emerald-700" onClick={() => setMobileOpen(false)}>Bookings</Link>
-              )}
-              {roles.includes('client') && (
-                <Link to="/bookings" className="text-gray-700 hover:text-emerald-700" onClick={() => setMobileOpen(false)}>My bookings</Link>
-              )}
-            </nav>
-            <div className="mt-2 flex flex-col gap-2">
-              {!auth?.user && (
-                <>
-                  <Link
-                    to="/login"
-                    className="px-3 py-1.5 text-sm text-emerald-700 hover:text-emerald-800"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="px-3 py-1.5 text-sm rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-all"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    Get Started
-                  </Link>
-                </>
-              )}
-              {auth?.user && (
-                <>
-                  {roles.includes('admin') && (
-                    <Link
-                      to="/admin/forms"
-                      className="text-xs text-emerald-700 hover:text-emerald-800 px-2 py-1 rounded-md border border-emerald-200 hover:bg-emerald-50"
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      Admin forms
-                    </Link>
-                  )}
-                  {accountType === 'organization' && (
-                    <Link
-                      to="/org/dashboard"
-                      className="text-xs text-emerald-700 hover:text-emerald-800 px-2 py-1 rounded-md border border-emerald-200 hover:bg-emerald-50"
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      Org dashboard
-                    </Link>
-                  )}
-                  {roles.includes('provider') && (
-                    <Link
-                      to="/provider/dashboard"
-                      className="text-xs text-emerald-700 hover:text-emerald-800 px-2 py-1 rounded-md border border-emerald-200 hover:bg-emerald-50"
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      My dashboard
-                    </Link>
-                  )}
-                  <Link
-                    to="/settings/account"
-                    className="text-xs text-gray-700 hover:text-emerald-700 px-2 py-1 rounded-md border border-gray-200 hover:bg-emerald-50"
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    Account settings
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => { auth.logout(); navigate('/'); setMobileOpen(false); }}
-                    className="px-3 py-1.5 text-xs rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 text-left"
-                  >
-                    Logout
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </header>
   );
 }

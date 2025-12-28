@@ -442,3 +442,22 @@ export const deleteFormResponse = async (req, res) => {
     res.status(500).json({ message: "Failed to delete response", error: e?.message || e });
   }
 };
+
+export const deleteForm = async (req, res) => {
+  try {
+    const { form, org } = await loadOrgForForm(req.params.id);
+    if (!form) return res.status(404).json({ message: "Form not found" });
+    if (!org) return res.status(404).json({ message: "Organization not found" });
+    if (!isOrgAdminOrStaff(req.user, org)) return res.status(403).json({ message: "Access denied" });
+
+    // Delete all responses
+    await FormResponse.deleteMany({ form: form._id });
+
+    // Delete the form definition
+    await form.deleteOne();
+
+    res.json({ message: "Form and all responses deleted" });
+  } catch (e) {
+    res.status(500).json({ message: "Failed to delete form", error: e?.message || e });
+  }
+};

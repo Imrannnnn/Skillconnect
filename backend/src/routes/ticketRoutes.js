@@ -6,11 +6,13 @@ import {
     checkInTicket,
     getEventAnalytics,
     downloadTicketPDF,
+    getMyTickets,
 } from "../controllers/ticketController.js";
 
 const router = express.Router();
 
 router.post("/purchase", maybeAuth, purchaseTickets);
+router.get("/mine", protect, getMyTickets);
 router.get("/:id", getTicket);
 router.get("/:id/download", downloadTicketPDF);
 router.post("/check-in", protect, checkInTicket);

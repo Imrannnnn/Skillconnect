@@ -256,7 +256,7 @@ export default function ProviderProfile() {
       }
 
       await API.post(`/bookings`, payload);
-      notify("Booking request sent to provider", { type: "success" });
+      notify(selectedProduct ? "Order placed successfully" : "Booking request sent to provider", { type: "success" });
       setBookingOpen(false);
       setClientName(""); setClientPhone(""); setJobDescription(""); setAddress(""); setDetails("");
       setSelectedProduct(null);
@@ -621,7 +621,7 @@ export default function ProviderProfile() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md bg-white rounded-xl border border-gray-200 shadow-2xl max-h-[90vh] overflow-y-auto flex flex-col">
             <div className="p-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
-              <h3 className="font-semibold">Request booking</h3>
+              <h3 className="font-semibold">{selectedProduct ? 'Place order' : 'Request booking'}</h3>
               <button onClick={() => setBookingOpen(false)} className="text-gray-500 hover:text-gray-700">✕</button>
             </div>
             <div className="p-4">
@@ -637,7 +637,7 @@ export default function ProviderProfile() {
                   </label>
                 </div>
                 <label className="grid gap-1 text-xs font-medium">
-                  <span className="text-gray-700">Job description / services required</span>
+                  <span className="text-gray-700">{selectedProduct ? 'Order notes / details' : 'Job description / services required'}</span>
                   <textarea className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[60px] text-sm" value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} required />
                 </label>
                 <label className="grid gap-1 text-xs font-medium">
@@ -662,7 +662,7 @@ export default function ProviderProfile() {
                   </label>
                 )}
                 <div className="flex items-center gap-2 pt-2">
-                  <button type="submit" disabled={bookingSubmitting} className="flex-1 px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition disabled:opacity-70 text-sm font-medium">{bookingSubmitting ? 'Sending…' : 'Send request'}</button>
+                  <button type="submit" disabled={bookingSubmitting} className="flex-1 px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition disabled:opacity-70 text-sm font-medium">{bookingSubmitting ? (selectedProduct ? 'Placing order…' : 'Sending…') : (selectedProduct ? 'Place order' : 'Send request')}</button>
                   <button type="button" onClick={() => setBookingOpen(false)} className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 text-sm font-medium">Cancel</button>
                 </div>
               </form>

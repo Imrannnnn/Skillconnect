@@ -234,3 +234,19 @@ export const downloadTicketPDF = async (req, res) => {
         res.status(500).json({ message: "Error generating PDF", error: error.message });
     }
 };
+
+// Get all tickets for logged in user
+export const getMyTickets = async (req, res) => {
+    try {
+        const orders = await Order.find({ buyerId: req.user._id });
+        const orderIds = orders.map(o => o._id);
+
+        const tickets = await Ticket.find({ orderId: { $in: orderIds } })
+            .populate("eventId")
+            .sort({ createdAt: -1 });
+
+        res.status(200).json(tickets);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching your tickets", error: error.message });
+    }
+};
