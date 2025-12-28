@@ -16,13 +16,7 @@ const EventDetails = () => {
     const [guestDetails, setGuestDetails] = useState({ name: "", email: "", phone: "" });
     const [processing, setProcessing] = useState(false);
 
-    // Support/Donation State
-    const [showSupportModal, setShowSupportModal] = useState(false);
-    const [supportType, setSupportType] = useState('donation'); // 'donation' or 'sponsorship'
-    const [selectedTier, setSelectedTier] = useState(null);
-    const [donationAmount, setDonationAmount] = useState('');
-    const [supportMessage, setSupportMessage] = useState('');
-    const [isAnonymous, setIsAnonymous] = useState(false);
+
 
     useEffect(() => {
         const fetchEvent = async () => {
@@ -99,37 +93,7 @@ const EventDetails = () => {
         }
     };
 
-    const handleSupport = async (e) => {
-        e.preventDefault();
-        if (!user) {
-            alert("Please login to support this event");
-            navigate("/login");
-            return;
-        }
 
-        try {
-            setProcessing(true);
-            const amount = supportType === 'sponsorship' ? selectedTier.amount : Number(donationAmount);
-
-            await API.post(`/events/${event._id}/support`, {
-                eventId: event._id,
-                amount,
-                type: supportType,
-                tierId: selectedTier?._id,
-                message: supportMessage,
-                isAnonymous
-            });
-
-            alert("Thank you for your support!");
-            setShowSupportModal(false);
-            fetchEvent(); // Refresh to update raised amount
-        } catch (error) {
-            console.error("Support failed:", error);
-            alert(error.response?.data?.message || "Support failed");
-        } finally {
-            setProcessing(false);
-        }
-    };
 
 
 
@@ -266,79 +230,7 @@ const EventDetails = () => {
                     </div>
                 </div>
             </div>
-            {/* Support Modal */}
-            {showSupportModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg max-w-md w-full p-6 relative">
-                        <button
-                            onClick={() => setShowSupportModal(false)}
-                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-                        >
-                            ✕
-                        </button>
 
-                        <h2 className="text-2xl font-bold mb-4">
-                            {supportType === 'sponsorship' ? `Sponsor: ${selectedTier.name}` : 'Make a Donation'}
-                        </h2>
-
-                        <form onSubmit={handleSupport} className="space-y-4">
-                            {supportType === 'donation' && (
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Amount ($)</label>
-                                    <input
-                                        type="number"
-                                        value={donationAmount}
-                                        onChange={(e) => setDonationAmount(e.target.value)}
-                                        min="1"
-                                        required
-                                        className="w-full rounded-md border-gray-300 shadow-sm p-2 border"
-                                        placeholder="Enter amount"
-                                    />
-                                </div>
-                            )}
-
-                            {supportType === 'sponsorship' && (
-                                <div className="p-3 bg-gray-50 rounded-md mb-4">
-                                    <p className="text-sm text-gray-600">Amount to pay:</p>
-                                    <p className="text-xl font-bold text-gray-900">${selectedTier.amount}</p>
-                                </div>
-                            )}
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Message (Optional)</label>
-                                <textarea
-                                    value={supportMessage}
-                                    onChange={(e) => setSupportMessage(e.target.value)}
-                                    rows="3"
-                                    className="w-full rounded-md border-gray-300 shadow-sm p-2 border"
-                                    placeholder="Leave a message of support..."
-                                />
-                            </div>
-
-                            <div className="flex items-center">
-                                <input
-                                    type="checkbox"
-                                    id="anon"
-                                    checked={isAnonymous}
-                                    onChange={(e) => setIsAnonymous(e.target.checked)}
-                                    className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
-                                />
-                                <label htmlFor="anon" className="ml-2 block text-sm text-gray-900">
-                                    Support anonymously
-                                </label>
-                            </div>
-
-                            <button
-                                type="submit"
-                                disabled={processing}
-                                className="w-full py-3 bg-emerald-600 text-white rounded-md font-bold hover:bg-emerald-700 disabled:opacity-50"
-                            >
-                                {processing ? 'Processing...' : `Pay $${supportType === 'sponsorship' ? selectedTier.amount : donationAmount}`}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };
