@@ -8,20 +8,20 @@ const EventList = () => {
     const [filters, setFilters] = useState({ city: "", category: "" });
 
     useEffect(() => {
+        const fetchEvents = async () => {
+            try {
+                setLoading(true);
+                const data = await getEvents(filters);
+                setEvents(data);
+            } catch (error) {
+                console.error("Error fetching events:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         fetchEvents();
     }, [filters]);
-
-    const fetchEvents = async () => {
-        try {
-            setLoading(true);
-            const data = await getEvents(filters);
-            setEvents(data);
-        } catch (error) {
-            console.error("Error fetching events:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleFilterChange = (e) => {
         setFilters({ ...filters, [e.target.name]: e.target.value });

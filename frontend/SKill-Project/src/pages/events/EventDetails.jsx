@@ -25,19 +25,18 @@ const EventDetails = () => {
     const [isAnonymous, setIsAnonymous] = useState(false);
 
     useEffect(() => {
+        const fetchEvent = async () => {
+            try {
+                const data = await getEventById(id);
+                setEvent(data);
+            } catch (error) {
+                console.error("Error fetching event:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
         fetchEvent();
     }, [id]);
-
-    const fetchEvent = async () => {
-        try {
-            const data = await getEventById(id);
-            setEvent(data);
-        } catch (error) {
-            console.error("Error fetching event:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleQuantityChange = (ticketTypeId, quantity) => {
         setSelectedTickets((prev) => ({
@@ -132,12 +131,7 @@ const EventDetails = () => {
         }
     };
 
-    const openSupportModal = (type, tier = null) => {
-        setSupportType(type);
-        setSelectedTier(tier);
-        setDonationAmount(tier ? tier.amount : '');
-        setShowSupportModal(true);
-    };
+
 
     if (loading) return <div className="text-center py-10">Loading...</div>;
     if (!event) return <div className="text-center py-10">Event not found</div>;

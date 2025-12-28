@@ -9,19 +9,18 @@ const TicketView = () => {
     const [downloading, setDownloading] = useState(false);
 
     useEffect(() => {
+        const fetchTicket = async () => {
+            try {
+                const data = await getTicket(id);
+                setTicketData(data);
+            } catch (error) {
+                console.error("Error fetching ticket:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
         fetchTicket();
     }, [id]);
-
-    const fetchTicket = async () => {
-        try {
-            const data = await getTicket(id);
-            setTicketData(data);
-        } catch (error) {
-            console.error("Error fetching ticket:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleDownload = async () => {
         try {

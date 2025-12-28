@@ -714,6 +714,29 @@ export default function OrgDashboard() {
     }
   }
 
+  const handleDeleteForm = async (formId, e) => {
+    if (e) e.stopPropagation()
+    if (!formId) return
+    if (deletingFormId === formId) {
+      try {
+        await API.delete(`/forms/${formId}`)
+        setForms((prev) => prev.filter((f) => f._id !== formId))
+        if (activeFormId === formId) {
+          setActiveFormId(null)
+          setEditableForm(null)
+        }
+        notify('Form deleted', { type: 'success' })
+      } catch (err) {
+        notify(err?.response?.data?.message || 'Failed to delete form', { type: 'error' })
+      } finally {
+        setDeletingFormId(null)
+      }
+    } else {
+      setDeletingFormId(formId)
+      setTimeout(() => setDeletingFormId((prev) => (prev === formId ? null : prev)), 3000)
+    }
+  }
+
   const handleExportCsv = async () => {
     if (!activeForm) return
     try {
