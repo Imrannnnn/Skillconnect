@@ -23,7 +23,7 @@ export default function DigitalCallback() {
                 } else {
                     setStatus("failed");
                 }
-            } catch (e) {
+            } catch {
                 setStatus("error");
             }
         }

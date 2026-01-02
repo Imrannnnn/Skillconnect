@@ -18,7 +18,7 @@ export default function DigitalProductDetails() {
             try {
                 const { data } = await API.get(`/digital-products/${id}`);
                 setProduct(data.product);
-            } catch (e) {
+            } catch {
                 setError("Product not found");
             } finally {
                 setLoading(false);

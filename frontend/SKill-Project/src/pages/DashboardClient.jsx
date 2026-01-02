@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useContext } from 'react'
 import { Link } from 'react-router-dom'
 import API from '../api/axios.js'
+import { AuthContext } from '../context/auth.js'
 import { useToast } from '../components/toast.js'
 
 export default function DashboardClient() {
+  const { user } = useContext(AuthContext)
   const { notify } = useToast()
   const [chats, setChats] = useState([])
   const [txs, setTxs] = useState([])

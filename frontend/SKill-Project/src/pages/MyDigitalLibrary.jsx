@@ -50,7 +50,8 @@ export default function MyDigitalLibrary() {
             document.body.appendChild(link);
             link.click();
             link.remove();
-        } catch (e) {
+        } catch (error) {
+            console.error(error);
             alert("Download failed. Your access might have expired.");
         }
     };

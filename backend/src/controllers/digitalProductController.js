@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import DigitalProduct from "../models/digitalProduct.js";
 import DigitalPurchase from "../models/digitalPurchase.js";
 import Transaction from "../models/transaction.js";
@@ -217,9 +218,13 @@ export const verifyPurchase = async (req, res) => {
         const userId = req.user?._id;
 
         // Find transaction
-        const tx = await Transaction.findOne({
-            $or: [{ providerReference: reference }, { _id: reference }]
-        });
+        // Find transaction
+        let query = { providerReference: reference };
+        if (mongoose.Types.ObjectId.isValid(reference)) {
+            query = { $or: [{ providerReference: reference }, { _id: reference }] };
+        }
+
+        const tx = await Transaction.findOne(query);
 
         if (!tx) return res.status(404).json({ message: "Transaction not found" });
         if (String(tx.fromUser) !== String(userId)) return res.status(403).json({ message: "Unauthorized" });

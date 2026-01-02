@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import API from "../api/axios";
 
 export default function DigitalMarketplace() {
@@ -7,7 +7,6 @@ export default function DigitalMarketplace() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [search, setSearch] = useState("");
-    const navigate = useNavigate();
 
     useEffect(() => {
         fetchProducts();

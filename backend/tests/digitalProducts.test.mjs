@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { jest, expect, describe, it, beforeAll, afterAll } from '@jest/globals';
 import request from 'supertest';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { app } from '../server.js';
@@ -35,7 +36,7 @@ beforeAll(async () => {
         providerMode: 'product'
     });
     sellerId = seller._id;
-    sellerToken = jwt.sign({ id: seller._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    sellerToken = jwt.sign({ _id: seller._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     const buyer = await User.create({
         name: 'Buyer One',
@@ -44,7 +45,7 @@ beforeAll(async () => {
         role: 'client'
     });
     buyerId = buyer._id;
-    buyerToken = jwt.sign({ id: buyer._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    buyerToken = jwt.sign({ _id: buyer._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 });
 
 afterAll(async () => {
@@ -69,6 +70,9 @@ describe('Digital Products Module', () => {
             .field('description', 'Learn everything')
             .field('price', '5000')
             .attach('file', buffer, 'ebook.pdf');
+
+        const fs = await import('fs');
+        fs.writeFileSync('debug_error.txt', `Status: ${res.statusCode}\nBody: ${JSON.stringify(res.body, null, 2)}\n`);
 
         expect(res.statusCode).toBe(201);
         expect(res.body.product).toBeDefined();
