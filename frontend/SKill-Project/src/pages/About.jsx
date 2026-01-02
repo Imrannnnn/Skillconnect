@@ -1,14 +1,12 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import API from '../api/axios.js'
 
 export default function About() {
-  const [stats, setStats] = useState([
+  const stats = [
     { label: 'Active Users', value: '10K+' },
     { label: 'Verified Providers', value: '500+' },
     { label: 'Digital Products', value: '1.2K+' },
     { label: 'Events Hosted', value: '300+' },
-  ])
+  ]
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
