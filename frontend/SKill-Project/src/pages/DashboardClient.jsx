@@ -26,7 +26,7 @@ export default function DashboardClient() {
         ])
         const chatList = Array.isArray(cRes.data?.chats) ? cRes.data.chats : Array.isArray(cRes.data) ? cRes.data : []
         const txListRaw = Array.isArray(tRes.data?.payments) ? tRes.data.payments : Array.isArray(tRes.data) ? tRes.data : []
-        const activeTx = txListRaw.filter((t) => ['pending','paid'].includes(t.status))
+        const activeTx = txListRaw.filter((t) => ['pending', 'paid'].includes(t.status))
         if (mounted) {
           setChats(chatList.slice(0, 5))
           setTxs(activeTx.slice(0, 5))
@@ -43,8 +43,15 @@ export default function DashboardClient() {
   }, [])
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      <h2 className="text-2xl font-semibold">Client Dashboard</h2>
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Welcome back, {user?.name || 'Client'}!
+          </h1>
+          <p className="text-gray-600">Here's what's happening today.</p>
+        </div>
+      </div>
       {loading && (
         <div className="mt-4 flex items-center justify-center">
           <div className="loader" />
@@ -166,7 +173,7 @@ export default function DashboardClient() {
         </div>
       </section>
 
-      
+
     </div>
   )
 }

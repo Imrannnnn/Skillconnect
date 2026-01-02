@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const transactionSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ["fund", "escrow", "release", "refund", "withdraw", "event_support", "ticket_purchase"],
+    enum: ["fund", "escrow", "release", "refund", "withdraw", "event_support", "ticket_purchase", "digital_purchase"],
     required: true,
   },
   fromUser: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

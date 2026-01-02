@@ -41,6 +41,11 @@ import TicketView from "./pages/events/TicketView";
 import OrganizerEvents from "./pages/organizer/OrganizerEvents";
 import CheckInScanner from "./pages/organizer/CheckInScanner";
 import MyEvents from "./pages/events/MyEvents.jsx"
+import DigitalMarketplace from "./pages/DigitalMarketplace.jsx"
+import DigitalProductDetails from "./pages/DigitalProductDetails.jsx"
+import SellerDigitalDashboard from "./pages/SellerDigitalDashboard.jsx"
+import MyDigitalLibrary from "./pages/MyDigitalLibrary.jsx"
+import DigitalCallback from "./pages/DigitalCallback.jsx"
 
 import Sidebar from './components/Sidebar.jsx'
 
@@ -52,9 +57,9 @@ function App() {
       <Sidebar isOpen={sidebarOpen} toggle={() => setSidebarOpen(!sidebarOpen)} />
 
       <div className="flex-1 flex flex-col min-w-0 lg:ml-20 group-hover:lg:ml-64 transition-all duration-300">
-        <Header minimal toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+        <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
         <OfflineBanner />
-        <main className="flex-1 p-4 relative">
+        <main className="flex-1 relative">
           {/* Floating particles across all pages */}
           <div className="fixed inset-0 overflow-hidden pointer-events-none select-none">
             <span className="particle" style={{ top: "10%", left: "8%", animationDelay: "0s" }} />
@@ -123,6 +128,15 @@ function App() {
               <Route path="/organizer/events" element={<PrivateRoute><OrganizerEvents /></PrivateRoute>} />
               <Route path="/organizer/checkin/:eventId" element={<PrivateRoute><CheckInScanner /></PrivateRoute>} />
               <Route path="/organizer/checkin" element={<PrivateRoute><CheckInScanner /></PrivateRoute>} />
+              <Route path="/organizer/checkin" element={<PrivateRoute><CheckInScanner /></PrivateRoute>} />
+
+              {/* Digital Products Routes */}
+              <Route path="/digital-marketplace" element={<DigitalMarketplace />} />
+              <Route path="/digital-products/:id" element={<DigitalProductDetails />} />
+              <Route path="/max-seller/digital" element={<PrivateRoute><SellerDigitalDashboard /></PrivateRoute>} />
+              <Route path="/my-digital-library" element={<PrivateRoute><MyDigitalLibrary /></PrivateRoute>} />
+              <Route path="/digital/callback" element={<PrivateRoute><DigitalCallback /></PrivateRoute>} />
+
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
             <AiAssistant />

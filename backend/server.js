@@ -21,6 +21,8 @@ import contentRoutes from "./src/routes/contentRoutes.js";
 import invitationRoutes from "./src/routes/invitationRoutes.js";
 import eventRoutes from "./src/routes/eventRoutes.js";
 import ticketRoutes from "./src/routes/ticketRoutes.js";
+import digitalProductRoutes from "./src/routes/digitalProductRoutes.js";
+import notificationRoutes from "./src/routes/notificationRoutes.js";
 
 dotenv.config();
 
@@ -73,6 +75,7 @@ app.use("/api/content", contentRoutes);
 app.use("/api", invitationRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/tickets", ticketRoutes);
+app.use("/api/digital-products", digitalProductRoutes);
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/providers", providerRoutes);
@@ -93,6 +96,8 @@ app.use("/api/v1/content", contentRoutes);
 app.use("/api/v1", invitationRoutes);
 app.use("/api/v1/events", eventRoutes);
 app.use("/api/v1/tickets", ticketRoutes);
+app.use("/api/v1/digital-products", digitalProductRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
 
 app.get("/api/v1/news", (req, res) => res.json({ items: [] }));
 app.get(["/api/v1/posts", "/api/v1/blog"], (req, res) => res.json({ items: [] }));

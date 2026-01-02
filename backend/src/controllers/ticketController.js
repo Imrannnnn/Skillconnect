@@ -1,6 +1,8 @@
 import Order from "../models/order.js";
 import Ticket from "../models/ticket.js";
 import Event from "../models/event.js";
+import Notification from "../models/notification.js";
+import User from "../models/user.js";
 import crypto from "crypto";
 import sendEmail from "../utils/sendEmail.js";
 import { generateTicketPDF } from "../utils/pdfGenerator.js";
@@ -123,6 +125,45 @@ export const purchaseTickets = async (req, res) => {
             } catch (err) {
                 console.error("Failed to send email", err);
             }
+        }
+
+        // --- Notify Organizer ---
+        try {
+            const organizerId = event.organizerId;
+            const organizer = await User.findById(organizerId); // Assumes organizerModel is User for now
+
+            if (organizer) {
+                // In-App
+                await Notification.create({
+                    userId: organizer._id,
+                    title: "Tickets Sold",
+                    message: `${orderItems.reduce((a, b) => a + b.quantity, 0)} tickets sold for ${event.title}. Revenue: $${totalAmount}`,
+                    type: "success",
+                    link: `/organizer/events` // Or specific event dashboard
+                });
+
+                // Email
+                if (organizer.email) {
+                    await sendEmail(
+                        organizer.email,
+                        `New Ticket Sale: ${event.title}`,
+                        `<p>You have sold tickets!</p><p>Event: ${event.title}</p><p>Amount: $${totalAmount}</p><p>Check dashboard for details.</p>`
+                    ).catch(console.error);
+                }
+            }
+        } catch (e) {
+            console.error("Failed to notify organizer", e);
+        }
+
+        // --- Notify Buyer (In-App) ---
+        if (req.user) {
+            await Notification.create({
+                userId: req.user._id,
+                title: "Tickets Purchased",
+                message: `You successfully purchased tickets for ${event.title}.`,
+                type: "success",
+                link: `/my-events`
+            });
         }
 
         res.status(201).json({ order, tickets });

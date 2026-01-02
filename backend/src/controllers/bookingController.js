@@ -3,6 +3,7 @@ import User from "../models/user.js";
 import Product from "../models/product.js";
 import Wallet from "../models/wallet.js";
 import Transaction from "../models/transaction.js";
+import Notification from "../models/notification.js";
 import sendEmail from "../utils/sendEmail.js";
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
@@ -136,6 +137,15 @@ export const createBooking = async (req, res) => {
       sendEmail(provider.email, subject, html).catch((e) => {
         console.warn("Email send failed (provider notification)", e?.message);
       });
+
+      // In-App Notification for Provider
+      await Notification.create({
+        userId: providerId,
+        title: "New Booking Request",
+        message: `You have a new booking request from ${clientName}.`,
+        type: "info",
+        link: "/provider/bookings"
+      });
     } catch { }
 
     // Confirmation email to client (fire-and-forget)
@@ -167,6 +177,17 @@ export const createBooking = async (req, res) => {
         sendEmail(clientEmail, subject, html).catch((e) => {
           console.warn("Email send failed (client confirmation)", e?.message);
         });
+
+        // In-App Notification for Client (if registered)
+        if (effectiveClientId) {
+          await Notification.create({
+            userId: effectiveClientId,
+            title: "Booking Request Sent",
+            message: `Your booking request for ${bookingType} has been sent.`,
+            type: "success",
+            link: "/bookings"
+          });
+        }
       } catch { }
     }
 
@@ -232,6 +253,24 @@ export const updateBookingStatus = async (req, res) => {
         ).catch((e) => {
           console.warn("Email send failed (client notification)", e?.message);
         });
+        sendEmail(
+          booking.clientEmail,
+          "Your booking has been accepted",
+          html
+        ).catch((e) => {
+          console.warn("Email send failed (client notification)", e?.message);
+        });
+
+        // In-App Notification for Client
+        if (booking.clientId) {
+          await Notification.create({
+            userId: booking.clientId,
+            title: "Booking Accepted",
+            message: `Your booking has been accepted by ${providerName}.`,
+            type: "success",
+            link: `/bookings`
+          });
+        }
       } catch { }
     }
 
@@ -371,6 +410,56 @@ export const updateBookingFlow = async (req, res) => {
       at: new Date(),
       by: req.user?._id || undefined,
     });
+
+    // --- Comprehensive Flow Notifications ---
+    try {
+      const userToNotify = (req.user?._id && String(req.user._id) === String(booking.providerId))
+        ? booking.clientId
+        : booking.providerId;
+
+      // Only notify if we have a valid user to notify (for registered users)
+      if (userToNotify) {
+        let notifTitle = "Booking Update";
+        let notifMsg = `Booking status updated to ${rule.to.replace("_", " ")}.`;
+        let notifType = "info";
+
+        if (rule.to === "job_started") {
+          notifTitle = "Job Started";
+          notifMsg = "The provider has started the job.";
+        } else if (rule.to === "job_completed") {
+          notifTitle = "Job Completed";
+          notifMsg = "The job has been marked as completed.";
+          notifType = "success";
+        } else if (rule.to === "on_the_way") {
+          notifTitle = "Provider on the way";
+          notifMsg = "The provider is on their way to your location.";
+        } else if (rule.to === "cancelled") {
+          notifTitle = "Booking Cancelled";
+          notifMsg = "The booking has been cancelled.";
+          notifType = "error";
+        } else if (rule.to === "payment_released") {
+          notifTitle = "Payment Released";
+          notifMsg = "Payment has been released to the provider.";
+          notifType = "success";
+        }
+
+        await Notification.create({
+          userId: userToNotify,
+          title: notifTitle,
+          message: notifMsg,
+          type: notifType,
+          link: userToNotify === booking.providerId ? "/provider/bookings" : "/bookings"
+        });
+
+        // Send Email for key states
+        const recipientUser = await User.findById(userToNotify);
+        if (recipientUser && recipientUser.email) {
+          sendEmail(recipientUser.email, `Booking Update: ${notifTitle}`, `<p>Hello ${recipientUser.name},</p><p>${notifMsg}</p><p>Check your dashboard for details.</p>`).catch(console.error);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to send flow notification", e);
+    }
 
     await booking.save();
 

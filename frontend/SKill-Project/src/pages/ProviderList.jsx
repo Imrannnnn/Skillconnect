@@ -21,6 +21,7 @@ export default function ProviderList() {
   const [sortDistance, setSortDistance] = useState(false);
   const { notify } = useToast();
   const [smartQuery, setSmartQuery] = useState("");
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Initialize from URL params or localStorage once
   useEffect(() => {
@@ -33,6 +34,7 @@ export default function ProviderList() {
     const urlLat = searchParams.get("lat") || "";
     const urlLng = searchParams.get("lng") || "";
     const urlSmartQuery = searchParams.get("smartQuery") || "";
+
     if (urlCategory) setCategory(urlCategory);
     if (urlProviderType) setProviderType(urlProviderType);
     if (urlCity) setCity(urlCity);
@@ -43,6 +45,7 @@ export default function ProviderList() {
     if (urlLng) setLng(urlLng);
     if (urlLat && urlLng) setSortDistance(true);
     if (urlSmartQuery) setSmartQuery(urlSmartQuery);
+
     // Auto-search on first load
     if (urlSmartQuery) {
       handleSmartSearch(urlSmartQuery);
@@ -51,7 +54,7 @@ export default function ProviderList() {
     } else {
       try {
         const saved = JSON.parse(localStorage.getItem('provider_filters') || '{}');
-        if (saved) {
+        if (saved && Object.keys(saved).length) {
           if (saved.category) setCategory(saved.category);
           if (saved.providerType) setProviderType(saved.providerType);
           if (saved.city) setCity(saved.city);
@@ -61,19 +64,18 @@ export default function ProviderList() {
           if (saved.lat) setLat(String(saved.lat));
           if (saved.lng) setLng(String(saved.lng));
           if (saved.sortDistance != null) setSortDistance(Boolean(saved.sortDistance));
-          if (Object.keys(saved).length) {
-            handleSearch(
-              saved.category || "",
-              saved.providerType || "",
-              saved.city || "",
-              saved.state || "",
-              saved.country || "",
-              saved.radiusKm || "",
-              saved.lat || "",
-              saved.lng || ""
-            );
-            return;
-          }
+
+          handleSearch(
+            saved.category || "",
+            saved.providerType || "",
+            saved.city || "",
+            saved.state || "",
+            saved.country || "",
+            saved.radiusKm || "",
+            saved.lat || "",
+            saved.lng || ""
+          );
+          return;
         }
       } catch { void 0 }
       handleSearch();
@@ -101,10 +103,9 @@ export default function ProviderList() {
       });
       const list = Array.isArray(data?.providers) ? data.providers : [];
       setProviders(list);
-      // clear smart query after a successful search so the field resets for next use
+
       if (!initialQuery) {
         setSmartQuery("");
-        // also remove the smartQuery param from the URL to avoid refilling on refresh
         const next = new URLSearchParams(searchParams);
         next.delete("smartQuery");
         setSearchParams(Object.fromEntries(next.entries()));
@@ -118,7 +119,7 @@ export default function ProviderList() {
     }
   }
 
-  // Fetch category suggestions once
+  // Fetch category suggestions
   useEffect(() => {
     let mounted = true;
     async function loadCats() {
@@ -155,22 +156,25 @@ export default function ProviderList() {
       if (la) params.set("lat", la);
       if (ln) params.set("lng", ln);
       if (la && ln && sortDistance) params.set("sort", "distance");
+
       const { data } = await API.get(`/users?${params.toString()}`);
       let list = Array.isArray(data?.users) ? data.users : data || [];
-      // Client-side distance fallback if coords are present
+
       const rr = Number(r);
       const latNum = Number(la);
       const lngNum = Number(ln);
+
+      // Client-side filtering/distances
       if (rr > 0 && !Number.isNaN(latNum) && !Number.isNaN(lngNum)) {
         list = list.filter((p) => {
           const plat = Number(p?.latitude);
           const plng = Number(p?.longitude);
-          if (Number.isNaN(plat) || Number.isNaN(plng)) return true; // keep if no coords to avoid accidental exclusion
+          if (Number.isNaN(plat) || Number.isNaN(plng)) return true;
           const d = haversineKm(latNum, lngNum, plat, plng);
           return d <= rr;
         });
       }
-      // Annotate distance when client coords known
+
       if (!Number.isNaN(latNum) && !Number.isNaN(lngNum)) {
         list = list.map((p) => {
           const plat = Number(p?.latitude);
@@ -179,7 +183,7 @@ export default function ProviderList() {
           const d = haversineKm(latNum, lngNum, plat, plng);
           return { ...p, __distanceKm: d };
         });
-        // Sort by distance if toggle is on
+
         if (sortDistance) {
           list.sort((a, b) => {
             const da = typeof a.__distanceKm === 'number' ? a.__distanceKm : Infinity;
@@ -188,8 +192,10 @@ export default function ProviderList() {
           });
         }
       }
+
       setProviders(list);
-      // sync URL for shareability
+
+      // Update/Persist params
       const next = {};
       if (cat) next.category = cat;
       if (type) next.providerType = type;
@@ -200,7 +206,7 @@ export default function ProviderList() {
       if (la) next.lat = la;
       if (ln) next.lng = ln;
       setSearchParams(next);
-      // persist filters
+
       try {
         localStorage.setItem('provider_filters', JSON.stringify({
           category: cat || "",
@@ -250,167 +256,218 @@ export default function ProviderList() {
     return R * c;
   }
 
+  function clearFilters() {
+    setCategory("");
+    setProviderType("");
+    setCity("");
+    setStateRegion("");
+    setCountry("");
+    setRadiusKm("");
+    setLat("");
+    setLng("");
+    setSortDistance(false);
+    setSearchParams({});
+    try { localStorage.removeItem('provider_filters'); } catch { void 0 }
+    handleSearch("", "", "", "", "", "", "", "");
+  }
+
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <h2 className="text-2xl font-semibold">Find providers near you</h2>
-      <div className="mt-1 text-xs text-gray-500">Search by skill or service (e.g. "software engineer", "plumber") or describe your problem in natural language. You can also use your location so the nearest providers show first.</div>
-      <div className="mt-4 space-y-3">
-        {/* Smart matching input */}
-        <div className="flex flex-col gap-2 rounded-md border border-emerald-100 bg-emerald-50/40 p-3">
-          <label className="text-xs font-medium text-emerald-900">Smart match (recommended)</label>
-          <div className="flex flex-col sm:flex-row gap-2">
+    <div className="min-h-screen bg-gray-50/50">
+      {/* Hero Section */}
+      <div className="relative bg-emerald-900 border-b border-gray-200">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?ixlib=rb-4.0.3&auto=format&fit=crop&w=2684&q=80')] bg-cover bg-center opacity-10 mix-blend-overlay"></div>
+        <div className="relative max-w-7xl mx-auto px-4 py-16 sm:py-24 flex flex-col items-center text-center">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-4">
+            Find the perfect professional
+          </h1>
+          <p className="text-emerald-100 text-lg sm:text-xl max-w-2xl mb-8">
+            Search by skill, service, or just tell us what you need done.
+          </p>
+
+          {/* Smart Search Bar */}
+          <div className="w-full max-w-2xl bg-white rounded-xl shadow-xl p-2 flex flex-col sm:flex-row gap-2">
             <input
-              className="flex-1 px-3 py-2 rounded-md border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
-              placeholder="Describe what you need (e.g. I need someone to repair a leaking bathroom sink)"
+              className="flex-1 px-4 py-3 bg-transparent text-gray-900 placeholder-gray-500 focus:outline-none text-lg"
+              placeholder="Describe your task (e.g. 'I need a plumber for a leak')"
               value={smartQuery}
               onChange={(e) => setSmartQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSmartSearch(null)}
             />
             <button
-              type="button"
-              onClick={handleSmartSearch}
-              className="px-4 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-all w-full sm:w-auto"
+              onClick={() => handleSmartSearch(null)}
+              className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
             >
-              Smart search
-            </button>
-          </div>
-        </div>
-
-        {/* Traditional filters */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <input
-            className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            placeholder="Skill or service (e.g., software engineer, plumber)"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            list="cat-suggest"
-          />
-          <select
-            className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            value={providerType}
-            onChange={(e) => setProviderType(e.target.value)}
-          >
-            <option value="">Any type</option>
-            <option value="individual">Individual</option>
-            <option value="company">Company</option>
-          </select>
-        </div>
-        <datalist id="cat-suggest">
-          {categorySuggestions.map((c) => (
-            <option key={c} value={c} />
-          ))}
-        </datalist>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <input
-            className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            placeholder="City"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-          />
-          <input
-            className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            placeholder="State / Region"
-            value={stateRegion}
-            onChange={(e) => setStateRegion(e.target.value)}
-          />
-          <input
-            className="px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            placeholder="Country"
-            value={country}
-            onChange={(e) => setCountry(e.target.value)}
-          />
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <input
-            className="w-28 px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            placeholder="Radius km"
-            type="number"
-            min="1"
-            value={radiusKm}
-            onChange={(e) => setRadiusKm(e.target.value)}
-          />
-          <button
-            type="button"
-            onClick={useMyLocation}
-            className="px-3 py-2 rounded-md border border-emerald-600 text-emerald-700 hover:bg-emerald-50"
-          >
-            Use my location
-          </button>
-          <div className="inline-flex items-center gap-2 text-sm text-gray-700">
-            <span>Sort by distance</span>
-            <div className="toggle-wrapper">
-              <input
-                type="checkbox"
-                className="toggle-checkbox"
-                checked={sortDistance}
-                onChange={(e) => setSortDistance(e.target.checked)}
-              />
-              <div className="toggle-container">
-                <div className="toggle-button">
-                  <div className="toggle-button-circles-container">
-                    <span className="toggle-button-circle" />
-                    <span className="toggle-button-circle" />
-                    <span className="toggle-button-circle" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="ms-auto flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={async () => {
-                await handleSearch();
-                // Clear filter inputs after search so the fields reset for the next use
-                setCategory("");
-                setProviderType("");
-                setCity("");
-                setStateRegion("");
-                setCountry("");
-                setRadiusKm("");
-                setLat("");
-                setLng("");
-                setSortDistance(false);
-                setSearchParams({});
-                try { localStorage.removeItem('provider_filters'); } catch { void 0 }
-              }}
-              className="px-4 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-all w-full sm:w-auto"
-            >
-              Search
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setCategory(""); setProviderType(""); setCity(""); setStateRegion(""); setCountry(""); setRadiusKm(""); setLat(""); setLng(""); setSortDistance(false);
-                setSearchParams({});
-                try { localStorage.removeItem('provider_filters'); } catch { void 0 }
-                handleSearch("","","","","", "", "", "");
-              }}
-              className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 w-full sm:w-auto"
-            >
-              Clear filters
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+              </svg>
+              <span>Smart Search</span>
             </button>
           </div>
         </div>
       </div>
-      <div className="mt-6">
-        {loading && (
-          <div className="py-6 flex items-center justify-center">
-            <div className="loader" />
+
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+
+          {/* Mobile Filter Toggle */}
+          <div className="lg:hidden mb-4">
+            <button
+              onClick={() => setShowMobileFilters(!showMobileFilters)}
+              className="w-full py-3 bg-white border border-gray-200 rounded-lg shadow-sm font-medium text-gray-700 flex items-center justify-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17.293V11.414L4.293 6.707A1 1 0 014 6V3z" clipRule="evenodd" />
+              </svg>
+              {showMobileFilters ? "Hide Filters" : "Show Filters"}
+            </button>
           </div>
-        )}
-        {!loading && providers.length === 0 && (
-          <p className="text-sm text-gray-500">
-            {city || stateRegion || country || radiusKm
-              ? "No providers available in this location."
-              : category
-              ? "No providers available in this category."
-              : "No providers found."}
-          </p>
-        )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {providers.map((p) => (
-            <ProviderCard key={p._id} provider={p} distanceKm={typeof p.__distanceKm === 'number' ? p.__distanceKm : undefined} />
-          ))}
+
+          {/* Sticky Sidebar Filters */}
+          <aside className={`lg:w-72 flex-shrink-0 ${showMobileFilters ? 'block' : 'hidden lg:block'}`}>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sticky top-24">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-bold text-gray-900">Filters</h3>
+                <button onClick={clearFilters} className="text-sm text-emerald-600 hover:text-emerald-700 font-medium">Reset</button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Category */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                  <input
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-shadow outline-none"
+                    placeholder="e.g. Design, Development"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    list="cat-suggest"
+                  />
+                  <datalist id="cat-suggest">
+                    {categorySuggestions.map((c) => (
+                      <option key={c} value={c} />
+                    ))}
+                  </datalist>
+                </div>
+
+                {/* Type */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Provider Type</label>
+                  <select
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-emerald-500 outline-none"
+                    value={providerType}
+                    onChange={(e) => setProviderType(e.target.value)}
+                  >
+                    <option value="">Any</option>
+                    <option value="individual">Individual</option>
+                    <option value="company">Company</option>
+                  </select>
+                </div>
+
+                {/* Location */}
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-gray-700">Location</label>
+                  <input
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                    placeholder="City"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                  />
+                  <input
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                    placeholder="State"
+                    value={stateRegion}
+                    onChange={(e) => setStateRegion(e.target.value)}
+                  />
+                  <div className="flex gap-2">
+                    <input
+                      className="w-1/2 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                      placeholder="Country"
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
+                    />
+                    <input
+                      className="w-1/2 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                      placeholder="Radius (km)"
+                      type="number"
+                      value={radiusKm}
+                      onChange={(e) => setRadiusKm(e.target.value)}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={useMyLocation}
+                    className="w-full py-2 text-sm text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
+                    Use my location
+                  </button>
+                </div>
+
+                {/* Sort */}
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                  <span className="text-sm text-gray-700">Sort by distance</span>
+                  <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                    <input
+                      type="checkbox"
+                      name="toggle"
+                      id="toggle"
+                      className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer"
+                      checked={sortDistance}
+                      onChange={(e) => setSortDistance(e.target.checked)}
+                    />
+                    <label htmlFor="toggle" className="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 cursor-pointer"></label>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => handleSearch()}
+                  className="w-full py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors shadow-sm"
+                >
+                  Apply Filters
+                </button>
+              </div>
+            </div>
+          </aside>
+
+          {/* Main Content */}
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900">
+                {loading ? "Searching..." : `${providers.length} Professionals Found`}
+              </h2>
+            </div>
+
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-20">
+                <div className="loader h-10 w-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                <p className="mt-4 text-emerald-600 font-medium">Finding the best matches...</p>
+              </div>
+            ) : providers.length === 0 ? (
+              <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 mb-6 text-gray-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">No providers found</h3>
+                <p className="text-gray-500 max-w-sm mx-auto mb-6">
+                  {smartQuery
+                    ? "We couldn't find anyone matching that description. Try broader keywords."
+                    : "Try adjusting your filters or search radius to see more results."}
+                </p>
+                <button onClick={clearFilters} className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium">
+                  Clear all filters
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                {providers.map(p => (
+                  <ProviderCard key={p._id} provider={p} distanceKm={typeof p.__distanceKm === 'number' ? p.__distanceKm : undefined} />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

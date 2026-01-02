@@ -75,12 +75,12 @@ export default function DashboardProvider() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Provider Dashboard</h1>
+        <p className="text-gray-600">Manage your services, bookings, and earnings.</p>
+      </div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold text-gray-900">Provider Dashboard</h2>
-          <p className="mt-1 text-sm text-gray-600">Overview of your services, earnings, and recent activity.</p>
-        </div>
         <div className="flex items-center gap-4">
           <div className="hidden sm:flex items-center gap-2 text-xs text-gray-600">
             <div className="hidden sm:flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 shadow-sm">
