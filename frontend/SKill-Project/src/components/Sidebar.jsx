@@ -23,7 +23,7 @@ export default function Sidebar({ isOpen, toggle }) {
             title={label}
         >
             <span className="text-lg shrink-0 w-6 text-center">{icon}</span>
-            <span className="text-sm opacity-0 group-hover:opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 delay-75">
+            <span className="text-sm opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 delay-75">
                 {label}
             </span>
         </Link>
@@ -36,13 +36,13 @@ export default function Sidebar({ isOpen, toggle }) {
                 className="w-full flex items-center justify-between px-3 py-1 text-xs font-semibold text-gray-400 uppercase tracking-wider hover:text-gray-600 transition-colors"
                 title={title}
             >
-                <span className="opacity-0 group-hover:opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 delay-75 truncate">{title}</span>
-                <span className={`transform transition-transform duration-200 opacity-0 group-hover:opacity-100 lg:opacity-0 lg:group-hover:opacity-100 ${openGroups[groupKey] ? 'rotate-180' : ''}`}>
+                <span className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 delay-75 truncate">{title}</span>
+                <span className={`transform transition-transform duration-200 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 ${openGroups[groupKey] ? 'rotate-180' : ''}`}>
                     ▼
                 </span>
             </button>
             {openGroups[groupKey] && (
-                <div className="flex flex-col gap-0.5 mt-1 border-l-2 border-gray-100 ml-4 pl-1 opacity-0 group-hover:opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 delay-75">
+                <div className="flex flex-col gap-0.5 mt-1 border-l-2 border-gray-100 ml-4 pl-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 delay-75">
                     {children}
                 </div>
             )}
@@ -116,7 +116,7 @@ export default function Sidebar({ isOpen, toggle }) {
                         <div className="h-7 w-7 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold shrink-0 text-sm">
                             SC
                         </div>
-                        <span className="font-bold text-lg text-emerald-900 opacity-0 group-hover:opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 delay-100">
+                        <span className="font-bold text-lg text-emerald-900 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 delay-100">
                             SkillConnect
                         </span>
                     </Link>
@@ -181,7 +181,7 @@ export default function Sidebar({ isOpen, toggle }) {
                                 alt={user.name}
                                 className="h-9 w-9 rounded-full bg-gray-200 object-cover shrink-0 border border-gray-200"
                             />
-                            <div className="flex flex-col opacity-0 group-hover:opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 delay-75">
+                            <div className="flex flex-col opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 delay-75">
                                 <span className="text-sm font-medium text-gray-900 truncate">{user.name}</span>
                                 <button onClick={logout} className="text-xs text-rose-600 text-left hover:underline">
                                     Sign out
@@ -190,7 +190,7 @@ export default function Sidebar({ isOpen, toggle }) {
                         </div>
                     </div>
                 ) : (
-                    <div className="p-4 border-t border-gray-100 flex flex-col gap-2 opacity-0 group-hover:opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 delay-75">
+                    <div className="p-4 border-t border-gray-100 flex flex-col gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 delay-75">
                         <Link to="/login" className="w-full py-2 rounded-md bg-gray-100 text-gray-700 text-sm font-medium text-center hover:bg-gray-200">
                             Log in
                         </Link>
