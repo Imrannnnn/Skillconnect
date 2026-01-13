@@ -1405,98 +1405,94 @@ export default function OrgDashboard() {
           </div>
         )}
         <header className="py-8">
-          <div className="flex flex-col gap-6 rounded-3xl bg-white/90 p-6 shadow-sm ring-1 ring-gray-100 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-1 items-start gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-600 text-xl font-semibold text-white">
+          <div className="flex flex-col gap-6 rounded-3xl bg-white/80 backdrop-blur-xl p-8 shadow-2xl shadow-emerald-100/20 ring-1 ring-gray-100 sm:flex-row sm:items-center sm:justify-between border border-white/50">
+            <div className="flex flex-1 items-start gap-6">
+              <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-2xl font-bold text-white shadow-lg shadow-emerald-200 ring-4 ring-white">
                 {orgDraft?.logo ? (
                   <img src={getImageUrl(orgDraft.logo)} alt="Organization logo" className="h-full w-full rounded-2xl object-cover" />
                 ) : (
                   orgInitial
                 )}
               </div>
-              <div className="space-y-2">
-                <div>
-                  <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">{orgDraft?.name || org?.name || 'Organization dashboard'}</h1>
-                  {orgDraft?.tagline && <p className="mt-1 text-sm text-gray-600">{orgDraft.tagline}</p>}
+              <div className="space-y-1">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{orgDraft?.name || org?.name || 'Organization dashboard'}</h1>
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase tracking-wider border border-emerald-200">Pro</span>
                 </div>
-                <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
-                  {createdAtLabel && <span>Joined {createdAtLabel}</span>}
-                  {org?.sector && <span>• {org.sector}</span>}
-                  {org?.email && <span>• {org.email}</span>}
+                {orgDraft?.tagline && <p className="text-sm font-medium text-slate-500">{orgDraft.tagline}</p>}
+                <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-400">
+                  {createdAtLabel && <span className="flex items-center gap-1.5"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> Joined {createdAtLabel}</span>}
+                  {org?.sector && <span className="flex items-center gap-1.5"><svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1" /></svg> {org.sector}</span>}
                 </div>
               </div>
             </div>
-            <div className="flex flex-col gap-2 sm:items-end">
-              <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-col gap-3 sm:items-end">
+              <div className="flex flex-wrap items-center gap-3">
                 <button
                   type="button"
                   onClick={handleCopyOrgLink}
                   disabled={!publicOrgUrl}
-                  className="inline-flex items-center gap-2 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:border-emerald-300 hover:text-emerald-700 transition-all shadow-sm active:scale-95 disabled:opacity-50"
                 >
-                  Copy public profile link
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                  Copy Link
                 </button>
                 {publicOrgUrl && (
                   <a
                     href={publicOrgUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-2 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700"
+                    className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2 text-xs font-bold text-white hover:bg-slate-800 transition-all shadow-lg active:scale-95"
                   >
-                    View public profile
+                    View Public Profile
                   </a>
                 )}
               </div>
               <button
                 type="button"
                 onClick={() => setShowProfileEditor((prev) => !prev)}
-                className="inline-flex items-center gap-2 text-xs font-medium text-emerald-700 hover:text-emerald-800"
+                className={`inline-flex items-center gap-2 text-xs font-bold transition-colors ${showProfileEditor ? 'text-rose-600 hover:text-rose-700' : 'text-emerald-600 hover:text-emerald-700'}`}
               >
-                {showProfileEditor ? 'Hide profile editor' : 'Edit public profile'}
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                {showProfileEditor ? 'Hide Editor' : 'Edit Profile'}
               </button>
             </div>
           </div>
         </header>
 
-        <section className="grid gap-4 rounded-3xl bg-gradient-to-br from-white via-white to-emerald-50 p-6 shadow-sm ring-1 ring-gray-100 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="flex flex-col gap-1">
-            <span className="text-xs font-medium uppercase tracking-wide text-emerald-600">Forms</span>
-            <p className="text-2xl font-semibold text-gray-900">{formStats.total}</p>
-            <p className="text-xs text-gray-500">{formStats.active} active · {formStats.draft} drafts</p>
+        <section className="grid gap-6 rounded-3xl bg-white p-8 shadow-xl shadow-slate-200/50 ring-1 ring-slate-100 sm:grid-cols-2 lg:grid-cols-4 border border-white">
+          <div className="flex flex-col gap-1 p-2">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-600 bg-emerald-50 w-fit px-2 py-0.5 rounded-lg mb-1">Total Forms</span>
+            <p className="text-3xl font-black text-slate-900">{formStats.total}</p>
+            <p className="text-xs font-medium text-slate-500">{formStats.active} active · {formStats.draft} drafts</p>
           </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-xs font-medium uppercase tracking-wide text-emerald-600">Team</span>
-            <p className="text-2xl font-semibold text-gray-900">{staffSummary.totalMembers}</p>
-            <p className="text-xs text-gray-500">{staffSummary.adminCount} admins · {staffSummary.staffCount} staff</p>
+          <div className="flex flex-col gap-1 p-2 border-l border-slate-100 pl-6">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-blue-600 bg-blue-50 w-fit px-2 py-0.5 rounded-lg mb-1">Collaboration</span>
+            <p className="text-3xl font-black text-slate-900">{staffSummary.totalMembers}</p>
+            <p className="text-xs font-medium text-slate-500">{staffSummary.adminCount} admins · {staffSummary.staffCount} staff</p>
           </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-xs font-medium uppercase tracking-wide text-emerald-600">Profile completeness</span>
-            <p className="text-2xl font-semibold text-gray-900">{profileCompletionPercent}%</p>
-            <p className="text-xs text-gray-500">{populatedSections} of {profileSectionsList.length} sections filled</p>
+          <div className="flex flex-col gap-1 p-2 border-l border-slate-100 pl-6">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-purple-600 bg-purple-50 w-fit px-2 py-0.5 rounded-lg mb-1">Completeness</span>
+            <p className="text-3xl font-black text-slate-900">{profileCompletionPercent}%</p>
+            <p className="text-xs font-medium text-slate-500">{populatedSections} of {profileSectionsList.length} sections</p>
           </div>
-          <div className="flex flex-col gap-2">
-            <span className="text-xs font-medium uppercase tracking-wide text-emerald-600">Quick actions</span>
+          <div className="flex flex-col gap-3 p-2 border-l border-slate-100 pl-6">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-600 bg-slate-50 w-fit px-2 py-0.5 rounded-lg mb-1">Quick Launch</span>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={handleCreateForm}
-                className="inline-flex items-center rounded-full border border-emerald-200 bg-white px-3 py-1 text-[11px] font-medium text-emerald-700 hover:bg-emerald-50"
+                className="inline-flex items-center rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-all shadow-md active:scale-95"
               >
-                New form
+                + New Form
               </button>
               <button
                 type="button"
                 onClick={() => setShowProfileEditor(true)}
-                className="inline-flex items-center rounded-full border border-emerald-200 bg-white px-3 py-1 text-[11px] font-medium text-emerald-700 hover:bg-emerald-50"
+                className="inline-flex items-center rounded-xl bg-white border border-slate-200 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all active:scale-95 shadow-sm"
               >
-                Update profile
+                Update Profile
               </button>
-              <Link
-                to="/my-content"
-                className="inline-flex items-center rounded-full border border-emerald-600 bg-emerald-50 px-3 py-1 text-[11px] font-medium text-emerald-700 hover:bg-emerald-100"
-              >
-                My content
-              </Link>
             </div>
           </div>
         </section>
@@ -1504,9 +1500,14 @@ export default function OrgDashboard() {
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* LEFT COLUMN (2/3) - Forms */}
           <div className="lg:col-span-2 space-y-8">
-            <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900">Form workspace</h2>
-              <p className="mt-1 text-xs text-gray-500">Build forms, share them, and keep track of submissions in one place.</p>
+            <div className="rounded-[2.5rem] bg-white p-8 shadow-xl shadow-slate-200/40 ring-1 ring-slate-100 border border-white">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Form Engine</h2>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                </div>
+              </div>
+              <p className="text-slate-500 font-medium text-sm">Design intelligent forms and track organic engagement.</p>
 
               <div className="mt-4 grid gap-6 lg:grid-cols-[240px,1fr]">
                 <div className="space-y-4">
@@ -1518,15 +1519,15 @@ export default function OrgDashboard() {
                     >
                       Create a new form
                     </button>
-                    <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
-                      <p className="text-[11px] font-medium text-gray-700">Quick templates</p>
-                      <div className="mt-2 flex flex-col gap-2">
+                    <div className="rounded-[1.5rem] bg-slate-50 p-5 border border-slate-100">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Blueprint Templates</p>
+                      <div className="flex flex-col gap-3">
                         <select
                           value={templateKey}
                           onChange={(e) => setTemplateKey(e.target.value)}
-                          className="rounded-md border border-gray-300 px-2 py-1 text-xs"
+                          className="rounded-xl border-none bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm focus:ring-2 focus:ring-emerald-500 outline-none"
                         >
-                          <option value="">Select template…</option>
+                          <option value="">Choose a Template…</option>
                           {FORM_TEMPLATES.map((template) => (
                             <option key={template.key} value={template.key}>
                               {template.name}
@@ -1537,9 +1538,9 @@ export default function OrgDashboard() {
                           type="button"
                           onClick={handleCreateFormFromTemplate}
                           disabled={!templateKey}
-                          className="inline-flex items-center justify-center rounded-md border border-emerald-200 bg-white px-3 py-1 text-[11px] font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-60"
+                          className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-[11px] font-black text-white hover:bg-emerald-600 transition-all disabled:opacity-30 shadow-lg active:scale-95"
                         >
-                          Use template
+                          Deploy Pattern
                         </button>
                       </div>
                     </div>

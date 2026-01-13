@@ -56,7 +56,7 @@ function App() {
     <div className="min-h-screen flex bg-gray-50">
       <Sidebar isOpen={sidebarOpen} toggle={() => setSidebarOpen(!sidebarOpen)} />
 
-      <div className="flex-1 flex flex-col min-w-0 lg:ml-20 group-hover:lg:ml-64 transition-all duration-300">
+      <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
         <Header toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
         <OfflineBanner />
         <main className="flex-1 relative">

@@ -1,4 +1,6 @@
 import Message from "../models/message.js";
+import User from "../models/user.js";
+import Notification from "../models/notification.js";
 import mongoose from "mongoose";
 
 function buildChatId(a, b) { const A = String(a); const B = String(b); return A < B ? `${A}_${B}` : `${B}_${A}`; }
@@ -31,7 +33,28 @@ export const listChats = async (req, res) => {
       { $project: { chatId: "$_id", lastMessage: 1, _id: 0 } },
     ];
     const rows = await Message.aggregate(pipeline);
-    res.json({ chats: rows.map(r => ({ chatId: r.chatId, lastMessage: r.lastMessage })) });
+
+    // Populate participant details
+    const chats = await Promise.all(rows.map(async (r) => {
+      const [a, b] = r.chatId.split("_");
+      const otherId = a === userId ? b : a;
+
+      let participants = [];
+      if (otherId) {
+        // We only really need the other user for the list view title
+        const otherUser = await User.findById(otherId).select("name email avatarUrl role");
+        if (otherUser) {
+          participants.push(otherUser);
+        }
+      }
+
+      return {
+        ...r,
+        participants
+      };
+    }));
+
+    res.json({ chats });
   } catch (error) { res.status(500).json({ message: "Failed to list chats", error }); }
 };
 
@@ -65,6 +88,23 @@ export const sendMessageToChat = async (req, res) => {
     const [a, b] = String(chatId).split("_"); if (!a || !b) return res.status(400).json({ message: "Invalid chatId" });
     const sender = String(req.user._id); const receiver = sender === a ? b : a;
     const msg = await Message.create({ chatId, sender, receiver, content: text });
+
+    // Create Notification for the receiver
+    try {
+      if (sender !== receiver) {
+        await Notification.create({
+          userId: receiver,
+          type: 'message',
+          title: 'New Message',
+          message: `You have a new message from ${req.user.name || 'someone'}`,
+          link: `/chat/${chatId}`,
+          isRead: false
+        });
+      }
+    } catch (e) {
+      console.error("Failed to create message notification", e);
+    }
+
     res.status(201).json(msg);
   } catch (error) { res.status(500).json({ message: "Failed to send message", error }); }
 };

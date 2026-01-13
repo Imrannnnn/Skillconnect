@@ -17,6 +17,7 @@ export default function Header({ minimal, toggleSidebar }) {
   const accountType = auth?.user?.accountType || "individual";
   const [pendingCount, setPendingCount] = useState(0);
   const [unreadChats, setUnreadChats] = useState(0);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [resending, setResending] = useState(false);
   const navigate = useNavigate();
   const { notify } = useToast();
@@ -43,6 +44,29 @@ export default function Header({ minimal, toggleSidebar }) {
     });
     return () => { mounted = false; unsub?.(); };
   }, [auth?.user?._id, roles]);
+
+  // Notifications count
+  useEffect(() => {
+    let mounted = true;
+    async function loadNotifs() {
+      try {
+        if (!auth?.user?._id) return;
+        const { data } = await API.get('/notifications');
+        if (mounted) setUnreadNotifications(data.unreadCount || 0);
+      } catch {
+        // ignore
+      }
+    }
+    loadNotifs();
+    // Poll or listen for events? 
+    // Ideally socket should push this. For now let's poll every minute or listen to NetBus if implemented.
+    // Assuming socket.js might emit 'notification' via NetBus or we rely on page refreshes/actions.
+    const interval = setInterval(loadNotifs, 30000);
+    const unsub = NetBus.subscribe((s) => {
+      if (s?.notificationsUpdated) loadNotifs();
+    });
+    return () => { mounted = false; clearInterval(interval); unsub?.(); };
+  }, [auth?.user?._id]);
 
   // Unread chats total
   useEffect(() => {
@@ -142,8 +166,10 @@ export default function Header({ minimal, toggleSidebar }) {
           {auth?.user && (
             <div className="flex items-center gap-3 relative group">
               <Link to="/notifications" className="relative text-gray-500 hover:text-emerald-600 transition-colors" title="Notifications">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                {/* We can add a red dot if unread notifications exist, similar to chats */}
+                <svg className={`w-6 h-6 ${unreadNotifications > 0 ? 'animate-shake text-emerald-600' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                {unreadNotifications > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 h-4 w-4 flex items-center justify-center text-[9px] rounded-full bg-rose-500 text-white font-medium ring-2 ring-white">{unreadNotifications}</span>
+                )}
               </Link>
               <Link to="/chats" className="relative text-gray-500 hover:text-emerald-600 transition-colors" title="Messages">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>

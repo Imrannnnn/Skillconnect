@@ -49,14 +49,14 @@ const EventList = () => {
 
 
                 {/* Filters */}
-                <div className="flex gap-4 mb-8">
+                <div className="flex flex-col sm:flex-row gap-4 mb-8">
                     <input
                         type="text"
                         name="city"
                         placeholder="Filter by City"
                         value={filters.city}
                         onChange={handleFilterChange}
-                        className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border"
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border"
                     />
                     <input
                         type="text"
@@ -64,7 +64,7 @@ const EventList = () => {
                         placeholder="Filter by Category"
                         value={filters.category}
                         onChange={handleFilterChange}
-                        className="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border"
+                        className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 border"
                     />
                 </div>
 
