@@ -14,19 +14,17 @@ import {
 } from "../controllers/digitalProductController.js";
 
 const router = express.Router();
+import { uploadDigitalProduct } from "../middleware/cloudinaryMiddleware.js";
 
-// Multer for memory storage (we handle saving in controller/service)
-const upload = multer({
-    storage: multer.memoryStorage(),
-    limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
-});
+// Note: Removed local multer setup as we now use cloudinary middleware exclusively
+
 
 // Pubic
 router.get("/", getProducts);
 router.get("/:id", getProduct);
 
 // Seller Management
-router.post("/", protect, upload.fields([{ name: "file", maxCount: 1 }, { name: "cover", maxCount: 1 }]), createProduct);
+router.post("/", protect, uploadDigitalProduct.fields([{ name: "file", maxCount: 1 }, { name: "cover", maxCount: 1 }]), createProduct);
 router.get("/seller/my-products", protect, getMyProducts);
 router.delete("/:id", protect, deleteProduct);
 // router.put("/:id") - Update (omitted for brevity, can enable if needed)

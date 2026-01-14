@@ -14,6 +14,7 @@ const digitalProductSchema = new mongoose.Schema({
     fileName: { type: String }, // Original name (e.g. "ebook.pdf")
     fileSize: { type: Number }, // In bytes
     mimeType: { type: String }, // e.g. "application/pdf"
+    resourceType: { type: String }, // 'image', 'video', 'raw' - for Cloudinary generation
 
     // Public Assets
     coverImage: { type: String }, // Public URL for cover image

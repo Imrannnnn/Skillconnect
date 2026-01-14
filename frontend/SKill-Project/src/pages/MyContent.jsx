@@ -71,34 +71,41 @@ export default function MyContent() {
   async function handleImageUpload(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      notify("Please select an image file.", { type: "error" });
+    // Allow images and videos
+    if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+      notify("Please select an image or video file.", { type: "error" });
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      notify("Image must be smaller than 5MB.", { type: "error" });
+    // Limit increased to 50MB for Cloudinary
+    if (file.size > 50 * 1024 * 1024) {
+      notify("File must be smaller than 50MB.", { type: "error" });
       return;
     }
     setImageUploading(true);
     try {
       const formData = new FormData();
-      formData.append("image", file);
+      formData.append("image", file); // Route expects 'image' field name
       const { data } = await API.post("/users/content-image", formData);
       const url = data?.url;
       if (url) {
         setMediaUrls((prev) => [...prev, url]);
-        notify("Image uploaded.", { type: "success" });
+        notify("Media uploaded.", { type: "success" });
       }
     } catch (e) {
-      notify(e?.response?.data?.message || "Image upload failed.", { type: "error" });
+      notify(e?.response?.data?.message || "Upload failed.", { type: "error" });
     } finally {
       setImageUploading(false);
       e.target.value = "";
     }
   }
 
+
   function removeImage(url) {
     setMediaUrls((prev) => prev.filter((u) => u !== url));
+  }
+
+  function isVideo(url) {
+    return /\.(mp4|mov|webm|mkv|avi)$/i.test(url);
   }
 
   async function handleCreate(e) {
@@ -116,11 +123,11 @@ export default function MyContent() {
       return;
     }
     if (newType === "blog" && mediaUrls.length === 0) {
-      notify("Blog must include at least one image.", { type: "info" });
+      notify("Blog must include at least one image/video.", { type: "info" });
       return;
     }
     if (newType === "post" && mediaUrls.length > 1) {
-      notify("Post can have at most one image.", { type: "info" });
+      notify("Post can have at most one media item.", { type: "info" });
       return;
     }
     setCreating(true);
@@ -242,30 +249,34 @@ export default function MyContent() {
               <label className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:border-emerald-500 cursor-pointer">
                 <input
                   type="file"
-                  accept="image/jpeg,image/png"
+                  accept="image/*,video/*"
                   onChange={handleImageUpload}
                   disabled={imageUploading || (newType === "post" && mediaUrls.length >= 1)}
                   className="sr-only"
                 />
-                {imageUploading ? "Uploading..." : "Add Image"}
+                {imageUploading ? "Uploading..." : "Add Image/Video"}
               </label>
               <span className="text-[11px] text-gray-500 self-center">
                 {newType === "post"
                   ? mediaUrls.length >= 1
-                    ? "Post can have at most one image."
-                    : "Optional: add one image."
-                  : "Blog must include at least one image."}
+                    ? "Post can have at most one media item."
+                    : "Optional: add one image or video."
+                  : "Blog must include at least one media item."}
               </span>
             </div>
             {mediaUrls.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {mediaUrls.map((url, i) => (
                   <div key={i} className="relative group">
-                    <img
-                      src={url}
-                      alt={`upload-${i}`}
-                      className="h-16 w-16 object-cover rounded border border-gray-200"
-                    />
+                    {isVideo(url) ? (
+                      <video src={url} className="h-16 w-16 object-cover rounded border border-gray-200" muted />
+                    ) : (
+                      <img
+                        src={url}
+                        alt={`upload-${i}`}
+                        className="h-16 w-16 object-cover rounded border border-gray-200"
+                      />
+                    )}
                     <button
                       type="button"
                       onClick={() => removeImage(url)}
@@ -299,33 +310,30 @@ export default function MyContent() {
           <button
             type="button"
             onClick={() => setFilterType("all")}
-            className={`px-3 py-1.5 rounded-full border text-[11px] font-medium ${
-              filterType === "all"
-                ? "bg-emerald-600 text-white border-emerald-600"
-                : "bg-white text-gray-700 border-gray-200 hover:border-emerald-500"
-            }`}
+            className={`px-3 py-1.5 rounded-full border text-[11px] font-medium ${filterType === "all"
+              ? "bg-emerald-600 text-white border-emerald-600"
+              : "bg-white text-gray-700 border-gray-200 hover:border-emerald-500"
+              }`}
           >
             All
           </button>
           <button
             type="button"
             onClick={() => setFilterType("post")}
-            className={`px-3 py-1.5 rounded-full border text-[11px] font-medium ${
-              filterType === "post"
-                ? "bg-emerald-600 text-white border-emerald-600"
-                : "bg-white text-gray-700 border-gray-200 hover:border-emerald-500"
-            }`}
+            className={`px-3 py-1.5 rounded-full border text-[11px] font-medium ${filterType === "post"
+              ? "bg-emerald-600 text-white border-emerald-600"
+              : "bg-white text-gray-700 border-gray-200 hover:border-emerald-500"
+              }`}
           >
             Posts
           </button>
           <button
             type="button"
             onClick={() => setFilterType("blog")}
-            className={`px-3 py-1.5 rounded-full border text-[11px] font-medium ${
-              filterType === "blog"
-                ? "bg-emerald-600 text-white border-emerald-600"
-                : "bg-white text-gray-700 border-gray-200 hover:border-emerald-500"
-            }`}
+            className={`px-3 py-1.5 rounded-full border text-[11px] font-medium ${filterType === "blog"
+              ? "bg-emerald-600 text-white border-emerald-600"
+              : "bg-white text-gray-700 border-gray-200 hover:border-emerald-500"
+              }`}
           >
             Blogs
           </button>
