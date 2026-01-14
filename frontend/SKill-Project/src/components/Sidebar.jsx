@@ -1,191 +1,258 @@
-import { useContext, useState } from 'react';
+import { useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/auth';
 import { getImageUrl } from '../utils/image';
+
+// Icons as a cleaner internal component set
+const Icons = {
+    Home: () => <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />,
+    Feed: () => <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />,
+    Bell: () => <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />,
+    Search: () => <><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></>,
+    ShoppingBag: () => <><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></>,
+    Calendar: () => <><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></>,
+    Book: () => <><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></>,
+    MessageSquare: () => <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2-2z" />,
+    CreditCard: () => <><rect width="20" height="14" x="2" y="5" rx="2" /><line x1="2" x2="22" y1="10" y2="10" /></>,
+    Briefcase: () => <><rect width="20" height="14" x="2" y="7" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></>,
+    TrendingUp: () => <><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></>,
+    Building: () => <><rect width="16" height="20" x="4" y="2" rx="2" ry="2" /><path d="M9 22v-4h6v4" /><path d="M8 6h.01" /><path d="M16 6h.01" /><path d="M8 10h.01" /><path d="M16 10h.01" /><path d="M8 14h.01" /><path d="M16 14h.01" /><path d="M8 18h.01" /><path d="M16 18h.01" /></>,
+    ChevronRight: () => <path d="m9 18 6-6-6-6" />,
+    ChevronLeft: () => <path d="m15 18-6-6 6-6" />,
+    Menu: () => <><line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="6" y2="6" /><line x1="4" x2="20" y1="18" y2="18" /></>,
+    LogOut: () => <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></>,
+    User: () => <><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>,
+    X: () => <><path d="M18 6 6 18" /><path d="m6 6 12 12" /></>
+}
+
+const Icon = ({ name, className }) => {
+    const Component = Icons[name] || Icons.Home;
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={className}
+        >
+            <Component />
+        </svg>
+    )
+}
 
 export default function Sidebar({ isOpen, toggle }) {
     const { user, logout } = useContext(AuthContext);
     const location = useLocation();
     const isActive = (path) => location.pathname === path;
-    const [openGroups, setOpenGroups] = useState({ discover: true, myZone: true, provider: true, org: true });
-    const [isHovered, setIsHovered] = useState(false);
 
-    const toggleGroup = (key) => {
-        setOpenGroups(prev => ({ ...prev, [key]: !prev[key] }));
-    };
-
-    const NavItem = ({ label, path, icon }) => (
-        <Link
-            to={path}
-            onClick={() => window.innerWidth < 1024 && toggle()}
-            className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 whitespace-nowrap overflow-hidden group/item
-                ${isActive(path)
-                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200/50'
-                    : 'text-gray-600 hover:bg-emerald-50 hover:text-emerald-700'}
-            `}
-            title={label}
-        >
-            <span className={`text-xl shrink-0 w-8 h-8 flex items-center justify-center rounded-lg transition-transform group-hover/item:scale-110 ${isActive(path) ? 'text-white' : 'text-emerald-600'}`}>
-                {icon}
-            </span>
-            <span className={`text-sm font-medium transition-all duration-300 ${isHovered || isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>
-                {label}
-            </span>
-        </Link>
-    );
-
-    const NavGroup = ({ title, groupKey, children }) => {
-        const isExpanded = isHovered || isOpen;
-        return (
-            <div className="mt-4 first:mt-0">
-                <button
-                    onClick={() => toggleGroup(groupKey)}
-                    className={`w-full flex items-center justify-between px-3 py-1 mb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:text-emerald-600 transition-colors ${!isExpanded ? 'justify-center' : ''}`}
-                    title={title}
-                >
-                    {isExpanded ? (
-                        <>
-                            <span className="truncate">{title}</span>
-                            <span className={`transform transition-transform duration-300 ${openGroups[groupKey] ? 'rotate-180' : ''}`}>
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                            </span>
-                        </>
-                    ) : (
-                        <div className="h-0.5 w-4 bg-gray-200 rounded-full" />
-                    )}
-                </button>
-                {openGroups[groupKey] && (
-                    <div className={`flex flex-col gap-1 transition-all duration-300 ${isExpanded ? 'opacity-100' : 'opacity-100'}`}>
-                        {children}
-                    </div>
-                )}
-            </div>
-        );
-    };
-
-    const sidebarWidth = isOpen ? 'w-72' : (isHovered ? 'w-72' : 'lg:w-0 w-0');
+    // Navigation Groups
+    const navGroups = [
+        {
+            title: "Discover",
+            items: [
+                { label: "Providers", path: "/providers", icon: "Search" },
+                { label: "Marketplace", path: "/digital-marketplace", icon: "ShoppingBag" },
+                { label: "Events", path: "/events", icon: "Calendar" },
+            ]
+        },
+        user && {
+            title: "My Zone",
+            items: [
+                { label: "My Library", path: "/my-digital-library", icon: "Book" },
+                { label: "My Bookings", path: "/bookings", icon: "Calendar" },
+                { label: "My Events", path: "/my-events", icon: "Calendar" },
+                { label: "Chats", path: "/chats", icon: "MessageSquare" },
+                { label: "Wallet", path: "/payments", icon: "CreditCard" },
+            ]
+        },
+        user && (user.roles?.includes('provider') || user.accountType === 'organization') && {
+            title: "Business",
+            items: [
+                ...(user.roles?.includes('provider') ? [
+                    { label: "Provider Dashboard", path: "/provider/dashboard", icon: "Briefcase" },
+                    { label: "Digital Sales", path: "/max-seller/digital", icon: "TrendingUp" },
+                ] : []),
+                ...(user.accountType === 'organization' ? [
+                    { label: "Org Dashboard", path: "/org/dashboard", icon: "Building" },
+                    { label: "Organizer Events", path: "/organizer/events", icon: "Briefcase" },
+                ] : [])
+            ]
+        }
+    ].filter(Boolean);
 
     return (
         <>
-            {/* Overlay for mobile */}
-            {isOpen && (
-                <div
-                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] lg:hidden transition-opacity"
-                    onClick={toggle}
-                />
-            )}
+            {/* Mobile Overlay */}
+            <div
+                className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 lg:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                onClick={toggle}
+            />
 
-            {/* Floating Burger Trigger for Desktop (when collapsed & not hovered) */}
-            {!isOpen && (
-                <div
-                    onMouseEnter={() => setIsHovered(true)}
-                    className={`fixed top-4 left-4 z-[80] hidden lg:flex items-center justify-center w-10 h-10 bg-white/80 backdrop-blur border border-gray-200/50 rounded-full shadow-lg cursor-pointer text-emerald-600 hover:text-emerald-700 hover:scale-110 transition-all duration-300 ${isHovered ? 'opacity-0 scale-50 pointer-events-none translate-x-10' : 'opacity-100 scale-100 translate-x-0'}`}
-                >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </div>
-            )}
-
-            {/* Sidebar */}
+            {/* Sidebar Container */}
             <aside
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-                className={`fixed top-0 left-0 h-full bg-white/80 backdrop-blur-xl border-r border-gray-200/50 z-[70] transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1) flex flex-col shadow-2xl
-                    ${sidebarWidth} ${!isOpen && !isHovered ? '-translate-x-full lg:translate-x-0' : 'translate-x-0'}
+                className={`
+                    fixed lg:sticky top-0 left-0 z-50 h-screen bg-white border-r border-gray-200 
+                    transition-all duration-300 ease-in-out flex flex-col shrink-0
+                    ${isOpen ? 'w-64 translate-x-0' : '-translate-x-full lg:translate-x-0 lg:w-20'}
                 `}
             >
-                {/* Logo Area */}
-                <div className="h-20 flex items-center px-4 mb-2">
-                    <Link to="/" className="flex items-center gap-3 overflow-hidden">
-                        <div className="min-w-[40px] h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-bold shadow-lg shadow-emerald-200 shrink-0">
+                {/* Header / Logo */}
+                <div className="h-16 flex items-center px-4 border-b border-gray-100 shrink-0 relative">
+                    <Link to="/" className={`flex items-center gap-3 overflow-hidden ${!isOpen ? 'justify-center w-full' : ''}`}>
+                        <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center shrink-0 shadow-emerald-200 shadow-lg text-white font-bold">
                             SC
                         </div>
-                        <span className={`font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-emerald-900 to-emerald-700 transition-all duration-300 ${isHovered || isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`}>
+                        <span className={`font-bold text-xl text-gray-800 transition-opacity duration-300 whitespace-nowrap ${isOpen ? 'opacity-100 delay-100' : 'opacity-0 hidden'}`}>
                             SkillConnect
                         </span>
                     </Link>
+
+                    {/* Desktop Collapse Toggle */}
+                    <button
+                        onClick={toggle}
+                        className={`hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white border border-gray-200 rounded-full items-center justify-center text-gray-500 hover:text-emerald-600 hover:border-emerald-300 transition-colors shadow-sm z-50`}
+                    >
+                        <Icon name={isOpen ? "ChevronLeft" : "ChevronRight"} className="w-3 h-3" />
+                    </button>
+
+                    {/* Mobile Close Button */}
+                    <button
+                        onClick={toggle}
+                        className="lg:hidden ml-auto p-1 text-gray-500 hover:text-gray-800"
+                    >
+                        <Icon name="X" className="w-6 h-6" />
+                    </button>
                 </div>
 
-                {/* Nav Items */}
-                <nav className="flex-1 overflow-y-auto px-3 py-2 scrollbar-none hover:scrollbar-thin scrollbar-thumb-emerald-100 scrollbar-track-transparent">
-
-                    {/* Core Navigation (Mobile Only/Collapsed Shortcut) */}
-                    <div className="lg:hidden mb-6 flex flex-col gap-1">
-                        <NavItem label="Home" path="/" icon="🏠" />
-                        <NavItem label="Feed" path="/feed" icon="📰" />
-                        {user && <NavItem label="Notifications" path="/notifications" icon="🔔" />}
-                    </div>
-
-                    <div className="flex flex-col gap-6">
-                        {/* Discover Group */}
-                        <NavGroup title="Explore" groupKey="discover">
-                            <NavItem label="Providers" path="/providers" icon="🔍" />
-                            <NavItem label="Marketplace" path="/digital-marketplace" icon="🛍️" />
-                            <NavItem label="Events" path="/events" icon="📅" />
-                        </NavGroup>
-
-                        {/* My Zone */}
+                {/* Scrollable Nav */}
+                <div className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3 space-y-6 scrollbar-thin scrollbar-thumb-gray-200">
+                    {/* Core / Mobile Only Items */}
+                    <div className="space-y-1">
+                        <NavItem
+                            to="/"
+                            icon="Home"
+                            label="Home"
+                            active={isActive('/')}
+                            expanded={isOpen}
+                            onClick={() => window.innerWidth < 1024 && toggle()}
+                        />
+                        <NavItem
+                            to="/feed"
+                            icon="Feed"
+                            label="Community Feed"
+                            active={isActive('/feed')}
+                            expanded={isOpen}
+                            onClick={() => window.innerWidth < 1024 && toggle()}
+                        />
                         {user && (
-                            <NavGroup title="My Zone" groupKey="myZone">
-                                <NavItem label="My Library" path="/my-digital-library" icon="📚" />
-                                <NavItem label="My Bookings" path="/bookings" icon="🗓️" />
-                                <NavItem label="My Events" path="/my-events" icon="🎟️" />
-                                <NavItem label="Chats" path="/chats" icon="💬" />
-                                <NavItem label="Wallet" path="/payments" icon="💳" />
-                            </NavGroup>
-                        )}
-
-                        {/* Business Tools */}
-                        {user && (user.roles?.includes('provider') || user.accountType === 'organization') && (
-                            <NavGroup title="Business" groupKey="provider">
-                                {user.roles?.includes('provider') && (
-                                    <>
-                                        <NavItem label="Provider Dashboard" path="/provider/dashboard" icon="💼" />
-                                        <NavItem label="Digital Sales" path="/max-seller/digital" icon="📈" />
-                                    </>
-                                )}
-                                {user.accountType === 'organization' && (
-                                    <>
-                                        <NavItem label="Org Dashboard" path="/org/dashboard" icon="🏢" />
-                                        <NavItem label="Organizer Events" path="/organizer/events" icon="📋" />
-                                    </>
-                                )}
-                            </NavGroup>
+                            <NavItem
+                                to="/notifications"
+                                icon="Bell"
+                                label="Notifications"
+                                active={isActive('/notifications')}
+                                expanded={isOpen}
+                                onClick={() => window.innerWidth < 1024 && toggle()}
+                            />
                         )}
                     </div>
-                </nav>
 
-                {/* User Footer */}
-                <div className="p-4 bg-gray-50/50 backdrop-blur-md border-t border-gray-100">
+                    {navGroups.map((group, idx) => (
+                        <div key={idx} className="space-y-1">
+                            {isOpen && (
+                                <div className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 whitespace-nowrap">
+                                    {group.title}
+                                </div>
+                            )}
+                            <div className={!isOpen ? 'pt-2 border-t border-gray-100' : ''}>
+                                {group.items.map((item, i) => (
+                                    <NavItem
+                                        key={i}
+                                        to={item.path}
+                                        icon={item.icon}
+                                        label={item.label}
+                                        active={isActive(item.path)}
+                                        expanded={isOpen}
+                                        onClick={() => window.innerWidth < 1024 && toggle()}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Footer / User Profile */}
+                <div className="p-3 border-t border-gray-100 bg-gray-50/50">
                     {user ? (
-                        <div className="flex items-center gap-3 overflow-hidden">
-                            <Link to="/settings/account" className="shrink-0 group/avatar">
+                        <div className={`flex items-center gap-3 ${isOpen ? 'px-2' : 'justify-center'}`}>
+                            <Link to="/settings/account" className="shrink-0 relative group">
                                 <img
                                     src={getImageUrl(user.avatarUrl)}
                                     alt={user.name}
-                                    className="h-10 w-10 rounded-xl bg-white object-cover border-2 border-white shadow-md group-hover/avatar:border-emerald-200 transition-all"
+                                    className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm group-hover:border-emerald-500 transition-colors"
                                 />
                             </Link>
-                            <div className={`flex flex-col min-w-0 transition-all duration-300 ${isHovered || isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`}>
-                                <span className="text-sm font-bold text-gray-900 truncate">{user.name}</span>
-                                <button onClick={logout} className="text-xs text-rose-500 font-medium hover:text-rose-600 transition-colors text-left uppercase tracking-wider">
-                                    Sign out
-                                </button>
-                            </div>
+
+                            {isOpen && (
+                                <div className="flex-1 min-w-0 overflow-hidden">
+                                    <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
+                                    <button onClick={logout} className="text-xs text-red-500 hover:text-red-700 font-medium whitespace-nowrap">
+                                        Sign Out
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     ) : (
-                        <div className={`flex flex-col gap-2 transition-all duration-300 ${isHovered || isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-10'}`}>
-                            <Link to="/login" className="w-full py-2.5 rounded-xl bg-white border border-gray-200 text-gray-700 text-sm font-bold text-center hover:bg-gray-50 transition-all shadow-sm">
-                                Log in
-                            </Link>
-                            <Link to="/register" className="w-full py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold text-center hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200/50">
-                                Join Now
-                            </Link>
+                        <div className="space-y-2">
+                            {isOpen ? (
+                                <>
+                                    <Link to="/login" className="flex items-center justify-center w-full py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 whitespace-nowrap">Log In</Link>
+                                    <Link to="/register" className="flex items-center justify-center w-full py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg shadow-sm hover:bg-emerald-700 whitespace-nowrap">Sign Up</Link>
+                                </>
+                            ) : (
+                                <Link to="/login" className="flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600">
+                                    <Icon name="User" className="w-5 h-5" />
+                                </Link>
+                            )}
                         </div>
                     )}
                 </div>
             </aside>
         </>
+    );
+}
+
+function NavItem({ to, icon, label, active, expanded, onClick }) {
+    return (
+        <Link
+            to={to}
+            onClick={onClick}
+            title={!expanded ? label : ''}
+            className={`
+                flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative
+                ${active
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
+                ${!expanded ? 'justify-center' : ''}
+            `}
+        >
+            <div className={`shrink-0 transition-colors ${active ? 'text-emerald-600' : 'text-gray-400 group-hover:text-gray-600'}`}>
+                <Icon name={icon} className="w-5 h-5" />
+            </div>
+
+            {expanded && (
+                <span className="text-sm font-medium truncate">
+                    {label}
+                </span>
+            )}
+
+            {!expanded && active && (
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-emerald-600 rounded-l-full" />
+            )}
+        </Link>
     );
 }
