@@ -47,6 +47,11 @@ export const createProduct = async (req, res) => {
         res.status(201).json({ message: "Product created", product });
     } catch (e) {
         console.error(e);
+        // Log to file for debugging
+        try {
+            const fs = await import('fs');
+            fs.appendFileSync('debug_error.txt', `\n[${new Date().toISOString()}] Create Product Error: ${e.message}\nStack: ${e.stack}\n`);
+        } catch (err) { }
         res.status(500).json({ message: "Failed to create product", error: e.message });
     }
 };

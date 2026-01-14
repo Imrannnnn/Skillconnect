@@ -2,6 +2,7 @@ import { useState, useEffect, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "../api/axios";
 import { AuthContext } from "../context/auth";
+import { getImageUrl } from "../utils/image";
 
 export default function DigitalProductDetails() {
     const { id } = useParams();
@@ -59,7 +60,7 @@ export default function DigitalProductDetails() {
                 {/* Left: Visual */}
                 <div className="md:w-1/3 bg-emerald-50 flex items-center justify-center relative overflow-hidden">
                     {product.coverImage ? (
-                        <img src={product.coverImage} alt={product.name} className="w-full h-full object-cover" />
+                        <img src={getImageUrl(product.coverImage)} alt={product.name} className="w-full h-full object-cover" />
                     ) : (
                         <div className="p-12 text-emerald-200">
                             <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.89 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" /></svg>
@@ -78,7 +79,7 @@ export default function DigitalProductDetails() {
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
                     <div className="flex items-center gap-2 mb-6">
                         <span className="text-gray-500 text-sm">Sold by</span>
-                        <img src={product.providerId?.avatarUrl || "https://ui-avatars.com/api/?name=?"} className="w-6 h-6 rounded-full" />
+                        <img src={getImageUrl(product.providerId?.avatarUrl) || "https://ui-avatars.com/api/?name=?"} className="w-6 h-6 rounded-full" />
                         <span className="font-medium text-gray-800">{product.providerId?.name}</span>
                     </div>
 
