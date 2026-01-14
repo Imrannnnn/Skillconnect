@@ -1,9 +1,18 @@
 export const getImageUrl = (path) => {
     if (!path) return "";
-    if (path.startsWith("http://") || path.startsWith("https://")) return path;
+
+    const sPath = String(path).trim();
+    if (
+        sPath.startsWith("http://") ||
+        sPath.startsWith("https://") ||
+        sPath.startsWith("blob:") ||
+        sPath.startsWith("data:") ||
+        sPath.startsWith("//")
+    ) {
+        return sPath;
+    }
 
     // Default to localhost:5000 if VITE_API_BASE is not set or doesn't contain the root
-    // Assuming VITE_API_BASE is like "http://localhost:5000/api/v1"
     let baseUrl = "http://localhost:5000";
 
     if (import.meta.env.VITE_API_BASE) {
@@ -15,5 +24,5 @@ export const getImageUrl = (path) => {
         }
     }
 
-    return `${baseUrl}${path.startsWith("/") ? "" : "/"}${path}`;
+    return `${baseUrl}${sPath.startsWith("/") ? "" : "/"}${sPath}`;
 };

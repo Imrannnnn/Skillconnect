@@ -35,12 +35,12 @@ export const createProduct = async (req, res) => {
             description,
             price: Number(price),
             currency: currency || "NGN",
-            fileKey: productFile.filename, // Cloudinary Public ID
+            fileKey: productFile.filename || productFile.public_id, // Ensure we get the ID
             fileName: productFile.originalname,
             fileSize: productFile.size,
             mimeType: productFile.mimetype,
-            resourceType: productFile.resource_type || "auto", // Store resource type ('image', 'video', 'raw')
-            coverImage: coverFile ? coverFile.path : null, // Cloudinary Secure URL
+            resourceType: productFile.resource_type || "auto",
+            coverImage: coverFile ? (coverFile.path || coverFile.secure_url) : null,
             isActive: true,
         });
 

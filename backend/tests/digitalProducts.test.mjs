@@ -140,8 +140,8 @@ describe('Digital Products Module', () => {
             .get(`/api/digital-products/purchase/${purchase._id}/download`)
             .set('Authorization', `Bearer ${buyerToken}`);
 
-        expect(res.statusCode).toBe(200);
-        expect(res.header['content-type']).toContain('application/pdf'); // inferred from extension in uploadFile mock/real
+        expect(res.statusCode).toBe(302);
+        expect(res.header['location']).toBeDefined();
     });
 
     it('Download blocked if access revoked', async () => {

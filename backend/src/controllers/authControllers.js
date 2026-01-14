@@ -174,7 +174,6 @@ export const register = async (req, res) => {
       providerMode,
       social: socialPayload,
       verificationToken,
-      verificationToken,
       accountType: "individual",
       location: {
         city,
