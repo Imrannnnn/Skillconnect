@@ -9,6 +9,7 @@ jobs:
   deploy-backend:
     name: Trigger Render Backend Deploy
     runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.modified, 'backend/') || github.event_name == 'push'
     steps:
       - name: Trigger Render deploy hook
         run: |

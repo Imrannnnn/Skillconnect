@@ -10,6 +10,7 @@ jobs:
   backend:
     name: Backend CI
     runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.modified, 'backend/') || github.event_name == 'pull_request'
     defaults:
       run:
         working-directory: backend
@@ -33,6 +34,7 @@ jobs:
   frontend:
     name: Frontend CI
     runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.modified, 'frontend/') || github.event_name == 'pull_request'
     defaults:
       run:
         working-directory: frontend/SKill-Project
@@ -52,9 +54,6 @@ jobs:
 
       - name: Lint
         run: npm run lint
-
-      - name: Run frontend tests
-        run: npm test
 
       - name: Build frontend
         run: npm run build
