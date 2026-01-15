@@ -1,5 +1,6 @@
 import Event from "../models/event.js";
 import User from "../models/user.js";
+import { deleteFromCloudinary } from "../services/cloudinaryService.js";
 
 // Create a new event
 export const createEvent = async (req, res) => {
@@ -95,6 +96,18 @@ export const updateEvent = async (req, res) => {
         }
         // TODO: Add check for Organization ownership if organizerModel is Organization
 
+        // Cloudinary cleanup for branding images
+        if (req.body.branding) {
+            const oldBranding = event.branding || {};
+            const newBranding = req.body.branding;
+            if (newBranding.logoUrl !== undefined && oldBranding.logoUrl && oldBranding.logoUrl !== newBranding.logoUrl) {
+                await deleteFromCloudinary(oldBranding.logoUrl).catch(console.error);
+            }
+            if (newBranding.backgroundImageUrl !== undefined && oldBranding.backgroundImageUrl && oldBranding.backgroundImageUrl !== newBranding.backgroundImageUrl) {
+                await deleteFromCloudinary(oldBranding.backgroundImageUrl).catch(console.error);
+            }
+        }
+
         Object.assign(event, req.body);
         await event.save();
         res.status(200).json(event);
@@ -113,6 +126,12 @@ export const deleteEvent = async (req, res) => {
             return res.status(403).json({ message: "Not authorized to delete this event" });
         }
         // TODO: Add check for Organization ownership
+
+        // Cloudinary cleanup
+        if (event.branding) {
+            if (event.branding.logoUrl) await deleteFromCloudinary(event.branding.logoUrl).catch(console.error);
+            if (event.branding.backgroundImageUrl) await deleteFromCloudinary(event.branding.backgroundImageUrl).catch(console.error);
+        }
 
         await event.deleteOne();
         res.status(200).json({ message: "Event deleted successfully" });

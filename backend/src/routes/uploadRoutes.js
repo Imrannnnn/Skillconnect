@@ -2,6 +2,7 @@ import express from "express";
 import User from "../models/user.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { uploadPublic } from "../middleware/cloudinaryMiddleware.js";
+import { deleteFromCloudinary } from "../services/cloudinaryService.js";
 
 const router = express.Router();
 
@@ -12,6 +13,11 @@ router.put("/:id/avatar", protect, uploadPublic.single("avatar"), async (req, re
 
     // Cloudinary returns file info in req.file. path is the secure_url
     const url = req.file.path;
+
+    const user = await User.findById(req.params.id);
+    if (user && user.avatarUrl) {
+      await deleteFromCloudinary(user.avatarUrl).catch(console.error);
+    }
 
     await User.findByIdAndUpdate(req.params.id, { avatarUrl: url });
     res.json({ avatarUrl: url, user: { avatarUrl: url } });

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import API from "../api/axios.js";
 import { AuthContext } from "../context/auth.js";
 import { useToast } from "../components/toast.js";
+import { getImageUrl } from "../utils/image.js";
 
 export default function CommunityFeed() {
   const { user } = useContext(AuthContext);
@@ -160,33 +161,30 @@ export default function CommunityFeed() {
           <button
             type="button"
             onClick={() => setFilterType("all")}
-            className={`px-3 py-1.5 rounded-full border text-xs font-medium ${
-              filterType === "all"
+            className={`px-3 py-1.5 rounded-full border text-xs font-medium ${filterType === "all"
                 ? "bg-emerald-600 text-white border-emerald-600"
                 : "bg-white text-gray-700 border-gray-200 hover:border-emerald-500"
-            }`}
+              }`}
           >
             All
           </button>
           <button
             type="button"
             onClick={() => setFilterType("post")}
-            className={`px-3 py-1.5 rounded-full border text-xs font-medium ${
-              filterType === "post"
+            className={`px-3 py-1.5 rounded-full border text-xs font-medium ${filterType === "post"
                 ? "bg-emerald-600 text-white border-emerald-600"
                 : "bg-white text-gray-700 border-gray-200 hover:border-emerald-500"
-            }`}
+              }`}
           >
             Posts
           </button>
           <button
             type="button"
             onClick={() => setFilterType("blog")}
-            className={`px-3 py-1.5 rounded-full border text-xs font-medium ${
-              filterType === "blog"
+            className={`px-3 py-1.5 rounded-full border text-xs font-medium ${filterType === "blog"
                 ? "bg-emerald-600 text-white border-emerald-600"
                 : "bg-white text-gray-700 border-gray-200 hover:border-emerald-500"
-            }`}
+              }`}
           >
             Blogs
           </button>
@@ -353,6 +351,18 @@ export default function CommunityFeed() {
               <p className="text-sm text-gray-700 line-clamp-3">
                 {String(item.body || "")}
               </p>
+              {Array.isArray(item.mediaUrls) && item.mediaUrls.length > 0 && (
+                <div className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                  {item.mediaUrls.map((url, i) => (
+                    <img
+                      key={i}
+                      src={getImageUrl(url)}
+                      alt="preview"
+                      className="h-20 w-32 object-cover rounded-lg border border-gray-100 flex-shrink-0"
+                    />
+                  ))}
+                </div>
+              )}
               {typeof item.commentsCount === "number" && (
                 <p className="mt-2 text-[11px] text-gray-500">
                   {item.commentsCount} comment{item.commentsCount === 1 ? "" : "s"}

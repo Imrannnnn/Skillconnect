@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Organization from "../models/organization.js";
 import User from "../models/user.js";
 import FormDefinition from "../models/formDefinition.js";
+import { deleteFromCloudinary } from "../services/cloudinaryService.js";
 
 function slugifyName(name) {
   return String(name || "")
@@ -158,7 +159,12 @@ export const updateOrganizationProfile = async (req, res) => {
     if (description !== undefined) org.description = description || undefined;
     if (phone !== undefined) org.phone = phone || undefined;
     if (website !== undefined) org.website = website || undefined;
-    if (logo !== undefined) org.logo = logo || undefined;
+    if (logo !== undefined) {
+      if (org.logo && org.logo !== logo) {
+        await deleteFromCloudinary(org.logo).catch(console.error);
+      }
+      org.logo = logo || undefined;
+    }
     if (address !== undefined) org.address = address || undefined;
     if (tagline !== undefined) org.tagline = tagline || undefined;
     if (Array.isArray(services)) org.services = services;

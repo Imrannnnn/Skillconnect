@@ -9,7 +9,11 @@ router.get("/", protect, async (req, res) => {
         const notifications = await Notification.find({ userId: req.user._id })
             .sort({ createdAt: -1 })
             .limit(20);
-        const unreadCount = await Notification.countDocuments({ userId: req.user._id, isRead: false });
+        const unreadCount = await Notification.countDocuments({
+            userId: req.user._id,
+            isRead: false,
+            type: { $ne: 'message' }
+        });
         res.json({ notifications, unreadCount });
     } catch (e) {
         res.status(500).json({ message: "Failed", error: e.message });

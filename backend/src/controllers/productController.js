@@ -1,4 +1,5 @@
 import Product from "../models/product.js";
+import { deleteFromCloudinary } from "../services/cloudinaryService.js";
 
 // Create a new product for a provider
 export const createProduct = async (req, res) => {
@@ -116,8 +117,20 @@ export const updateProduct = async (req, res) => {
     ];
     const update = {};
     for (const k of allowed) if (req.body[k] !== undefined) update[k] = req.body[k];
+    const oldProduct = await Product.findById(req.params.id);
+    if (!oldProduct) return res.status(404).json({ message: "Product not found" });
+
+    // Cloudinary cleanup for removed images
+    if (update.images !== undefined) {
+      const oldImages = oldProduct.images || [];
+      const newImages = update.images || [];
+      const removed = oldImages.filter(url => !newImages.includes(url));
+      for (const url of removed) {
+        await deleteFromCloudinary(url).catch(console.error);
+      }
+    }
+
     const product = await Product.findByIdAndUpdate(req.params.id, update, { new: true });
-    if (!product) return res.status(404).json({ message: "Product not found" });
     res.json({ product });
   } catch (error) {
     res.status(500).json({ message: "Failed to update product", error });
@@ -126,6 +139,16 @@ export const updateProduct = async (req, res) => {
 
 export const deleteProduct = async (req, res) => {
   try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    // Cloudinary cleanup
+    if (Array.isArray(product.images)) {
+      for (const url of product.images) {
+        await deleteFromCloudinary(url).catch(console.error);
+      }
+    }
+
     await Product.findByIdAndDelete(req.params.id);
     res.json({ message: "Deleted" });
   } catch (error) {

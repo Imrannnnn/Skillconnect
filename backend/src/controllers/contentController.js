@@ -1,5 +1,9 @@
 import Content from "../models/content.js";
 import Comment from "../models/comment.js";
+import User from "../models/user.js";
+import Organization from "../models/organization.js";
+import Notification from "../models/notification.js";
+import { deleteFromCloudinary } from "../services/cloudinaryService.js";
 
 function deriveAuthorType(user) {
   if (!user) return "client";
@@ -8,8 +12,8 @@ function deriveAuthorType(user) {
     Array.isArray(user.roles) && user.roles.length
       ? user.roles
       : user.role
-      ? [user.role]
-      : [];
+        ? [user.role]
+        : [];
 
   if (accountType === "organization" || user.organizationId) return "organization";
   if (roles.includes("admin")) return "admin";
@@ -167,7 +171,11 @@ export const listAuthorContent = async (req, res) => {
 export const getContent = async (req, res) => {
   try {
     const { id } = req.params;
-    const content = await Content.findById(id);
+    const content = await Content.findByIdAndUpdate(
+      id,
+      { $inc: { views: 1 } },
+      { new: true }
+    );
     if (!content || content.isDeleted) {
       return res.status(404).json({ message: "Content not found" });
     }
@@ -243,6 +251,16 @@ export const updateContent = async (req, res) => {
       }
     }
 
+    // Cloudinary cleanup for removed media
+    if (req.body.mediaUrls !== undefined) {
+      const oldMedia = content.mediaUrls || [];
+      const newMedia = next.mediaUrls || [];
+      const removed = oldMedia.filter(url => !newMedia.includes(url));
+      for (const url of removed) {
+        await deleteFromCloudinary(url).catch(console.error);
+      }
+    }
+
     Object.assign(content, next, { body: bodyVal, title: titleVal, mediaUrls: media });
     await content.save();
 
@@ -267,6 +285,13 @@ export const softDeleteContent = async (req, res) => {
 
     if (String(content.authorId) !== String(user._id)) {
       return res.status(403).json({ message: "You can only delete your own content" });
+    }
+
+    // Delete media from Cloudinary
+    if (Array.isArray(content.mediaUrls)) {
+      for (const url of content.mediaUrls) {
+        await deleteFromCloudinary(url).catch(console.error);
+      }
     }
 
     content.isDeleted = true;
@@ -344,7 +369,7 @@ export const createComment = async (req, res) => {
     }
 
     const { id } = req.params; // contentId
-    const { body } = req.body || {};
+    const { body, parentId } = req.body || {};
 
     if (!body || typeof body !== "string" || !body.trim()) {
       return res.status(400).json({ message: "body is required" });
@@ -370,7 +395,41 @@ export const createComment = async (req, res) => {
       authorId,
       authorType,
       body,
+      parentId: parentId || null,
     });
+
+    // Notify content author
+    if (String(content.authorId) !== String(user._id)) {
+      try {
+        await Notification.create({
+          userId: content.authorId,
+          title: "New Comment",
+          message: `${user.name || "Someone"} commented on your post`,
+          type: "info",
+          link: `/content/${id}`,
+        });
+      } catch (e) {
+        console.error("Failed to notify content author", e);
+      }
+    }
+
+    // If it's a reply, notify the parent comment author
+    if (parentId) {
+      try {
+        const parentComment = await Comment.findById(parentId);
+        if (parentComment && String(parentComment.authorId) !== String(user._id)) {
+          await Notification.create({
+            userId: parentComment.authorId,
+            title: "New Reply",
+            message: `${user.name || "Someone"} replied to your comment`,
+            type: "info",
+            link: `/content/${id}`,
+          });
+        }
+      } catch (e) {
+        console.error("Failed to notify parent comment author", e);
+      }
+    }
 
     content.commentsCount = (content.commentsCount || 0) + 1;
     await content.save();
@@ -397,7 +456,27 @@ export const listComments = async (req, res) => {
       return res.status(404).json({ message: "Content not found" });
     }
 
-    const comments = await Comment.find({ contentId: id, isDeleted: false }).sort({ createdAt: 1 });
+    const commentsRaw = await Comment.find({ contentId: id, isDeleted: false }).sort({ createdAt: 1 });
+
+    const comments = await Promise.all(
+      commentsRaw.map(async (c) => {
+        const commentObj = c.toObject();
+        let authorName = "Unknown";
+        try {
+          if (c.authorType === "organization") {
+            const org = await Organization.findById(c.authorId);
+            authorName = org?.name || "Organization";
+          } else {
+            const u = await User.findById(c.authorId);
+            authorName = u?.name || "User";
+          }
+        } catch (err) {
+          // ignore
+        }
+        return { ...commentObj, authorName };
+      }),
+    );
+
     return res.json({ comments });
   } catch (e) {
     return res.status(500).json({ message: "Failed to list comments", error: e?.message || e });
