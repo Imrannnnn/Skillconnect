@@ -353,7 +353,7 @@ export default function MyContent() {
           {items.map((item) => (
             <Link
               key={item._id}
-              to={`/feed/${item._id}`}
+              to={`/feed/${item.slug || item._id}`}
               className="block rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:border-emerald-500 hover:shadow-md transition"
             >
               <div className="flex items-center justify-between gap-2 mb-1.5">

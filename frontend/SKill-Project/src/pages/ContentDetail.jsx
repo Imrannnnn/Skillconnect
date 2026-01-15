@@ -170,7 +170,11 @@ export default function ContentDetail() {
   }
 
   function handleCopyLink() {
-    const url = window.location.href;
+    let url = window.location.href;
+    if (content?.slug) {
+      const origin = window.location.origin;
+      url = `${origin}/feed/${content.slug}`;
+    }
     navigator.clipboard.writeText(url).then(() => {
       notify("Link copied to clipboard!", { type: "success" });
     }).catch(() => {

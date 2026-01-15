@@ -162,8 +162,8 @@ export default function CommunityFeed() {
             type="button"
             onClick={() => setFilterType("all")}
             className={`px-3 py-1.5 rounded-full border text-xs font-medium ${filterType === "all"
-                ? "bg-emerald-600 text-white border-emerald-600"
-                : "bg-white text-gray-700 border-gray-200 hover:border-emerald-500"
+              ? "bg-emerald-600 text-white border-emerald-600"
+              : "bg-white text-gray-700 border-gray-200 hover:border-emerald-500"
               }`}
           >
             All
@@ -172,8 +172,8 @@ export default function CommunityFeed() {
             type="button"
             onClick={() => setFilterType("post")}
             className={`px-3 py-1.5 rounded-full border text-xs font-medium ${filterType === "post"
-                ? "bg-emerald-600 text-white border-emerald-600"
-                : "bg-white text-gray-700 border-gray-200 hover:border-emerald-500"
+              ? "bg-emerald-600 text-white border-emerald-600"
+              : "bg-white text-gray-700 border-gray-200 hover:border-emerald-500"
               }`}
           >
             Posts
@@ -182,8 +182,8 @@ export default function CommunityFeed() {
             type="button"
             onClick={() => setFilterType("blog")}
             className={`px-3 py-1.5 rounded-full border text-xs font-medium ${filterType === "blog"
-                ? "bg-emerald-600 text-white border-emerald-600"
-                : "bg-white text-gray-700 border-gray-200 hover:border-emerald-500"
+              ? "bg-emerald-600 text-white border-emerald-600"
+              : "bg-white text-gray-700 border-gray-200 hover:border-emerald-500"
               }`}
           >
             Blogs
@@ -325,7 +325,7 @@ export default function CommunityFeed() {
           {items.map((item) => (
             <Link
               key={item._id}
-              to={`/feed/${item._id}`}
+              to={`/feed/${item.slug || item._id}`}
               className="block rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:border-emerald-500 hover:shadow-md transition"
             >
               <div className="flex items-center justify-between gap-2 mb-1.5">

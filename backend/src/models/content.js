@@ -64,6 +64,12 @@ const contentSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    slug: {
+      type: String,
+      index: true,
+      unique: true,
+      sparse: true, // Allow multiple nulls/no-slugs for posts without titles
+    },
   },
   {
     timestamps: true,

@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Content from "../models/content.js";
 import Comment from "../models/comment.js";
 import User from "../models/user.js";
@@ -34,6 +35,29 @@ function normalizeTags(tags) {
     .split(",")
     .map((t) => t.trim())
     .filter(Boolean);
+}
+
+async function generateSlug(title, model, existingId = null) {
+  if (!title) return null;
+  let slug = String(title)
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  if (!slug) return null;
+
+  let finalSlug = slug;
+  let count = 1;
+  while (true) {
+    const filter = { slug: finalSlug };
+    if (existingId) filter._id = { $ne: existingId };
+    const exists = await model.exists(filter);
+    if (!exists) break;
+    finalSlug = `${slug}-${count}`;
+    count++;
+  }
+  return finalSlug;
 }
 
 export const createContent = async (req, res) => {
@@ -80,6 +104,8 @@ export const createContent = async (req, res) => {
       }
     }
 
+    const slug = await generateSlug(title || trimmedBody.substring(0, 50), Content);
+
     const doc = await Content.create({
       authorId,
       authorType,
@@ -89,6 +115,7 @@ export const createContent = async (req, res) => {
       mediaUrls: normalizedMedia,
       tags: normalizeTags(tags),
       visibility: visibility === "private" ? "private" : "public",
+      slug,
     });
 
     return res.status(201).json({ content: doc });
@@ -171,8 +198,15 @@ export const listAuthorContent = async (req, res) => {
 export const getContent = async (req, res) => {
   try {
     const { id } = req.params;
-    const content = await Content.findByIdAndUpdate(
-      id,
+    let query;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      query = { _id: id };
+    } else {
+      query = { slug: id };
+    }
+
+    const content = await Content.findOneAndUpdate(
+      query,
       { $inc: { views: 1 } },
       { new: true }
     );
@@ -255,10 +289,19 @@ export const updateContent = async (req, res) => {
     if (req.body.mediaUrls !== undefined) {
       const oldMedia = content.mediaUrls || [];
       const newMedia = next.mediaUrls || [];
-      const removed = oldMedia.filter(url => !newMedia.includes(url));
+      const removed = oldMedia.filter((url) => !newMedia.includes(url));
       for (const url of removed) {
         await deleteFromCloudinary(url).catch(console.error);
       }
+    }
+
+    // Handle slug update if title changes
+    if (req.body.title !== undefined && req.body.title !== content.title) {
+      content.slug = await generateSlug(
+        req.body.title || content.body.substring(0, 50),
+        Content,
+        content._id,
+      );
     }
 
     Object.assign(content, next, { body: bodyVal, title: titleVal, mediaUrls: media });
