@@ -8,6 +8,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [resetNotice, setResetNotice] = useState("");
   const [registerNotice, setRegisterNotice] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const auth = useContext(AuthContext);
@@ -30,6 +31,7 @@ export default function Login() {
   function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    setLoading(true);
     auth
       .login({ email: email.trim().toLowerCase(), password })
       .then((data) => {
@@ -48,6 +50,9 @@ export default function Login() {
       })
       .catch((err) => {
         setError(err?.response?.data?.message || "Login failed");
+      })
+      .finally(() => {
+        setLoading(false);
       });
   }
 
@@ -83,8 +88,12 @@ export default function Login() {
             Forgot password?
           </Link>
         </div>
-        <button type="submit" className="mt-2 px-4 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-all">
-          Sign in
+        <button
+          type="submit"
+          disabled={loading}
+          className="mt-2 px-4 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+        >
+          {loading ? "Signing in..." : "Sign in"}
         </button>
       </form>
       {error && <p className="text-rose-500 mt-3 text-sm">{error}</p>}
