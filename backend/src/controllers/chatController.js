@@ -83,11 +83,23 @@ export const getChatById = async (req, res) => {
 
 export const sendMessageToChat = async (req, res) => {
   try {
-    const { chatId } = req.params; const { text } = req.body;
-    if (!text) return res.status(400).json({ message: "text is required" });
+    const { chatId } = req.params;
+    const { text, attachments } = req.body;
+
+    if (!text && (!attachments || attachments.length === 0)) {
+      return res.status(400).json({ message: "Message cannot be empty" });
+    }
+
     const [a, b] = String(chatId).split("_"); if (!a || !b) return res.status(400).json({ message: "Invalid chatId" });
     const sender = String(req.user._id); const receiver = sender === a ? b : a;
-    const msg = await Message.create({ chatId, sender, receiver, content: text });
+
+    const msg = await Message.create({
+      chatId,
+      sender,
+      receiver,
+      content: text || "",
+      attachments: attachments || []
+    });
 
     // Create Notification for the receiver
     try {
@@ -130,5 +142,21 @@ export const deleteChat = async (req, res) => {
     return res.json({ message: "Chat deleted for you" });
   } catch (error) {
     res.status(500).json({ message: "Failed to delete chat", error });
+  }
+};
+
+export const markAsRead = async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const userId = req.user._id;
+
+    await Message.updateMany(
+      { chatId, receiver: userId, isRead: false },
+      { $set: { isRead: true } }
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to mark messages as read" });
   }
 };

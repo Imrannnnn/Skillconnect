@@ -171,11 +171,8 @@ export default function ProviderProfile() {
   const verification = provider?.verification || {};
   const emailVerified = !!(verification.emailVerified || provider?.verified);
   const phoneVerified = !!verification.phoneVerified;
-  const idVerified = !!verification.idVerified;
-  const trustedProvider = !!verification.trustedProvider;
   const topPerformer = Array.isArray(verification.topPerformerMonths) && verification.topPerformerMonths.length > 0;
 
-  const hasService = provider.providerMode === "service" || provider.providerMode === "both" || !provider.providerMode;
   const hasProducts = provider.providerMode === "product" || provider.providerMode === "both";
 
   async function handleChat(e) {
@@ -284,389 +281,315 @@ export default function ProviderProfile() {
     setBookingOpen(true);
   }
 
-  function scrollToProducts() {
-    const el = document.getElementById("provider-products-section");
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
+
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6">
-      <div className="relative mb-6 flex justify-center">
-        <div
-          className="relative w-full max-w-xl cursor-pointer text-slate-900
-                     flex flex-col justify-end gap-3 rounded-xl bg-transparent
-                     before:content-[''] before:absolute before:inset-0 before:-left-[6px]
-                     before:m-auto before:w-[calc(100%+12px)] before:h-[calc(100%+12px)] before:rounded-[14px]
-                     before:bg-gradient-to-br before:from-emerald-500
-                     before:via-emerald-500 before:to-cyan-500 before:-z-10
-                     before:pointer-events-none before:transition-transform
-                     before:duration-500 before:ease-[cubic-bezier(0.175,0.885,0.32,1.275)]
-                     after:content-[''] after:absolute after:inset-0 after:-z-[1]
-                     after:bg-gradient-to-br after:from-emerald-500 after:to-cyan-500
-                     after:scale-[0.95] after:blur-[18px]
-                     hover:after:blur-[26px]
-                     hover:before:-rotate-90 hover:before:scale-x-[1.08] hover:before:scale-y-[0.96]"
-        >
-          <div className="relative rounded-lg border border-gray-200 bg-white p-5 shadow-sm overflow-hidden">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-              <div className="flex items-start gap-4 md:col-span-2 min-w-0">
-                <div className="h-16 w-16 shrink-0 rounded-full overflow-hidden bg-emerald-100 flex items-center justify-center text-emerald-700 text-xl font-semibold">
-                  {provider?.avatarUrl ? (
-                    <img src={getImageUrl(provider.avatarUrl)} alt="avatar" className="h-full w-full object-cover" />
-                  ) : (
-                    provider?.name?.[0]?.toUpperCase() || "P"
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h1 className="text-2xl font-semibold text-gray-800 break-words">{provider.name}</h1>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-gray-500">
-                    {provider.providerType && (
-                      <span className="px-2 py-0.5 rounded-md bg-gray-100 text-gray-700">
-                        {provider.providerType}
-                      </span>
-                    )}
-                    {categories.map((c) => (
-                      <span key={c} className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700">
-                        {c}
-                      </span>
-                    ))}
+    <div className="min-h-screen bg-gray-50/50 pb-20">
+      {/* Hero Section / Profile Header */}
+      <div className="bg-white border-b border-gray-100">
+        <div className="max-w-5xl mx-auto px-4 pt-12 pb-8">
+          <div className="flex flex-col md:flex-row items-center md:items-end gap-8">
+            {/* Profile Photo */}
+            <div className="relative group">
+              <div className="h-40 w-40 rounded-3xl overflow-hidden bg-emerald-50 border-4 border-white shadow-xl ring-1 ring-gray-100 relative z-10">
+                {provider?.avatarUrl ? (
+                  <img
+                    src={getImageUrl(provider.avatarUrl)}
+                    alt={provider.name}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center text-emerald-600 text-5xl font-bold">
+                    {provider?.name?.[0]?.toUpperCase() || "P"}
                   </div>
-                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-500">
-                    {typeof provider.ratingAvg === 'number' && provider.ratingCount > 0 && (
-                      <span className="inline-flex items-center gap-1 text-amber-600">
-                        <span>★ {provider.ratingAvg}</span>
-                        <span className="text-gray-500">({provider.ratingCount})</span>
-                      </span>
-                    )}
-                    {typeof jobsDone === 'number' && jobsDone > 0 && (
-                      <span className="inline-flex items-center gap-1">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                        <span className="text-gray-600">{jobsDone} jobs done</span>
-                      </span>
-                    )}
-                    {(emailVerified || phoneVerified) && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] text-emerald-700 border border-emerald-100">
-                        <span>✔</span>
-                        <span>Verified</span>
-                      </span>
-                    )}
-                    {idVerified && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2 py-0.5 text-[11px] text-sky-700 border border-sky-100">
-                        <span>🪪</span>
-                        <span>ID verified</span>
-                      </span>
-                    )}
-                    {trustedProvider && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] text-emerald-800 border border-emerald-200">
-                        <span>🛡</span>
-                        <span>Trusted</span>
-                      </span>
-                    )}
-                    {topPerformer && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] text-amber-800 border border-amber-200">
-                        <span>🥇</span>
-                        <span>Top performer</span>
-                      </span>
-                    )}
-                  </div>
-                  {provider.location?.city && (
-                    <p className="mt-2 text-sm text-gray-500 break-words">
-                      {provider.location.city}
-                      {provider.location.state ? `, ${provider.location.state}` : ""}
-                      {provider.location.country ? `, ${provider.location.country}` : ""}
-                    </p>
-                  )}
-                  {typeof distanceKm === 'number' && (
-                    <p className="text-xs text-gray-500 mt-1">{distanceKm.toFixed(1)} km away</p>
-                  )}
-                </div>
+                )}
               </div>
-              <div className="flex md:flex-col gap-2 md:items-end">
-                {typeof distanceKm === 'number' && (
-                  <span className="inline-flex items-center justify-center text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    {distanceKm.toFixed(1)} km away
+              {/* Subtle decorative element behind photo */}
+              <div className="absolute -inset-2 bg-gradient-to-tr from-emerald-100 to-teal-100 rounded-[36px] blur-2xl opacity-50 -z-0"></div>
+            </div>
+
+            {/* Profile Info */}
+            <div className="flex-1 text-center md:text-left">
+              <div className="flex flex-col md:flex-row items-center md:items-center gap-2 mb-2">
+                <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
+                  {provider.name}
+                </h1>
+                {(emailVerified || phoneVerified || provider.verified) && (
+                  <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-emerald-600 text-white" title="Verified Professional">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
                   </span>
                 )}
-                <button
-                  onClick={handleChat}
-                  disabled={chatLoading}
-                  className="w-full md:w-auto px-4 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-all disabled:opacity-70"
-                >
-                  {chatLoading ? "Starting…" : "Chat"}
-                </button>
-                {hasService && (
-                  <button
-                    onClick={() => {
-                      setSelectedProduct(null);
-                      if (!jobDescription) {
-                        const primaryCategory = categories[0];
-                        const label = primaryCategory || "service";
-                        setJobDescription(`Order: ${label}`);
-                      }
-                      setBookingOpen(true);
-                    }}
-                    className="w-full md:w-auto px-4 py-2 rounded-md border border-emerald-600 text-emerald-700 hover:bg-emerald-50 transition-all"
-                  >
-                    Book service
-                  </button>
+              </div>
+
+              <p className="text-xl font-medium text-gray-600 mb-1">
+                {provider.providerType || "Professional Professional"}
+              </p>
+
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-4">
+                {categories.map((c) => (
+                  <span key={c} className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-sm font-medium border border-emerald-100">
+                    {c}
+                  </span>
+                ))}
+                {topPerformer && (
+                  <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-sm font-medium border border-amber-100 inline-flex items-center gap-1.5">
+                    <span className="text-lg leading-none">🏆</span> Top Performer
+                  </span>
                 )}
-                {hasProducts && (
-                  <button
-                    type="button"
-                    onClick={scrollToProducts}
-                    className="w-full md:w-auto px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all text-sm"
-                  >
-                    View products
-                  </button>
-                )}
+              </div>
+            </div>
+
+            {/* Main CTAs */}
+            <div className="flex flex-col gap-3 w-full md:w-auto min-w-[200px]">
+              <button
+                onClick={handleChat}
+                disabled={chatLoading}
+                className="w-full px-8 py-3 bg-emerald-600 text-white font-semibold rounded-xl shadow-lg shadow-emerald-200 hover:bg-emerald-700 hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:pointer-events-none"
+              >
+                {chatLoading ? "Initializing..." : "Message"}
+              </button>
+              <div className="flex gap-2">
                 <button
-                  type="button"
-                  onClick={refreshDistance}
-                  className="w-full md:w-auto text-xs text-emerald-700 hover:text-emerald-800"
+                  onClick={() => setBookingOpen(true)}
+                  className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors"
                 >
-                  Use my location
+                  Connect
                 </button>
+                <a
+                  href={`mailto:${provider.email || ""}`}
+                  className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 text-center font-semibold rounded-xl hover:bg-gray-50 transition-colors"
+                >
+                  Email
+                </a>
               </div>
             </div>
           </div>
         </div>
       </div>
-      {/* Rating */}
-      <div className="mt-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-2">Rate this provider</h2>
-        <div className="flex items-center gap-2">
-          {[1, 2, 3, 4, 5].map((s) => (
-            <button
-              key={s}
-              type="button"
-              disabled={ratingSubmitting}
-              onClick={() => submitRating(s)}
-              className={`text-2xl ${s <= (ratingValue || 0) ? 'text-amber-400' : 'text-gray-300'} hover:text-amber-400 transition`}
-              onMouseEnter={() => setRatingValue(s)}
-              onMouseLeave={() => setRatingValue(0)}
-            >
-              ★
-            </button>
-          ))}
-          {typeof provider.ratingAvg === 'number' && provider.ratingCount > 0 && (
-            <span className="text-sm text-gray-600 ml-2">{provider.ratingAvg} ({provider.ratingCount})</span>
-          )}
+
+      <div className="max-w-5xl mx-auto px-4 py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column: Bio & Experience */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Bio Card */}
+            <section className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">About Professional</h2>
+              <div className="text-gray-600 leading-relaxed text-lg whitespace-pre-wrap">
+                {provider.bio || "No biography provided."}
+              </div>
+            </section>
+
+            {/* Products / Services Section */}
+            {hasProducts && (
+              <section id="provider-products-section" className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-gray-900">Portfolio & Services</h2>
+                  <span className="text-sm text-gray-500 font-medium">{products.length} Items</span>
+                </div>
+
+                {productsLoading ? (
+                  <div className="py-12 flex justify-center"><div className="loader" /></div>
+                ) : products.length === 0 ? (
+                  <div className="bg-white rounded-2xl p-12 text-center border-2 border-dashed border-gray-100 text-gray-400">
+                    No items displayed yet.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {products.map((p) => (
+                      <div key={p._id} className="group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                        <div className="aspect-video relative overflow-hidden bg-gray-100">
+                          {p.images?.[0] ? (
+                            <img src={getImageUrl(p.images[0])} alt={p.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center text-gray-300">
+                              <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-6">
+                          <div className="flex justify-between items-start mb-2">
+                            <h3 className="font-bold text-gray-900 text-lg group-hover:text-emerald-600 transition-colors">{p.name}</h3>
+                            <span className="text-emerald-600 font-bold">
+                              {new Intl.NumberFormat(undefined, { style: 'currency', currency: (p.currency || 'NGN').toUpperCase() }).format(p.price)}
+                            </span>
+                          </div>
+                          <p className="text-gray-500 text-sm line-clamp-2 mb-4">
+                            {p.shortDescription || p.fullDescription}
+                          </p>
+                          <button
+                            onClick={() => startProductBooking(p)}
+                            disabled={p.stockStatus === 'out_of_stock'}
+                            className="w-full py-2 bg-emerald-50 text-emerald-700 font-semibold rounded-xl hover:bg-emerald-600 hover:text-white transition-all disabled:bg-gray-50 disabled:text-gray-300"
+                          >
+                            {p.stockStatus === 'out_of_stock' ? 'Out of Stock' : 'Order Now'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* Portfolio Grid */}
+            {Array.isArray(provider.portfolio) && provider.portfolio.length > 0 && (
+              <section className="space-y-4">
+                <h2 className="text-xl font-bold text-gray-900 font-bold">Portfolio Gallery</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {provider.portfolio.map((item, idx) => (
+                    <div key={idx} className="aspect-square rounded-2xl overflow-hidden border border-gray-100 group">
+                      <img src={getImageUrl(item.url)} alt={item.description} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+
+          {/* Right Column: Details Card & Trust */}
+          <div className="space-y-8">
+            {/* Quick Details Card */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-6">
+              <h3 className="text-lg font-bold text-gray-900">Professional Details</h3>
+
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">Location</p>
+                    <p className="text-gray-900 font-medium">
+                      {provider.location?.city ? `${provider.location.city}, ${provider.location.country}` : "Remote / Global"}
+                    </p>
+                    {distanceKm !== null && <p className="text-xs text-emerald-600 font-medium mt-0.5">{distanceKm.toFixed(1)}km from you</p>}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9-3-9m-9 9a9 9 0 019-9" /></svg>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">Website</p>
+                    <a href={provider.website || "#"} target="_blank" className="text-emerald-600 font-medium hover:underline break-all">
+                      {provider.website ? provider.website.replace(/^https?:\/\//, '') : "Not provided"}
+                    </a>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">Contact</p>
+                    <p className="text-gray-900 font-medium break-all">{provider.email || "Confidential"}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Ratings & Trust Card */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-6">
+              <h3 className="text-lg font-bold text-gray-900">Client Feedback</h3>
+
+              <div className="flex items-center gap-4 pb-6 border-b border-gray-50">
+                <div className="text-4xl font-bold text-gray-900">{provider.ratingAvg || "0.0"}</div>
+                <div>
+                  <div className="flex text-amber-400">
+                    {[1, 2, 3, 4, 5].map(s => (
+                      <svg key={s} className={`w-5 h-5 ${s <= Math.round(provider.ratingAvg || 0) ? 'fill-current' : 'text-gray-200'}`} viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+                  <p className="text-sm text-gray-500 mt-1 font-medium">{provider.ratingCount || 0} Professional Reviews</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <p className="text-sm font-bold text-gray-700">Submit your rating</p>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <button
+                      key={s}
+                      disabled={ratingSubmitting}
+                      onClick={() => submitRating(s)}
+                      onMouseEnter={() => setRatingValue(s)}
+                      onMouseLeave={() => setRatingValue(0)}
+                      className={`text-2xl transition-transform hover:scale-125 ${s <= (ratingValue || (provider.ratingAvg || 0)) ? 'text-amber-400' : 'text-gray-200'}`}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Impact Metric */}
+            <div className="bg-emerald-600 rounded-2xl p-6 text-white text-center shadow-lg shadow-emerald-100">
+              <div className="text-3xl font-extrabold mb-1">{jobsDone || "0"}</div>
+              <div className="text-emerald-100 text-sm font-semibold uppercase tracking-widest">Successful Projects</div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {provider.bio && (
-        <div className="mt-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-2">About</h2>
-          <p className="text-gray-700 leading-relaxed break-words">{provider.bio}</p>
-        </div>
-      )}
-
-      {/* Products (for product providers) */}
-      {hasProducts && (
-        <div className="mt-6" id="provider-products-section">
-          <h2 className="text-lg font-semibold text-gray-800 mb-2">Products</h2>
-          {productsLoading && (
-            <div className="py-4 flex items-center justify-center">
-              <div className="loader" />
-            </div>
-          )}
-          {!productsLoading && products.length === 0 && (
-            <p className="text-sm text-gray-500">This provider has not added any products yet.</p>
-          )}
-          {products.length > 0 && (
-            <div className="mt-2 grid gap-3 sm:grid-cols-2">
-              {products.map((p) => (
-                <div key={p._id} className="rounded-lg border border-gray-200 bg-white p-3 flex flex-col gap-1">
-                  {Array.isArray(p.images) && p.images.length > 0 && (
-                    <div className="mb-2">
-                      <div className="overflow-hidden rounded-md">
-                        <img src={getImageUrl(p.images[0])} alt={p.name} className="h-32 w-full object-cover" />
-                      </div>
-                      {p.images.length > 1 && (
-                        <div className="mt-1 flex gap-1 overflow-x-auto">
-                          {p.images.slice(1).map((img, idx) => (
-                            <img
-                              key={idx}
-                              src={getImageUrl(img)}
-                              alt={`${p.name} ${idx + 2}`}
-                              className="h-12 w-12 object-cover rounded-md flex-shrink-0 border border-gray-200"
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="text-sm font-semibold text-gray-800 break-words">{p.name}</div>
-                      {p.productCode && (
-                        <div className="text-[11px] text-gray-500 mt-0.5">ID: {p.productCode}</div>
-                      )}
-                      {p.category && (
-                        <div className="text-[11px] text-gray-500 mt-0.5">{p.category}</div>
-                      )}
-                    </div>
-                    <span className={`px-2 py-0.5 rounded-full border text-[10px] ${p.status === 'active' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
-                      {p.status || 'inactive'}
-                    </span>
-                  </div>
-                  {(p.shortDescription || p.fullDescription) && (
-                    <div className="text-xs text-gray-600 mt-1 break-words line-clamp-3">
-                      {p.shortDescription || p.fullDescription}
-                    </div>
-                  )}
-                  <div className="mt-1 flex items-center justify-between text-xs text-gray-700">
-                    {typeof p.price === 'number' && (
-                      <span className="font-semibold flex items-baseline gap-1">
-                        {typeof p.discountPrice === 'number' && p.discountPrice < p.price ? (
-                          <>
-                            <span className="text-[11px] font-semibold text-emerald-700">
-                              {new Intl.NumberFormat(undefined, { style: 'currency', currency: (p.currency || 'NGN').toUpperCase() }).format(p.discountPrice)}
-                            </span>
-                            <span className="text-[10px] text-gray-400 line-through">
-                              {new Intl.NumberFormat(undefined, { style: 'currency', currency: (p.currency || 'NGN').toUpperCase() }).format(p.price)}
-                            </span>
-                            <span className="text-[10px] px-1 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
-                              -{Math.round(((p.price - p.discountPrice) / p.price) * 100)}%
-                            </span>
-                          </>
-                        ) : (
-                          <span className="text-[11px] font-semibold text-gray-800">
-                            {new Intl.NumberFormat(undefined, { style: 'currency', currency: (p.currency || 'NGN').toUpperCase() }).format(p.price)}
-                          </span>
-                        )}
-                      </span>
-                    )}
-                    <span className="flex items-center gap-2">
-                      {typeof p.stockQty === 'number' && (
-                        <span className="text-gray-500">Stock: {p.stockQty}</span>
-                      )}
-                      {p.stockStatus && (
-                        <span
-                          className={`px-2 py-0.5 rounded-full border text-[10px] ${p.stockStatus === 'out_of_stock'
-                            ? 'bg-rose-50 border-rose-200 text-rose-700'
-                            : p.stockStatus === 'low_stock'
-                              ? 'bg-amber-50 border-amber-200 text-amber-700'
-                              : p.stockStatus === 'pre_order'
-                                ? 'bg-sky-50 border-sky-200 text-sky-700'
-                                : 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                            }`}
-                        >
-                          {p.stockStatus.replace('_', ' ')}
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-gray-600">
-                    {p.sku && (
-                      <span className="px-2 py-0.5 rounded-full bg-gray-50 border border-gray-200">SKU: {p.sku}</span>
-                    )}
-                    {Array.isArray(p.deliveryOptions) && p.deliveryOptions.length > 0 && (
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700">
-                        Delivery: {p.deliveryOptions.join(', ')}
-                      </span>
-                    )}
-                    {typeof p.deliveryFee === 'number' && (
-                      <span>
-                        Fee: {new Intl.NumberFormat(undefined, { style: 'currency', currency: (p.currency || 'NGN').toUpperCase() }).format(p.deliveryFee)}
-                      </span>
-                    )}
-                    {p.deliveryEta && (
-                      <span>ETA: {p.deliveryEta}</span>
-                    )}
-                  </div>
-                  <div className="mt-2 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => startProductBooking(p)}
-                      disabled={p.stockStatus === 'out_of_stock'}
-                      className={`px-3 py-1.5 text-xs rounded-md text-white transition ${p.stockStatus === 'out_of_stock'
-                        ? 'bg-gray-300 cursor-not-allowed'
-                        : 'bg-emerald-600 hover:bg-emerald-700'
-                        }`}
-                    >
-                      {p.stockStatus === 'out_of_stock' ? 'Out of stock' : 'Order product'}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {Array.isArray(provider.portfolio) && provider.portfolio.length > 0 && (
-        <div className="mt-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-3">Portfolio</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {provider.portfolio.map((item, idx) => (
-              <a
-                key={idx}
-                href={item.url}
-                target="_blank"
-                rel="noreferrer"
-                className="block rounded-lg overflow-hidden border border-gray-200 hover:shadow-md transition"
-              >
-                <img src={getImageUrl(item.url)} alt={item.description || `Portfolio ${idx + 1}`} className="w-full aspect-[4/3] object-cover" />
-                {item.description && (
-                  <div className="px-2 py-1 text-xs text-gray-600 bg-white break-words">{item.description}</div>
-                )}
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
-      {/* Booking Modal */}
+      {/* Booking Modal Redesigned */}
       {bookingOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white rounded-xl border border-gray-200 shadow-2xl max-h-[90vh] overflow-y-auto flex flex-col">
-            <div className="p-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
-              <h3 className="font-semibold">{selectedProduct ? 'Place order' : 'Request booking'}</h3>
-              <button onClick={() => setBookingOpen(false)} className="text-gray-500 hover:text-gray-700">✕</button>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 backdrop-blur-md p-4 animate-in fade-in duration-300">
+          <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="px-8 py-6 bg-emerald-600 text-white flex justify-between items-center">
+              <div>
+                <h3 className="text-xl font-bold">{selectedProduct ? 'Checkout Order' : 'Collaboration Request'}</h3>
+                <p className="text-emerald-100 text-sm mt-1">Ready to start something amazing?</p>
+              </div>
+              <button onClick={() => setBookingOpen(false)} className="h-10 w-10 flex items-center justify-center rounded-full bg-emerald-500 hover:bg-emerald-400 transition-colors">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
             </div>
-            <div className="p-4">
-              <form onSubmit={submitBooking} className="grid gap-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <label className="grid gap-1 text-xs font-medium">
-                    <span className="text-gray-700">Your name</span>
-                    <input className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" value={clientName} onChange={(e) => setClientName(e.target.value)} required />
-                  </label>
-                  <label className="grid gap-1 text-xs font-medium">
-                    <span className="text-gray-700">Phone number</span>
-                    <input className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} required />
-                  </label>
+
+            <form onSubmit={submitBooking} className="p-8 space-y-6">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Full Name</label>
+                  <input className="w-full px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-100 focus:border-emerald-400 outline-none transition-all" value={clientName} onChange={(e) => setClientName(e.target.value)} required />
                 </div>
-                <label className="grid gap-1 text-xs font-medium">
-                  <span className="text-gray-700">{selectedProduct ? 'Order notes / details' : 'Job description / services required'}</span>
-                  <textarea className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[60px] text-sm" value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} required />
-                </label>
-                <label className="grid gap-1 text-xs font-medium">
-                  <span className="text-gray-700">Address / location</span>
-                  <input className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm" value={address} onChange={(e) => setAddress(e.target.value)} />
-                </label>
-                <label className="grid gap-1 text-xs font-medium">
-                  <span className="text-gray-700">Additional details</span>
-                  <textarea className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[50px] text-sm" value={details} onChange={(e) => setDetails(e.target.value)} />
-                </label>
-                {selectedProduct && (
-                  <label className="grid gap-1 text-xs font-medium">
-                    <span className="text-gray-700">Quantity</span>
-                    <input
-                      type="number"
-                      min="1"
-                      className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
-                      value={quantity}
-                      onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                      required
-                    />
-                  </label>
-                )}
-                <div className="flex items-center gap-2 pt-2">
-                  <button type="submit" disabled={bookingSubmitting} className="flex-1 px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition disabled:opacity-70 text-sm font-medium">{bookingSubmitting ? (selectedProduct ? 'Placing order…' : 'Sending…') : (selectedProduct ? 'Place order' : 'Send request')}</button>
-                  <button type="button" onClick={() => setBookingOpen(false)} className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 text-sm font-medium">Cancel</button>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Phone</label>
+                  <input className="w-full px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-100 focus:border-emerald-400 outline-none transition-all" value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} required />
                 </div>
-              </form>
-            </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">{selectedProduct ? 'Order Specifications' : 'Service Requirements'}</label>
+                <textarea className="w-full px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-100 focus:border-emerald-400 outline-none transition-all min-h-[100px]" value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} required />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Location / Deployment</label>
+                <input className="w-full px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-100 focus:border-emerald-400 outline-none transition-all" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Office, Remote, or City" />
+              </div>
+
+              {selectedProduct && (
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Quantity</label>
+                  <input type="number" min="1" className="w-full px-4 py-3 rounded-xl border border-gray-100 bg-gray-50 outline-none" value={quantity} onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))} />
+                </div>
+              )}
+
+              <div className="flex gap-4 pt-4">
+                <button type="submit" disabled={bookingSubmitting} className="flex-1 py-4 bg-emerald-600 text-white font-bold rounded-2xl shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all disabled:opacity-50">
+                  {bookingSubmitting ? 'Processing...' : (selectedProduct ? 'Confirm Order' : 'Send Inquiry')}
+                </button>
+                <button type="button" onClick={() => setBookingOpen(false)} className="px-8 py-4 text-gray-500 font-bold hover:text-gray-900 transition-colors">
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

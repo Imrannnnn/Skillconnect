@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/auth';
 import { getImageUrl } from '../utils/image';
@@ -22,7 +22,8 @@ const Icons = {
     Menu: () => <><line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="6" y2="6" /><line x1="4" x2="20" y1="18" y2="18" /></>,
     LogOut: () => <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" /></>,
     User: () => <><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>,
-    X: () => <><path d="M18 6 6 18" /><path d="m6 6 12 12" /></>
+    X: () => <><path d="M18 6 6 18" /><path d="m6 6 12 12" /></>,
+    ChevronDown: () => <path d="m6 9 6 6 6-6" />
 }
 
 const Icon = ({ name, className }) => {
@@ -49,6 +50,17 @@ export default function Sidebar({ isOpen, toggle }) {
     const { user, logout } = useContext(AuthContext);
     const location = useLocation();
     const isActive = (path) => location.pathname === path;
+
+    const [expandedGroups, setExpandedGroups] = useState({});
+
+    const toggleGroup = (title) => {
+        setExpandedGroups(prev => ({
+            ...prev,
+            [title]: !(prev[title] ?? true)
+        }));
+    };
+
+    const isGroupExpanded = (title) => expandedGroups[title] !== false;
 
     // Navigation Groups
     const navGroups = [
@@ -161,28 +173,41 @@ export default function Sidebar({ isOpen, toggle }) {
                         )}
                     </div>
 
-                    {navGroups.map((group, idx) => (
-                        <div key={idx} className="space-y-1">
-                            {isOpen && (
-                                <div className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 whitespace-nowrap">
-                                    {group.title}
+                    {navGroups.map((group, idx) => {
+                        const expanded = isGroupExpanded(group.title);
+                        return (
+                            <div key={idx} className="space-y-1">
+                                {isOpen && (
+                                    <button
+                                        onClick={() => toggleGroup(group.title)}
+                                        className="w-full flex items-center justify-between px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 whitespace-nowrap hover:text-gray-600 transition-colors focus:outline-none"
+                                    >
+                                        {group.title}
+                                        <Icon
+                                            name={expanded ? "ChevronDown" : "ChevronRight"}
+                                            className="w-3 h-3 text-gray-400"
+                                        />
+                                    </button>
+                                )}
+                                <div className={`
+                                    ${!isOpen ? 'pt-2 border-t border-gray-100' : ''}
+                                    ${isOpen && !expanded ? 'hidden' : 'block'}
+                                `}>
+                                    {group.items.map((item, i) => (
+                                        <NavItem
+                                            key={i}
+                                            to={item.path}
+                                            icon={item.icon}
+                                            label={item.label}
+                                            active={isActive(item.path)}
+                                            expanded={isOpen}
+                                            onClick={() => window.innerWidth < 1024 && toggle()}
+                                        />
+                                    ))}
                                 </div>
-                            )}
-                            <div className={!isOpen ? 'pt-2 border-t border-gray-100' : ''}>
-                                {group.items.map((item, i) => (
-                                    <NavItem
-                                        key={i}
-                                        to={item.path}
-                                        icon={item.icon}
-                                        label={item.label}
-                                        active={isActive(item.path)}
-                                        expanded={isOpen}
-                                        onClick={() => window.innerWidth < 1024 && toggle()}
-                                    />
-                                ))}
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
 
                 {/* Footer / User Profile */}

@@ -124,183 +124,249 @@ export default function OrgPublic() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-16">
-      <div className="relative isolate overflow-hidden bg-gradient-to-br from-emerald-900 via-emerald-700 to-emerald-500">
-        <div className="pointer-events-none absolute inset-0 opacity-30">
-          <div className="absolute -left-24 top-[-6rem] h-64 w-64 rounded-full bg-emerald-300 blur-3xl" />
-          <div className="absolute bottom-[-8rem] right-[-4rem] h-72 w-72 rounded-full bg-teal-300 blur-3xl" />
-          <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-emerald-900" />
-        </div>
-        <div className="relative mx-auto max-w-5xl px-4 py-16 sm:py-20 text-white">
-          <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
-            {organization.logo ? (
-              <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl border border-white/20 bg-white/10 p-3 shadow-lg shadow-emerald-900/30 backdrop-blur">
-                <img
-                  src={getImageUrl(organization.logo)}
-                  alt={`${organization.name} logo`}
-                  className="h-full w-full rounded-2xl object-contain"
-                />
+    <div className="min-h-screen bg-gray-50/30 pb-20 font-sans antialiased">
+      {/* Premium Header Section */}
+      <div className="bg-white border-b border-gray-100 shadow-sm relative overflow-hidden">
+        {/* Subtle background decoration */}
+        <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-emerald-50/50 to-transparent -z-0"></div>
+        <div className="absolute -top-24 -left-24 w-64 h-64 bg-emerald-100/20 rounded-full blur-3xl -z-0"></div>
+
+        <div className="max-w-6xl mx-auto px-4 py-12 relative z-10">
+          <div className="flex flex-col md:flex-row items-start gap-8">
+            {/* Organization Logo */}
+            <div className="relative">
+              <div className="h-32 w-32 md:h-40 md:w-40 rounded-[2rem] bg-white border border-gray-100 shadow-xl p-6 flex items-center justify-center overflow-hidden">
+                {organization.logo ? (
+                  <img
+                    src={getImageUrl(organization.logo)}
+                    alt={organization.name}
+                    className="h-full w-full object-contain"
+                  />
+                ) : (
+                  <span className="text-4xl font-extrabold text-emerald-600 uppercase tracking-tighter">
+                    {organization.name?.slice(0, 2) || "SC"}
+                  </span>
+                )}
               </div>
-            ) : (
-              <div className="flex h-24 w-24 items-center justify-center rounded-3xl border border-white/20 bg-white/10 text-4xl font-semibold uppercase tracking-wider text-white/80 shadow-lg shadow-emerald-900/30 backdrop-blur">
-                {organization.name?.slice(0, 2) || "SC"}
-              </div>
-            )}
-            <div className="space-y-3">
-              <p className="text-xs uppercase tracking-[0.35em] text-white/60">Organization profile</p>
-              <h1 className="text-3xl font-semibold sm:text-4xl">
-                {organization.name}
-              </h1>
-              {organization.tagline && (
-                <p className="max-w-2xl text-base text-white/80 sm:text-lg">
-                  {organization.tagline}
-                </p>
-              )}
-              <div className="flex flex-wrap items-center gap-3 text-sm text-white/80">
-                {organization.sector && (
-                  <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 font-medium">
-                    {organization.sector}
-                  </span>
-                )}
-                {hasRating && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 font-medium">
-                    <span className="text-amber-300">★</span>
-                    {ratingScore.toFixed(1)}
-                    {ratingCount && ratingCount > 0 && (
-                      <span className="text-white/60">({ratingCount})</span>
-                    )}
-                  </span>
-                )}
-                {createdAtDisplay && (
-                  <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 font-medium text-white/70">
-                    <span className="text-white/50">Since</span>
-                    {createdAtDisplay}
-                  </span>
-                )}
+              <div className="absolute -bottom-2 -right-2 h-10 w-10 bg-emerald-600 rounded-2xl flex items-center justify-center border-4 border-white shadow-lg text-white">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
               </div>
             </div>
-          </div>
-          <div className="mt-8 flex flex-wrap items-center gap-3 text-sm">
-            {bookingForms.length > 0 && (
-              <a
-                href="#booking-options"
-                className="inline-flex items-center rounded-full bg-white px-4 py-2 font-semibold text-emerald-700 shadow hover:bg-white/90"
-              >
-                <span aria-hidden="true" className="mr-2">🗓</span>
-                Book a service
-              </a>
-            )}
-            {organization.website && (
-              <a
-                href={organization.website}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center rounded-full border border-white/30 bg-white/10 px-4 py-2 font-semibold text-white backdrop-blur transition hover:bg-white/20"
-              >
-                Visit website
-              </a>
-            )}
-            {organization.email && (
-              <a
-                href={`mailto:${organization.email}`}
-                className="inline-flex items-center rounded-full border border-white/30 bg-white/10 px-4 py-2 font-semibold text-white backdrop-blur transition hover:bg-white/20"
-              >
-                Contact via email
-              </a>
-            )}
-            {organization.phone && (
-              <a
-                href={`tel:${organization.phone}`}
-                className="inline-flex items-center rounded-full border border-white/30 bg-white/10 px-4 py-2 font-semibold text-white backdrop-blur transition hover:bg-white/20"
-              >
-                Call {organization.phone}
-              </a>
-            )}
-            {hasExtendedDetails && (
+
+            {/* Header Content */}
+            <div className="flex-1 space-y-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="px-3 py-1 bg-emerald-600 text-white text-[10px] uppercase font-black tracking-widest rounded-lg">
+                  {organization.sector || "Organization"}
+                </span>
+                {organization.verified && (
+                  <span className="flex items-center gap-1.5 text-emerald-700 text-xs font-bold px-3 py-1 bg-emerald-50 rounded-lg border border-emerald-100">
+                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" /></svg>
+                    Verified Entity
+                  </span>
+                )}
+              </div>
+
+              <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight leading-none">
+                {organization.name}
+              </h1>
+
+              <p className="max-w-3xl text-xl font-medium text-gray-500 leading-relaxed">
+                {organization.tagline || "Leading the way in innovation and sustainable growth."}
+              </p>
+
+              <div className="flex flex-wrap items-center gap-6 pt-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-amber-400 text-xl">★</span>
+                  <span className="text-gray-900 font-bold text-lg">{ratingScore?.toFixed(1) || "0.0"}</span>
+                  <span className="text-gray-400 font-medium">({ratingCount || 0} Professional Reviews)</span>
+                </div>
+                <div className="h-4 w-px bg-gray-200 hidden md:block"></div>
+                <div className="flex items-center gap-2 text-gray-500 font-medium">
+                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  {organization.address?.split(',').pop() || "Global Operations"}
+                </div>
+              </div>
+            </div>
+
+            {/* CTAs */}
+            <div className="flex flex-col gap-3 w-full md:w-auto min-w-[240px] md:pt-4">
               <button
-                type="button"
-                onClick={() => setShowDetails((prev) => !prev)}
-                className="inline-flex items-center rounded-full border border-white/30 bg-white/10 px-4 py-2 font-semibold text-white backdrop-blur transition hover:bg-white/20"
+                className="w-full px-8 py-4 bg-emerald-600 text-white font-bold rounded-2xl shadow-xl shadow-emerald-100 hover:bg-emerald-700 hover:-translate-y-1 transition-all"
+                onClick={() => document.getElementById('booking-options')?.scrollIntoView({ behavior: 'smooth' })}
               >
-                <span className="mr-2 text-base" aria-hidden="true">{showDetails ? "−" : "+"}</span>
-                {showDetails ? "Hide full profile" : "View full profile"}
+                Connect Organization
               </button>
-            )}
+              <a
+                href={organization.website || "#"}
+                target="_blank"
+                className="w-full px-8 py-4 bg-white border border-gray-100 text-gray-900 font-bold rounded-2xl shadow-sm hover:shadow-md hover:bg-gray-50 transition-all text-center"
+              >
+                Visit Ecosystem
+              </a>
+              <button className="text-emerald-600 font-bold text-sm hover:underline py-2">
+                View Open Opportunities →
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="mx-auto -mt-12 max-w-5xl px-4">
-        <div className="overflow-hidden rounded-3xl bg-white shadow-xl shadow-emerald-900/5 ring-1 ring-black/5">
-          <div className="space-y-12 p-6 sm:p-10">
-            <section className="grid gap-8 lg:grid-cols-[2fr,1fr]">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">About {organization.name}</h2>
-                <p className="mt-3 text-sm leading-6 text-gray-700 whitespace-pre-line">
-                  {organization.description || "This organization has not added a description yet."}
+      {/* Main Content Sections */}
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+
+          {/* Left Column: Mission & Metrics (Side Card style) */}
+          <div className="lg:col-span-4 space-y-8">
+            <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm space-y-8 sticky top-24">
+              <section className="space-y-4">
+                <h3 className="text-lg font-black text-gray-900 uppercase tracking-widest">Our Mission</h3>
+                <p className="text-gray-600 leading-relaxed font-medium">
+                  {organization.description || "Building a future where technology and talent meet to create extraordinary value for everyone involved."}
                 </p>
-              </div>
-              {hasContactInfo && (
-                <div className="rounded-2xl bg-emerald-50/60 p-5 text-sm text-emerald-900 shadow-inner">
-                  <h3 className="text-sm font-semibold text-emerald-900">Connect with {organization.name}</h3>
-                  <ul className="mt-3 space-y-2">
-                    {organization.address && (
-                      <li className="flex gap-2">
-                        <span className="mt-0.5 text-emerald-500" aria-hidden="true">📍</span>
-                        <span className="whitespace-pre-line">{organization.address}</span>
-                      </li>
-                    )}
-                    {organization.email && (
-                      <li className="flex gap-2 break-all">
-                        <span className="mt-0.5 text-emerald-500" aria-hidden="true">✉️</span>
-                        <a href={`mailto:${organization.email}`} className="hover:text-emerald-700">{organization.email}</a>
-                      </li>
-                    )}
-                    {organization.phone && (
-                      <li className="flex gap-2">
-                        <span className="mt-0.5 text-emerald-500" aria-hidden="true">📞</span>
-                        <a href={`tel:${organization.phone}`} className="hover:text-emerald-700">{organization.phone}</a>
-                      </li>
-                    )}
-                    {organization.website && (
-                      <li className="flex gap-2 break-all">
-                        <span className="mt-0.5 text-emerald-500" aria-hidden="true">🌐</span>
-                        <a href={organization.website} target="_blank" rel="noreferrer" className="hover:text-emerald-700">
-                          {organization.website}
-                        </a>
-                      </li>
-                    )}
-                  </ul>
+              </section>
+
+              <section className="space-y-4 pt-6 border-t border-gray-50">
+                <h3 className="text-lg font-black text-gray-900 uppercase tracking-widest">Ecosystem Impact</h3>
+                <div className="grid grid-cols-1 gap-6">
+                  <div className="p-5 rounded-2xl bg-emerald-50/50 border border-emerald-50">
+                    <div className="text-3xl font-black text-emerald-600">5,000+</div>
+                    <div className="text-sm font-bold text-gray-500 uppercase">Active Users</div>
+                  </div>
+                  <div className="p-5 rounded-2xl bg-teal-50/50 border border-teal-50">
+                    <div className="text-3xl font-black text-teal-600">300+</div>
+                    <div className="text-sm font-bold text-gray-500 uppercase">Verified Experts</div>
+                  </div>
+                  <div className="p-5 rounded-2xl bg-emerald-50/50 border border-emerald-50">
+                    <div className="text-3xl font-black text-emerald-600">6</div>
+                    <div className="text-sm font-bold text-gray-500 uppercase">Operating Regions</div>
+                  </div>
                 </div>
-              )}
+              </section>
+
+              <section className="space-y-4 pt-6 border-t border-gray-50">
+                <h3 className="text-lg font-black text-gray-900 uppercase tracking-widest">Connect</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 text-sm text-gray-600">
+                    <span className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-emerald-600">✉️</span>
+                    <span className="font-semibold truncate">{organization.email || "hello@org.com"}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-gray-600">
+                    <span className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-emerald-600">📞</span>
+                    <span className="font-semibold">{organization.phone || "+1 (555) 000-0000"}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-gray-600">
+                    <span className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-emerald-600">🗓</span>
+                    <span className="font-semibold">Founded {new Date(organization.createdAt).getFullYear()}</span>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          {/* Right Column: Capabilities & Dynamic Feed */}
+          <div className="lg:col-span-8 space-y-12">
+
+            {/* Capabilities / Services */}
+            <section className="space-y-6">
+              <h2 className="text-2xl font-black text-gray-900 tracking-tight">Core Competencies</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {Array.isArray(organization.services) && organization.services.length > 0 ? (
+                  organization.services.map((svc, idx) => (
+                    <div key={idx} className="group p-6 bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all">
+                      <div className="h-12 w-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition-transform">
+                        {idx % 2 === 0 ? "⚡️" : "🚀"}
+                      </div>
+                      <h4 className="text-lg font-bold text-gray-900 mb-2">{typeof svc === 'string' ? svc : svc.title}</h4>
+                      <p className="text-gray-500 text-sm leading-relaxed">
+                        {typeof svc === 'object' ? svc.description : "High-impact delivery tailored to specific organizational needs."}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-2 py-10 text-center bg-gray-50 rounded-3xl text-gray-400 font-bold border-2 border-dashed border-gray-200">
+                    Capabilities list arriving soon
+                  </div>
+                )}
+              </div>
             </section>
 
+            {/* Booking & Call to Action Section */}
             {bookingForms.length > 0 && (
-              <section id="booking-options" className="space-y-4">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
-                  <h2 className="text-lg font-semibold text-gray-900">Booking options</h2>
-                  <p className="text-xs uppercase tracking-wide text-emerald-600">Powered by SkillConnect</p>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
+              <section id="booking-options" className="space-y-6">
+                <h2 className="text-2xl font-black text-gray-900 tracking-tight">Deployment Channels</h2>
+                <div className="space-y-4">
                   {bookingForms.map((form) => (
-                    <div
-                      key={form._id}
-                      className="group flex h-full flex-col justify-between rounded-2xl border border-emerald-100 bg-emerald-50/40 p-5 shadow-sm transition hover:-translate-y-1 hover:border-emerald-200 hover:bg-white"
-                    >
-                      <div>
-                        <h3 className="text-base font-semibold text-emerald-900">{form.name}</h3>
-                        {form.description && (
-                          <p className="mt-2 text-sm text-emerald-800/80 line-clamp-4">{form.description}</p>
-                        )}
+                    <div key={form._id} className="group relative bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm flex flex-col md:flex-row items-center gap-8 hover:border-emerald-400 transition-all overflow-hidden">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-full blur-3xl -z-0 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                      <div className="h-20 w-20 rounded-3xl bg-emerald-600 text-white flex items-center justify-center text-3xl font-black shrink-0 relative z-10">
+                        {form.name?.[0]}
                       </div>
-                      <div className="mt-4 flex items-center justify-between text-xs text-emerald-700">
-                        <span>{form.allowAnonymous ? "No login required" : "Login required"}</span>
-                        <Link
-                          to={`/forms/${form._id}`}
-                          className="inline-flex items-center rounded-full bg-emerald-600 px-4 py-1.5 font-semibold text-white shadow-sm transition hover:bg-emerald-700"
-                        >
-                          Start booking
-                        </Link>
+                      <div className="flex-1 text-center md:text-left relative z-10">
+                        <h3 className="text-xl font-black text-gray-900 mb-2">{form.name}</h3>
+                        <p className="text-gray-500 text-sm font-medium line-clamp-2 max-w-md mx-auto md:mx-0">
+                          {form.description || "Standard engagement gateway for professional service delivery and project initiation."}
+                        </p>
+                      </div>
+                      <Link to={`/forms/${form._id}`} className="px-8 py-4 bg-gray-900 text-white font-bold rounded-2xl hover:bg-emerald-600 transition-all shadow-lg relative z-10">
+                        Initiate Booking
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Trust Section: Partners & Reviews */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              <section className="space-y-6">
+                <h3 className="text-lg font-black text-gray-900 uppercase tracking-widest">Global Partners</h3>
+                <div className="flex flex-wrap gap-4">
+                  {Array.isArray(organization.partners) && organization.partners.length > 0 ? (
+                    organization.partners.map((p, idx) => (
+                      <div key={idx} className="h-16 w-32 bg-white rounded-2xl border border-gray-100 flex items-center justify-center p-3 grayscale hover:grayscale-0 transition-all" title={p.name}>
+                        {p.logo ? <img src={getImageUrl(p.logo)} alt={p.name} className="h-full w-full object-contain" /> : <span className="text-xs font-bold text-gray-400">{p.name || "Partner"}</span>}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-gray-400 text-sm font-bold">Partnerships available upon inquiry</div>
+                  )}
+                </div>
+              </section>
+
+              <section className="space-y-6">
+                <h3 className="text-lg font-black text-gray-900 uppercase tracking-widest">Latest Insight</h3>
+                {Array.isArray(organization.updates) && organization.updates.length > 0 ? (
+                  <div className="bg-white rounded-[2rem] p-6 border border-gray-100 shadow-sm relative group overflow-hidden">
+                    <div className="absolute top-0 right-0 px-4 py-1.5 bg-emerald-600 text-white text-[10px] uppercase font-black rounded-bl-2xl">New Announcement</div>
+                    <h4 className="text-lg font-bold text-gray-900 mb-2 pr-12 line-clamp-1">{organization.updates[organization.updates.length - 1].title}</h4>
+                    <p className="text-gray-500 text-sm line-clamp-3 mb-4">{organization.updates[organization.updates.length - 1].content}</p>
+                    <button className="text-xs font-bold text-emerald-600 hover:tracking-widest transition-all uppercase">Explore Updates →</button>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 rounded-[2rem] p-6 text-center text-gray-400 font-bold border-2 border-dashed border-gray-100">
+                    Stay tuned for official updates
+                  </div>
+                )}
+              </section>
+            </div>
+
+            {/* Media Highlight */}
+            {Array.isArray(organization.media) && organization.media.length > 0 && (
+              <section className="space-y-6">
+                <h2 className="text-2xl font-black text-gray-900 tracking-tight">Ecosystem Highlights</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {organization.media.slice(0, 3).map((item, idx) => (
+                    <div key={idx} className="aspect-square rounded-3xl overflow-hidden shadow-sm relative group">
+                      {item.type === 'image' ? (
+                        <img src={getImageUrl(item.url)} alt="" className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                      ) : (
+                        <div className="h-full w-full bg-gray-900 flex items-center justify-center text-white">Video Path</div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                        <span className="text-white text-xs font-black uppercase truncate">{item.title || "Gallery Item"}</span>
                       </div>
                     </div>
                   ))}
@@ -308,323 +374,6 @@ export default function OrgPublic() {
               </section>
             )}
 
-            {showDetails && (
-              <div className="space-y-12 border-t border-gray-100 pt-10">
-                {Array.isArray(organization.services) && organization.services.length > 0 && (
-                  <section>
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100 text-xl">🛠</span>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Services</h3>
-                        <p className="text-sm text-gray-500">What {organization.name} offers.</p>
-                      </div>
-                    </div>
-                    <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                      {organization.services.map((svc, index) => {
-                        const title = typeof svc === "string" ? svc : svc?.title;
-                        const description = typeof svc === "object" ? svc?.description : "";
-                        return (
-                          <div
-                            key={index}
-                            className="rounded-2xl border border-gray-100 bg-gray-50/60 p-5 text-sm text-gray-700 shadow-sm"
-                          >
-                            <div className="text-base font-semibold text-gray-900">{title || `Service ${index + 1}`}</div>
-                            {description && <p className="mt-2 text-sm leading-6 text-gray-600">{description}</p>}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </section>
-                )}
-
-                {Array.isArray(organization.projects) && organization.projects.length > 0 && (
-                  <section>
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100 text-xl">📁</span>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Projects & portfolio</h3>
-                        <p className="text-sm text-gray-500">Recent work and highlights.</p>
-                      </div>
-                    </div>
-                    <ul className="mt-6 space-y-2 rounded-2xl border border-gray-100 bg-white p-5 text-sm leading-6 text-gray-700">
-                      {organization.projects.map((project, index) => (
-                        <li key={index} className="relative pl-4">
-                          <span className="absolute left-0 top-2 h-2 w-2 rounded-full bg-emerald-500" />
-                          {project}
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-                )}
-
-                {reviews.length > 0 && (
-                  <section>
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-100 text-xl">★</span>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">What people say</h3>
-                        <p className="text-sm text-gray-500">Feedback from clients & partners.</p>
-                      </div>
-                    </div>
-                    <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                      {reviewPagination.pageReviews.map((review, index) => {
-                        const rating = typeof review.rating === "number" ? review.rating : null;
-                        return (
-                          <div
-                            key={index}
-                            className="flex h-full flex-col gap-3 rounded-2xl border border-gray-100 bg-white p-5 text-sm text-gray-700 shadow-sm"
-                          >
-                            {rating && rating > 0 && (
-                              <div className="text-sm text-amber-500">
-                                {"★".repeat(Math.max(1, Math.min(5, Math.round(rating))))}
-                              </div>
-                            )}
-                            {review.comment && (
-                              <p className="text-sm leading-6 text-gray-600 whitespace-pre-line">{review.comment}</p>
-                            )}
-                            <div className="text-xs text-gray-500">
-                              {review.author && <span className="font-semibold text-gray-800">{review.author}</span>}
-                              {review.roleOrOrg && (
-                                <span className="ml-1">• {review.roleOrOrg}</span>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    {reviewPagination.totalPages > 1 && (
-                      <div className="mt-4 flex items-center justify-between text-xs text-gray-600">
-                        <button
-                          type="button"
-                          onClick={() => setReviewPage((prev) => Math.max(0, prev - 1))}
-                          disabled={reviewPagination.safePage === 0}
-                          className="rounded-full border border-gray-200 px-3 py-1 font-medium hover:bg-gray-50 disabled:opacity-50"
-                        >
-                          Previous
-                        </button>
-                        <span>
-                          Page {reviewPagination.safePage + 1} of {reviewPagination.totalPages}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setReviewPage((prev) => Math.min(reviewPagination.totalPages - 1, prev + 1))}
-                          disabled={reviewPagination.safePage >= reviewPagination.totalPages - 1}
-                          className="rounded-full border border-gray-200 px-3 py-1 font-medium hover:bg-gray-50 disabled:opacity-50"
-                        >
-                          Next
-                        </button>
-                      </div>
-                    )}
-                  </section>
-                )}
-
-                {Array.isArray(organization.partners) && organization.partners.length > 0 && (
-                  <section>
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-indigo-100 text-xl">🤝</span>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Partners</h3>
-                        <p className="text-sm text-gray-500">Organizations we collaborate with.</p>
-                      </div>
-                    </div>
-                    <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                      {organization.partners.map((partner, index) => (
-                        <div
-                          key={index}
-                          className="flex gap-4 rounded-2xl border border-gray-100 bg-white p-5 text-sm text-gray-700 shadow-sm"
-                        >
-                          {partner.logo && (
-                            <img
-                              src={getImageUrl(partner.logo)}
-                              alt={partner.name || "Partner"}
-                              className="h-16 w-16 flex-shrink-0 rounded-xl object-contain border border-gray-100"
-                            />
-                          )}
-                          <div className="min-w-0">
-                            {partner.name && <div className="text-base font-semibold text-gray-900">{partner.name}</div>}
-                            {partner.website && (
-                              <a
-                                href={partner.website}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-xs text-emerald-600 hover:text-emerald-700 break-all"
-                              >
-                                {partner.website}
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                )}
-
-                {Array.isArray(organization.media) && organization.media.length > 0 && (
-                  <section>
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-sky-100 text-xl">📷</span>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Media gallery</h3>
-                        <p className="text-sm text-gray-500">A glimpse into our world.</p>
-                      </div>
-                    </div>
-                    <div className="mt-6 grid gap-5 sm:grid-cols-2">
-                      {organization.media.map((item, index) => (
-                        <div
-                          key={index}
-                          className="flex flex-col gap-3 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
-                        >
-                          {item.type === "image" && item.url && (
-                            <img
-                              src={getImageUrl(item.url)}
-                              alt={item.title || "Media"}
-                              className="h-48 w-full object-cover"
-                            />
-                          )}
-                          {item.type === "video" && item.url && (
-                            <div className="aspect-video w-full overflow-hidden bg-black">
-                              <iframe
-                                src={item.url}
-                                title={item.title || "Video"}
-                                className="h-full w-full border-0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                              />
-                            </div>
-                          )}
-                          {item.title && (
-                            <p className="px-5 pb-5 text-sm font-medium text-gray-700">{item.title}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                )}
-
-                {Array.isArray(organization.certificates) && organization.certificates.length > 0 && (
-                  <section>
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100 text-xl">🎓</span>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Certifications & accreditations</h3>
-                        <p className="text-sm text-gray-500">Proof of expertise and trust.</p>
-                      </div>
-                    </div>
-                    <ul className="mt-6 space-y-3">
-                      {organization.certificates.map((cert, index) => (
-                        <li
-                          key={index}
-                          className="flex flex-col gap-1 rounded-2xl border border-gray-100 bg-white p-5 text-sm text-gray-700 shadow-sm sm:flex-row sm:items-center sm:justify-between"
-                        >
-                          <div>
-                            <div className="text-base font-semibold text-gray-900">{cert.name}</div>
-                            <div className="text-xs text-gray-500">
-                              {cert.issuer && <span>{cert.issuer}</span>}
-                              {cert.issuer && cert.year && <span className="mx-1">•</span>}
-                              {cert.year && <span>{cert.year}</span>}
-                            </div>
-                          </div>
-                          {cert.link && (
-                            <a
-                              href={cert.link}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-xs font-semibold text-emerald-600 hover:text-emerald-700"
-                            >
-                              View certificate
-                            </a>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-                )}
-
-                {Array.isArray(organization.updates) && organization.updates.length > 0 && (() => {
-                  const visibleUpdates = organization.updates.slice(-5).reverse();
-                  return (
-                    <section>
-                      <div className="flex items-center gap-3">
-                        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-100 text-xl">⏱</span>
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900">Latest updates</h3>
-                          <p className="text-sm text-gray-500">News and announcements.</p>
-                        </div>
-                      </div>
-                      <div className="mt-6 space-y-4">
-                        {visibleUpdates.map((item, index) => (
-                          <div
-                            key={index}
-                            className="rounded-2xl border border-gray-100 bg-white p-5 text-sm text-gray-700 shadow-sm"
-                          >
-                            {item.title && <div className="text-base font-semibold text-gray-900">{item.title}</div>}
-                            {item.date && <div className="text-xs text-gray-500">{item.date}</div>}
-                            {item.content && (
-                              <p className="mt-2 text-sm leading-6 text-gray-600 whitespace-pre-line">{item.content}</p>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </section>
-                  );
-                })()}
-
-                {Array.isArray(organization.teamMembers) && organization.teamMembers.length > 0 && (
-                  <section>
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100 text-xl">👥</span>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Team members</h3>
-                        <p className="text-sm text-gray-500">Meet the people behind the work.</p>
-                      </div>
-                    </div>
-                    <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                      {organization.teamMembers.map((member, index) => (
-                        <div
-                          key={index}
-                          className="flex gap-4 rounded-2xl border border-gray-100 bg-white p-5 text-sm text-gray-700 shadow-sm"
-                        >
-                          {member.photoUrl && (
-                            <img
-                              src={getImageUrl(member.photoUrl)}
-                              alt={member.name || "Team member"}
-                              className="h-16 w-16 flex-shrink-0 rounded-full object-cover"
-                            />
-                          )}
-                          <div className="min-w-0">
-                            {member.name && <div className="text-base font-semibold text-gray-900">{member.name}</div>}
-                            {member.role && <div className="text-xs text-gray-500">{member.role}</div>}
-                            {member.bio && (
-                              <p className="mt-2 text-sm leading-6 text-gray-600 whitespace-pre-line">{member.bio}</p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                )}
-
-                {Array.isArray(organization.achievements) && organization.achievements.length > 0 && (
-                  <section>
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100 text-xl">🏆</span>
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">Achievements & milestones</h3>
-                        <p className="text-sm text-gray-500">Celebrating key moments.</p>
-                      </div>
-                    </div>
-                    <ul className="mt-6 space-y-2 rounded-2xl border border-gray-100 bg-white p-5 text-sm leading-6 text-gray-700">
-                      {organization.achievements.map((achievement, index) => (
-                        <li key={index} className="relative pl-4">
-                          <span className="absolute left-0 top-2 h-2 w-2 rounded-full bg-emerald-500" />
-                          {achievement}
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>
