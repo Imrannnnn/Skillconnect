@@ -108,7 +108,7 @@ export default function Sidebar({ isOpen, toggle }) {
             {/* Sidebar Container */}
             <aside
                 className={`
-                    fixed lg:sticky top-0 left-0 z-50 h-screen bg-white border-r border-gray-200 
+                    fixed lg:sticky top-0 left-0 z-50 h-[100dvh] bg-white border-r border-gray-200 
                     transition-all duration-300 ease-in-out flex flex-col shrink-0
                     ${isOpen ? 'w-64 translate-x-0' : '-translate-x-full lg:translate-x-0 lg:w-20'}
                 `}
@@ -211,7 +211,7 @@ export default function Sidebar({ isOpen, toggle }) {
                 </div>
 
                 {/* Footer / User Profile */}
-                <div className="p-3 border-t border-gray-100 bg-gray-50/50">
+                <div className="p-4 border-t border-gray-100 bg-gray-50/50 pb-[calc(env(safe-area-inset-bottom,16px)+16px)]">
                     {user ? (
                         <div className={`flex items-center gap-3 ${isOpen ? 'px-2' : 'justify-center'}`}>
                             <Link to="/settings/account" className="shrink-0 relative group">
@@ -225,21 +225,21 @@ export default function Sidebar({ isOpen, toggle }) {
                             {isOpen && (
                                 <div className="flex-1 min-w-0 overflow-hidden">
                                     <p className="text-sm font-semibold text-gray-900 truncate">{user.name}</p>
-                                    <button onClick={logout} className="text-xs text-red-500 hover:text-red-700 font-medium whitespace-nowrap">
+                                    <button onClick={logout} className="text-xs text-red-500 hover:text-red-700 font-medium whitespace-nowrap pt-1">
                                         Sign Out
                                     </button>
                                 </div>
                             )}
                         </div>
                     ) : (
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             {isOpen ? (
                                 <>
-                                    <Link to="/login" className="flex items-center justify-center w-full py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 whitespace-nowrap">Log In</Link>
-                                    <Link to="/register" className="flex items-center justify-center w-full py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg shadow-sm hover:bg-emerald-700 whitespace-nowrap">Sign Up</Link>
+                                    <Link to="/login" className="flex items-center justify-center w-full py-3 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 whitespace-nowrap shadow-sm">Log In</Link>
+                                    <Link to="/register" className="flex items-center justify-center w-full py-3 text-sm font-medium text-white bg-emerald-600 rounded-xl shadow-sm hover:bg-emerald-700 whitespace-nowrap transition-colors">Sign Up</Link>
                                 </>
                             ) : (
-                                <Link to="/login" className="flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600">
+                                <Link to="/login" className="flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 mx-auto">
                                     <Icon name="User" className="w-5 h-5" />
                                 </Link>
                             )}

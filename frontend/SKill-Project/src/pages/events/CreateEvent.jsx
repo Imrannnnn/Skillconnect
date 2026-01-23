@@ -23,7 +23,11 @@ const CreateEvent = () => {
             logoUrl: "",
             primaryColor: "#000000",
             secondaryColor: "#ffffff",
+            backgroundImageUrl: "",
         },
+        flyerFile: null,
+        flyerPreview: "",
+        uploadingFlyer: false,
         ticketTypes: [
             { name: "Regular", price: 0, quantity: 100, description: "" },
         ],
@@ -31,7 +35,8 @@ const CreateEvent = () => {
             enabled: false,
             goal: 0,
             tiers: []
-        }
+        },
+        isPublic: true
     });
 
     React.useEffect(() => {
@@ -78,7 +83,40 @@ const CreateEvent = () => {
                 sponsorship: { ...prev.sponsorship, [field]: type === 'checkbox' ? checked : value },
             }));
         } else {
-            setFormData((prev) => ({ ...prev, [name]: value }));
+            setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+        }
+    };
+
+    const handleFlyerChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Preview
+        const previewUrl = URL.createObjectURL(file);
+        setFormData(prev => ({ ...prev, flyerFile: file, flyerPreview: previewUrl }));
+
+        // Upload immediately
+        setFormData(prev => ({ ...prev, uploadingFlyer: true }));
+        try {
+            const uploadData = new FormData();
+            uploadData.append("image", file);
+
+            // Note: server.js mounts uploadRoutes at /api/users
+            const { data } = await API.post("/users/content-image", uploadData, {
+                headers: { "Content-Type": "multipart/form-data" }
+            });
+
+            if (data?.url) {
+                setFormData(prev => ({
+                    ...prev,
+                    branding: { ...prev.branding, backgroundImageUrl: data.url },
+                    uploadingFlyer: false
+                }));
+            }
+        } catch (error) {
+            console.error("Flyer upload failed:", error);
+            alert("Failed to upload flyer image. Please try again.");
+            setFormData(prev => ({ ...prev, uploadingFlyer: false }));
         }
     };
 
@@ -236,6 +274,27 @@ const CreateEvent = () => {
                     </div>
                 </div>
 
+                <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 flex items-center justify-between">
+                    <div>
+                        <h3 className="text-sm font-bold text-emerald-900">Visibility</h3>
+                        <p className="text-xs text-emerald-700">Public events appear in search. Private events are only accessible via link.</p>
+                    </div>
+                    <label className="flex items-center cursor-pointer">
+                        <div className="relative">
+                            <input
+                                type="checkbox"
+                                name="isPublic"
+                                checked={formData.isPublic}
+                                onChange={handleChange}
+                                className="sr-only"
+                            />
+                            <div className={`block w-12 h-7 rounded-full transition-colors ${formData.isPublic ? 'bg-emerald-500' : 'bg-gray-300'}`}></div>
+                            <div className={`dot absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition-transform ${formData.isPublic ? 'translate-x-5' : ''}`}></div>
+                        </div>
+                        <span className="ml-3 text-sm font-semibold text-emerald-900">{formData.isPublic ? 'Public' : 'Private'}</span>
+                    </label>
+                </div>
+
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Description</label>
                     <textarea
@@ -259,8 +318,31 @@ const CreateEvent = () => {
                                 name="branding.logoUrl"
                                 value={formData.branding.logoUrl}
                                 onChange={handleChange}
+                                placeholder="https://example.com/logo.png"
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
                             />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Event Flyer/Banner Image</label>
+                            <div className="mt-1 flex flex-col gap-2">
+                                {formData.flyerPreview && (
+                                    <div className="w-full h-32 rounded-md overflow-hidden bg-gray-100 border relative">
+                                        <img src={formData.flyerPreview} className="w-full h-full object-cover" alt="Flyer Preview" />
+                                        {formData.uploadingFlyer && (
+                                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                                <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleFlyerChange}
+                                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                                />
+                                {formData.uploadingFlyer && <p className="text-[10px] text-indigo-600 font-medium italic">Uploading to server...</p>}
+                            </div>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Primary Color</label>

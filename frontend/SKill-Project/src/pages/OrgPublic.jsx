@@ -9,7 +9,6 @@ export default function OrgPublic() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reviewPage, setReviewPage] = useState(0);
-  const [showDetails, setShowDetails] = useState(false);
 
   const bookingForms = useMemo(() => {
     return Array.isArray(organization?.bookingForms) ? organization.bookingForms : [];
@@ -36,38 +35,11 @@ export default function OrgPublic() {
 
   const orgId = organization?._id;
   useEffect(() => {
-    setShowDetails(false);
+    // If we had logic to reset local state on org change
   }, [orgId]);
 
   const ratingScore = typeof organization?.ratingScore === "number" ? organization.ratingScore : null;
   const ratingCount = typeof organization?.ratingCount === "number" ? organization.ratingCount : null;
-  const hasRating = ratingScore !== null && ratingScore > 0;
-
-  const hasExtendedDetails = useMemo(() => {
-    if (!organization) return false;
-    return (
-      (Array.isArray(organization.services) && organization.services.length > 0) ||
-      (Array.isArray(organization.projects) && organization.projects.length > 0) ||
-      (Array.isArray(organization.reviews) && organization.reviews.length > 0) ||
-      (Array.isArray(organization.partners) && organization.partners.length > 0) ||
-      (Array.isArray(organization.media) && organization.media.length > 0) ||
-      (Array.isArray(organization.certificates) && organization.certificates.length > 0) ||
-      (Array.isArray(organization.updates) && organization.updates.length > 0) ||
-      (Array.isArray(organization.teamMembers) && organization.teamMembers.length > 0) ||
-      (Array.isArray(organization.achievements) && organization.achievements.length > 0)
-    );
-  }, [organization]);
-
-  const createdAtDisplay = useMemo(() => {
-    if (!organization?.createdAt) return "";
-    const date = new Date(organization.createdAt);
-    if (Number.isNaN(date.getTime())) return "";
-    return date.toLocaleDateString();
-  }, [organization?.createdAt]);
-
-  const hasContactInfo = Boolean(
-    organization?.email || organization?.phone || organization?.website || organization?.address,
-  );
 
   useEffect(() => {
     let mounted = true;

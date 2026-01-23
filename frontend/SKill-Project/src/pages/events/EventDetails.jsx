@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { getEventById } from "../../api/eventService";
 import { purchaseTickets } from "../../api/ticketService";
 import API from "../../api/axios";
@@ -9,6 +9,9 @@ const EventDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { user } = useContext(AuthContext);
+    const location = useLocation();
+    const queryParams = new URLSearchParams(location.search);
+    const accessKey = queryParams.get("accessKey");
 
     const [event, setEvent] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -21,7 +24,7 @@ const EventDetails = () => {
     useEffect(() => {
         const fetchEvent = async () => {
             try {
-                const data = await getEventById(id);
+                const data = await getEventById(id, accessKey);
                 setEvent(data);
             } catch (error) {
                 console.error("Error fetching event:", error);
@@ -30,7 +33,7 @@ const EventDetails = () => {
             }
         };
         fetchEvent();
-    }, [id]);
+    }, [id, accessKey]);
 
     const handleQuantityChange = (ticketTypeId, quantity) => {
         setSelectedTickets((prev) => ({
@@ -130,6 +133,37 @@ const EventDetails = () => {
                         <h2 className="text-2xl font-bold mb-4 text-gray-800">About this Event</h2>
                         <p className="text-gray-600 whitespace-pre-line">{event.description}</p>
                     </div>
+
+                    {!event.isPublic && (
+                        <div className="bg-amber-50 p-4 rounded-xl border border-amber-200">
+                            <h3 className="text-amber-800 font-bold flex items-center mb-1">
+                                <span className="mr-2">🔒</span> Private Event
+                            </h3>
+                            <p className="text-sm text-amber-700">This event is private and does not appear in public listings. Only people with the unique link below can access it.</p>
+
+                            {(user && (event.organizerId._id === user._id || event.organizerId === user._id)) && (
+                                <div className="mt-4">
+                                    <p className="text-[10px] font-bold text-amber-900 uppercase tracking-widest mb-1">Share Private Access Link:</p>
+                                    <div className="flex">
+                                        <input
+                                            readOnly
+                                            value={`${window.location.origin}/events/${event._id}?accessKey=${event.accessKey}`}
+                                            className="bg-white border border-amber-200 text-xs p-2.5 rounded-l-lg flex-1 text-gray-600 focus:outline-none"
+                                        />
+                                        <button
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(`${window.location.origin}/events/${event._id}?accessKey=${event.accessKey}`);
+                                                alert("Private link copied to clipboard!");
+                                            }}
+                                            className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-1 rounded-r-lg text-xs font-bold transition-colors"
+                                        >
+                                            Copy Link
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     <div className="bg-white p-6 rounded-lg shadow-sm border">
                         <h2 className="text-2xl font-bold mb-4 text-gray-800">Select Tickets</h2>

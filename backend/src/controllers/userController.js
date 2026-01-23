@@ -458,3 +458,22 @@ export const becomeProvider = async (req, res) => {
     res.status(500).json({ message: "Failed to enable provider role", error: e?.message || e });
   }
 };
+
+export const updateSubscribedCategories = async (req, res) => {
+  try {
+    const { categories } = req.body; // Array of category names
+    if (!Array.isArray(categories)) {
+      return res.status(400).json({ message: "Categories must be an array" });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    user.categories = categories;
+    await user.save();
+
+    res.status(200).json({ message: "Subscriptions updated successfully", categories: user.categories });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating subscriptions", error: error.message });
+  }
+};

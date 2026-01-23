@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react'
+import { useContext, useState, useEffect } from 'react'
 import API from '../api/axios.js'
 import { useToast } from '../components/toast.js'
 import { useNavigate } from 'react-router-dom'
@@ -30,6 +30,12 @@ export default function AccountSettings() {
   const isClient = roles.includes('client')
   const isProvider = roles.includes('provider')
   const isAdmin = roles.includes('admin')
+
+  useEffect(() => {
+    if (user?.categories) {
+      setCategoriesInput(user.categories.join(', '))
+    }
+  }, [user])
 
   const handleBecomeProvider = async (e) => {
     e.preventDefault()
@@ -112,6 +118,46 @@ export default function AccountSettings() {
               </span>
             )
           })}
+        </div>
+      </section>
+
+      <section className="mt-8 rounded-lg border border-gray-200 bg-white p-4">
+        <h3 className="font-semibold mb-1 text-sm text-gray-900">Event subscriptions</h3>
+        <p className="text-xs text-gray-600 mb-4">
+          Subscribe to event categories you're interested in. We'll notify you whenever a new event in these categories is published.
+        </p>
+
+        <div className="space-y-4">
+          <label className="grid gap-1 text-xs">
+            <span className="text-gray-700 font-medium uppercase tracking-wider">Subscribed Categories</span>
+            <div className="flex gap-2">
+              <input
+                className="flex-1 rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all shadow-sm"
+                placeholder="e.g. Technology, Business, Design"
+                value={categoriesInput}
+                onChange={(e) => setCategoriesInput(e.target.value)}
+              />
+              <button
+                onClick={async () => {
+                  try {
+                    const categories = categoriesInput.split(',').map(s => s.trim()).filter(Boolean);
+                    await API.put('/users/me/subscriptions', { categories });
+                    notify('Subscription preferences updated!', { type: 'success' });
+                    // Update local user state if needed
+                    if (auth?.setUser) {
+                      auth.setUser({ ...user, categories });
+                    }
+                  } catch {
+                    notify('Failed to update subscriptions', { type: 'error' });
+                  }
+                }}
+                className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors shadow-sm"
+              >
+                Update
+              </button>
+            </div>
+            <span className="text-[10px] text-gray-400 mt-1 italic">Comma separated list. Example: Music, Sports, Tech</span>
+          </label>
         </div>
       </section>
 

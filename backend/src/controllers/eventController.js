@@ -45,10 +45,16 @@ export const createEvent = async (req, res) => {
             branding,
             ticketTypes,
             sponsorship: finalOrganizerModel === 'Organization' ? sponsorship : undefined,
-            status: "published", // Auto-publish for now
+            status: req.body.status || "published",
+            isPublic: req.body.isPublic !== undefined ? req.body.isPublic : true,
         });
 
         await newEvent.save();
+
+        if (newEvent.status === "published") {
+            await notifySubscribers(newEvent);
+        }
+
         res.status(201).json(newEvent);
     } catch (error) {
         res.status(500).json({ message: "Error creating event", error: error.message });
@@ -59,7 +65,7 @@ export const createEvent = async (req, res) => {
 export const getEvents = async (req, res) => {
     try {
         const { organizerId, city, category } = req.query;
-        const query = { status: "published" };
+        const query = { status: "published", isPublic: true };
 
         if (organizerId) query.organizerId = organizerId;
         if (city) query.city = city;
@@ -72,11 +78,31 @@ export const getEvents = async (req, res) => {
     }
 };
 
-// Get single event by ID
+// Get single event by ID or Access Key
 export const getEventById = async (req, res) => {
     try {
-        const event = await Event.findById(req.params.id).populate("organizerId", "name avatarUrl logo");
+        const { id } = req.params;
+        const { accessKey } = req.query;
+
+        let event;
+        if (id.length === 24) { // Likely direct ID
+            event = await Event.findById(id).populate("organizerId", "name avatarUrl");
+        }
+
+        if (!event && accessKey) {
+            event = await Event.findOne({ accessKey }).populate("organizerId", "name avatarUrl");
+        }
+
         if (!event) return res.status(404).json({ message: "Event not found" });
+
+        // If private, check if user has access (either creator or has accessKey)
+        if (!event.isPublic && !accessKey) {
+            // Check if user is organizer
+            if (!req.user || event.organizerId._id.toString() !== req.user._id.toString()) {
+                return res.status(403).json({ message: "This is a private event. You need a private link to access it." });
+            }
+        }
+
         res.status(200).json(event);
     } catch (error) {
         res.status(500).json({ message: "Error fetching event", error: error.message });
@@ -108,8 +134,14 @@ export const updateEvent = async (req, res) => {
             }
         }
 
+        const wasPublished = event.status === 'published';
         Object.assign(event, req.body);
         await event.save();
+
+        if (event.status === 'published' && !wasPublished) {
+            await notifySubscribers(event);
+        }
+
         res.status(200).json(event);
     } catch (error) {
         res.status(500).json({ message: "Error updating event", error: error.message });
@@ -137,6 +169,35 @@ export const deleteEvent = async (req, res) => {
         res.status(200).json({ message: "Event deleted successfully" });
     } catch (error) {
         res.status(500).json({ message: "Error deleting event", error: error.message });
+    }
+};
+
+import Notification from "../models/notification.js";
+
+// Helper: Notify users subscribed to the event category
+const notifySubscribers = async (event) => {
+    try {
+        // Find users who have this category in their profile and have not opted out (assuming they opted in by adding category)
+        const subscribers = await User.find({
+            categories: event.category,
+            _id: { $ne: event.organizerId } // Don't notify the organizer
+        });
+
+        if (subscribers.length === 0) return;
+
+        const notifications = subscribers.map(user => ({
+            userId: user._id,
+            title: "New Event: " + event.title,
+            message: `A new event in the ${event.category} category is now available: ${event.title}. Check it out!`,
+            type: "info",
+            link: `/events/${event._id}`,
+            metadata: { eventId: event._id, category: event.category }
+        }));
+
+        await Notification.insertMany(notifications);
+        console.log(`Sent notifications to ${subscribers.length} subscribers for category: ${event.category}`);
+    } catch (error) {
+        console.error("Error notifying subscribers:", error);
     }
 };
 

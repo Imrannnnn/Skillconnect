@@ -5,84 +5,150 @@ import axios from "axios";
 export const generateTicketPDF = async (ticket, event) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const doc = new PDFDocument({ size: "A4", margin: 0 });
+            const doc = new PDFDocument({
+                size: "A4",
+                margin: 0,
+                info: {
+                    Title: `Ticket - ${event.title}`,
+                    Author: 'SkillConnect'
+                }
+            });
             const buffers = [];
             doc.on("data", buffers.push.bind(buffers));
             doc.on("end", () => resolve(Buffer.concat(buffers)));
 
-            const primaryColor = event.branding?.primaryColor || "#4f46e5";
-            const secondaryColor = event.branding?.secondaryColor || "#ffffff";
+            // Colors
+            const emerald = "#10b981";
+            const darkEmerald = "#064e3b";
+            const lightEmerald = "#ecfdf5";
+            const grey = "#64748b";
+            const black = "#1e293b";
 
-            // --- Header Section ---
-            doc.rect(0, 0, doc.page.width, 160).fill(primaryColor);
+            // --- Background & Border ---
+            doc.rect(0, 0, doc.page.width, doc.page.height).fill("#f8fafc");
 
-            // Logo (if available)
-            if (event.branding?.logoUrl) {
+            // Ticket Card background
+            const cardX = 50;
+            const cardY = 50;
+            const cardWidth = doc.page.width - 100;
+            let cardHeight = 600;
+
+            if (event.branding?.backgroundImageUrl) {
+                cardHeight = 750;
+            }
+
+            doc.roundedRect(cardX, cardY, cardWidth, cardHeight, 20).fill("white");
+
+            // Top Emerald Accent
+            doc.path(`M ${cardX + 20} ${cardY} L ${cardX + cardWidth - 20} ${cardY} Q ${cardX + cardWidth} ${cardY} ${cardX + cardWidth} ${cardY + 20} L ${cardX + cardWidth} ${cardY + 40} L ${cardX} ${cardY + 40} L ${cardX} ${cardY + 20} Q ${cardX} ${cardY} ${cardX + 20} ${cardY} Z`).fill(emerald);
+
+            let contentY = cardY + 70;
+
+            // --- Flyer Image ---
+            if (event.branding?.backgroundImageUrl) {
                 try {
-                    const response = await axios.get(event.branding.logoUrl, { responseType: "arraybuffer" });
-                    const logoBuffer = Buffer.from(response.data, "binary");
-                    doc.image(logoBuffer, 50, 40, { fit: [80, 80] });
+                    const response = await axios.get(event.branding.backgroundImageUrl, { responseType: 'arraybuffer' });
+                    const flyerBuffer = Buffer.from(response.data);
+
+                    // Display flyer at the top of the card
+                    const flyerHeight = 150;
+                    doc.save();
+                    // Clip to rounded top corners
+                    doc.roundedRect(cardX, cardY, cardWidth, flyerHeight + 20, 20).clip();
+                    doc.image(flyerBuffer, cardX, cardY, { width: cardWidth, height: flyerHeight + 20, align: 'center', valign: 'center' });
+                    doc.restore();
+
+                    contentY = cardY + flyerHeight + 40;
                 } catch (err) {
-                    console.error("Failed to load logo for PDF:", err.message);
+                    console.error("Failed to include flyer in PDF:", err.message);
                 }
             }
 
+            // --- Header Content ---
             // Event Title
-            doc.fillColor(secondaryColor)
-                .fontSize(28)
+            doc.fillColor(black)
+                .fontSize(24)
                 .font("Helvetica-Bold")
-                .text(event.title, 150, 50, { width: 400, align: "left" });
+                .text(event.title, cardX + 40, contentY, { width: cardWidth - 80, align: "center" });
 
-            // Event Category
-            doc.fontSize(12)
-                .font("Helvetica")
-                .text(event.category.toUpperCase(), 150, 90, { width: 400, align: "left" });
+            // Ticket Type Badge
+            const badgeWidth = 120;
+            const badgeHeight = 25;
+            const badgeX = cardX + (cardWidth - badgeWidth) / 2;
+            const badgeY = contentY + 40;
 
-            // --- Ticket Details Section ---
-            doc.fillColor("black").font("Helvetica");
+            doc.roundedRect(badgeX, badgeY, badgeWidth, badgeHeight, 12).fill(lightEmerald);
+            doc.fillColor(darkEmerald)
+                .fontSize(10)
+                .font("Helvetica-Bold")
+                .text(ticket.ticketType.name.toUpperCase(), badgeX, badgeY + 7, { width: badgeWidth, align: "center" });
 
-            const startY = 200;
-            const col1X = 50;
-            const col2X = 300;
+            // --- Details Section ---
+            const startY = contentY + 90;
+            const col1X = cardX + 60;
+            const col2X = cardX + (cardWidth / 2) + 20;
 
-            // Ticket Type & Holder
-            doc.fontSize(10).text("TICKET TYPE", col1X, startY);
-            doc.fontSize(18).font("Helvetica-Bold").text(ticket.ticketType.name, col1X, startY + 15);
-
-            doc.fontSize(10).font("Helvetica").text("HOLDER NAME", col2X, startY);
-            doc.fontSize(18).font("Helvetica-Bold").text(ticket.holderName, col2X, startY + 15);
+            // Helper to draw detail
+            const drawDetail = (label, value, x, y) => {
+                doc.fillColor(grey).fontSize(8).font("Helvetica-Bold").text(label.toUpperCase(), x, y);
+                doc.fillColor(black).fontSize(12).font("Helvetica-Bold").text(value, x, y + 15);
+            };
 
             // Date & Time
+            drawDetail("Date", new Date(event.date).toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric' }), col1X, startY);
+            drawDetail("Time", event.time, col2X, startY);
+
+            // Venue & Ticket Holder
             const row2Y = startY + 60;
-            doc.fontSize(10).font("Helvetica").text("DATE", col1X, row2Y);
-            doc.fontSize(14).font("Helvetica-Bold").text(new Date(event.date).toLocaleDateString(), col1X, row2Y + 15);
+            drawDetail("Venue", event.venue, col1X, row2Y);
+            drawDetail("Guest", ticket.holderName, col2X, row2Y);
 
-            doc.fontSize(10).font("Helvetica").text("TIME", col2X, row2Y);
-            doc.fontSize(14).font("Helvetica-Bold").text(event.time, col2X, row2Y + 15);
-
-            // Venue
+            // Location
             const row3Y = row2Y + 60;
-            doc.fontSize(10).font("Helvetica").text("VENUE", col1X, row3Y);
-            doc.fontSize(14).font("Helvetica-Bold").text(`${event.venue}, ${event.city}`, col1X, row3Y + 15, { width: 500 });
+            drawDetail("Location", event.city, col1X, row3Y);
+            drawDetail("Ticket ID", ticket.uniqueTicketId, col2X, row3Y);
 
-            // Ticket ID
-            const row4Y = row3Y + 60;
-            doc.fontSize(10).font("Helvetica").text("TICKET ID", col1X, row4Y);
-            doc.fontSize(14).font("Helvetica-Courier").text(ticket.uniqueTicketId, col1X, row4Y + 15);
+            // --- Divider ---
+            const dividerY = row3Y + 60;
+            doc.moveTo(cardX + 40, dividerY)
+                .lineTo(cardX + cardWidth - 40, dividerY)
+                .dash(5, { space: 5 })
+                .strokeColor("#e2e8f0")
+                .stroke();
 
             // --- QR Code Section ---
-            const qrY = row4Y + 60;
+            const qrSize = 120;
+            const qrX = cardX + (cardWidth - qrSize) / 2;
+            const qrY = dividerY + 30;
+
             try {
-                const qrBuffer = await QRCode.toBuffer(ticket.uniqueTicketId, { width: 150, margin: 1 });
-                doc.image(qrBuffer, (doc.page.width - 150) / 2, qrY);
+                const qrBuffer = await QRCode.toBuffer(ticket.uniqueTicketId, {
+                    width: 200,
+                    margin: 1,
+                    color: {
+                        dark: '#064e3b',
+                        light: '#ffffff'
+                    }
+                });
+                doc.image(qrBuffer, qrX, qrY, { width: qrSize });
             } catch (err) {
                 console.error("Failed to generate QR code for PDF:", err.message);
             }
 
-            doc.fontSize(10).font("Helvetica").text("Scan this code at the entrance", 0, qrY + 160, { align: "center" });
+            doc.fillColor(grey)
+                .fontSize(8)
+                .font("Helvetica")
+                .text("Scan this code at the entrance for check-in", cardX, qrY + qrSize + 15, { align: "center", width: cardWidth });
 
-            // Footer
-            doc.fontSize(8).text("Powered by SkillConnect", 50, doc.page.height - 50, { align: "center", width: doc.page.width - 100 });
+            // --- Footer ---
+            doc.fillColor(grey)
+                .fontSize(8)
+                .text("This is a digital ticket. Please present it on your mobile device or bring a printed copy.", cardX, cardY + cardHeight - 50, { align: "center", width: cardWidth });
+
+            doc.fillColor(emerald)
+                .fontSize(10)
+                .font("Helvetica-Bold")
+                .text("SkillConnect", 0, cardY + cardHeight + 15, { align: "center", width: doc.page.width });
 
             doc.end();
         } catch (error) {

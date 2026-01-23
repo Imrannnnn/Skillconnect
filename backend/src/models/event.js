@@ -53,7 +53,16 @@ const eventSchema = new mongoose.Schema({
     },
 
     isPublic: { type: Boolean, default: true },
+    accessKey: { type: String, unique: true, sparse: true }, // For private events URL
 
 }, { timestamps: true });
+
+// Pre-save hook to generate accessKey if private
+eventSchema.pre("save", function (next) {
+    if (!this.isPublic && !this.accessKey) {
+        this.accessKey = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    }
+    next();
+});
 
 export default mongoose.model("Event", eventSchema);

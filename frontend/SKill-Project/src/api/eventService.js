@@ -10,8 +10,9 @@ export const getEvents = async (filters) => {
     return response.data;
 };
 
-export const getEventById = async (id) => {
-    const response = await axios.get(`/events/${id}`);
+export const getEventById = async (id, accessKey = null) => {
+    const params = accessKey ? { accessKey } : {};
+    const response = await axios.get(`/events/${id}`, { params });
     return response.data;
 };
 
